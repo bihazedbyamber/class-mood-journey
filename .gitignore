@@ -1,0 +1,11 @@
+# Never upload these to GitHub:
+# config.json holds the Apps Script URL, the admin password hash and the sheet secret.
+config.json
+# data/ holds the notes and admin data of your own computer (local mode).
+data/
+
+# Editor / system clutter
+node_modules/
+.DS_Store
+Thumbs.db
+*.log

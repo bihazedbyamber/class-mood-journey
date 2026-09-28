@@ -1,0 +1,5349 @@
+/* =====================================================================
+   Class Mood Journey — style.css
+   One stylesheet, two styles, two themes:
+
+     <html data-style="modern-2026">  lined paper, pixel titles, tape (default)
+     <html data-style="scribblish">   friendly pastel notebook doodles
+     <html data-style="modern-bold">  zine collage, huge headlines, marker scribbles
+     <html data-theme="light|dark">  set by settings.js
+
+   How it works: every colour, font, corner and shadow is a CSS variable
+   ("token"). Section 1 gives each style + theme its own token values;
+   the components below only use the tokens. Section 8 holds the few
+   extra touches that only one style has.
+
+   Contents
+     1. Tokens: base defaults, Scribblish, Modern 2026, Modern Bold (each light + dark)
+     2. Page basics
+     3. Shared pieces: top bar, buttons, stickers
+     4. Input page (index.html)
+     5. Journey page (journey.html)
+     6. Focused note (the big note in the middle)
+     7. Settings panel
+     8. Style-only extras
+     9. Animations
+    10. Small screens
+    11. Reduced motion
+   ===================================================================== */
+
+
+/* ---------- 1. Tokens ---------- */
+
+/* ===== Base tokens: shared defaults (every style below builds on these) ===== */
+:root {
+  color-scheme: light;
+
+  /* Fixed clash palette */
+  --c-cobalt: #3d5afe;
+  --c-pink: #ff5fa2;
+  --c-lime: #c8f25a;
+  --c-lemon: #ffe14a;
+  --c-violet: #8b7bff;
+
+  /* Page */
+  --bg: #f5f1e8;
+  --bg-dot: rgba(17, 17, 17, 0.14);
+  --bg-image: radial-gradient(var(--bg-dot) 1.3px, transparent 1.6px);
+  --bg-size: 22px 22px;
+  --surface: #ffffff;
+  --surface-2: #f1ece1;
+  --text: #111111;
+  --text-soft: #5c5866;
+  --line: #111111;         /* outlines */
+  --shadow: #111111;       /* hard offset shadows */
+  --on-color: #111111;     /* text on the bright mood colours */
+  --note-line: #111111;    /* outline of notes and coloured cards */
+
+  /* Accents */
+  --accent: var(--c-cobalt);
+  --on-accent: #ffffff;
+  --scribble: var(--c-pink);
+  --highlight: var(--c-lime);
+  --error: #e0245e;
+  --sticker: var(--c-lemon);
+  --doodle-a: var(--c-lime);
+  --doodle-b: var(--c-cobalt);
+  --step-bg: var(--c-lemon);
+
+  /* Moods, green (great) to pink-red (frustrated) */
+  --mood-5: #6bea8f;
+  --mood-4: #c8f25a;
+  --mood-3: #ffe14a;
+  --mood-2: #ff9f45;
+  --mood-1: #ff5f8f;
+  --lane-mix: 12%;         /* how strongly lanes are tinted */
+  --tile-mix: 24%;         /* how strongly mood tiles are tinted */
+
+  /* Fonts */
+  --font-display: "Clash Display", "Satoshi", system-ui, sans-serif;
+  --font-heading: "Clash Display", "Satoshi", system-ui, sans-serif;
+  --font-body: "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-label: "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-scribble: "Caveat", "Segoe Print", cursive;
+  --display-weight: 700;
+  --display-tracking: -0.025em;
+  --display-words: 0.1em;  /* Clash Display has very narrow spaces */
+  --display-case: none;    /* Modern 2026 shouts in uppercase pixels */
+  --heading-weight: 600;
+  --heading-scale: 1;
+  --label-weight: 700;
+  --label-case: uppercase;
+  --label-tracking: 0.07em;
+  --label-scale: 1;        /* small uppercase labels */
+  --btn-scale: 1;
+  --note-scale: 1;
+  --pin-scale: 1;
+  --title-size: clamp(2.7rem, 9.5vw, 5.4rem);
+  --journey-title-size: clamp(2.5rem, 7.5vw, 5rem);
+
+  /* Shapes */
+  --bw: 2.5px;
+  --radius-lg: 26px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+  --radius-pill: 999px;
+  --radius-round: 50%;
+  --radius-note: 8px 8px 8px 20px;
+  --radius-big-note: 18px 18px 18px 40px;
+  --connector-dash: 1 8;
+
+  /* Shadows */
+  --shadow-s: 3px 3px 0 var(--shadow);
+  --shadow-s-hover: 5px 5px 0 var(--shadow);
+  --shadow-m: 4px 4px 0 var(--shadow);
+  --shadow-m-hover: 6px 6px 0 var(--shadow);
+  --shadow-l: 8px 8px 0 var(--shadow);
+  --shadow-note: 4px 4px 0 var(--shadow);
+  --shadow-note-hover: 7px 7px 0 var(--shadow);
+
+  /* Journey map sizes (journey.js reads these, so the layout always matches) */
+  --lane-h: 116px;
+  --ruler-h: 38px;
+  --note-w: 138px;
+  --note-h: 94px;
+  --labels-w: 100px;
+}
+
+/* ===== Base tokens · dark ===== */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121016;
+  --bg-dot: rgba(255, 255, 255, 0.09);
+  --surface: #1d1a23;
+  --surface-2: #27232e;
+  --text: #f5f1e8;
+  --text-soft: #aba5b6;
+  --line: #f5f1e8;
+  --shadow: var(--c-violet);   /* coloured shadows = extra clash in the dark */
+  --accent: var(--c-lime);
+  --on-accent: #111111;
+  --highlight: var(--c-cobalt);
+  --error: #ff6b93;
+  --doodle-b: var(--c-pink);
+  --tile-mix: 20%;
+}
+
+/* ===== Scribblish · light ===== */
+:root[data-style="scribblish"] {
+  color-scheme: light;
+  --bg: #fffdf6;
+  --grid-line: rgba(120, 160, 210, 0.17);
+  --margin-line: rgba(240, 120, 140, 0.35);
+  --bg-image:
+    linear-gradient(90deg, transparent 52px, var(--margin-line) 52px, var(--margin-line) 54px, transparent 54px),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  --bg-size: 100% 100%, 24px 24px, 24px 24px;
+  --surface: #ffffff;
+  --surface-2: #fffaf0;
+  --text: #3b3446;
+  --text-soft: #6b6275;
+  --line: #3b3446;
+  --shadow: rgba(59, 52, 70, 0.85);
+  --on-color: #3b3446;
+  --note-line: #3b3446;
+
+  --accent: #e7e2ff;
+  --on-accent: #3b3446;
+  --scribble: #ff8fab;
+  --highlight: #fff0a0;
+  --error: #c4455f;
+  --sticker: #fff3b0;
+  --doodle-a: #ffe27a;
+  --doodle-b: #b9aefc;
+  --step-bg: #fff3b0;
+
+  --mood-5: #cdeec5;
+  --mood-4: #e9f5b8;
+  --mood-3: #fff3b0;
+  --mood-2: #ffdcbb;
+  --mood-1: #ffcad4;
+  --lane-mix: 40%;
+  --tile-mix: 50%;
+
+  --font-display: "Caveat", "Patrick Hand", cursive;
+  --font-heading: "Patrick Hand", "Comic Sans MS", cursive;
+  --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-label: "Patrick Hand", "Comic Sans MS", cursive;
+  --display-weight: 700;
+  --display-tracking: 0;
+  --display-words: normal;
+  --heading-weight: 400;
+  --heading-scale: 1.08;
+  --label-weight: 400;
+  --label-case: none;
+  --label-tracking: 0.01em;
+  --label-scale: 1.32;
+  --btn-scale: 1.2;
+  --note-scale: 1.12;
+  --pin-scale: 1.4;
+  --title-size: clamp(3rem, 11vw, 5.6rem);
+  --journey-title-size: clamp(2.8rem, 8.5vw, 5.2rem);
+
+  --radius-lg: 22px 8px 26px 6px / 6px 24px 8px 22px;
+  --radius-md: 20px 8px 22px 6px / 6px 20px 8px 18px;
+  --radius-sm: 12px 6px 14px 5px / 5px 12px 6px 12px;
+  --radius-pill: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --radius-round: 60% 40% 55% 45% / 45% 55% 45% 55%;
+  --radius-note: 3px 6px 4px 9px / 7px 3px 8px 4px;
+  --radius-big-note: 4px 8px 6px 12px / 10px 4px 12px 6px;
+  --connector-dash: 7 7;
+
+  --shadow-s: 2px 3px 0 var(--shadow);
+  --shadow-s-hover: 4px 5px 0 var(--shadow);
+  --shadow-m: 3px 4px 0 var(--shadow);
+  --shadow-m-hover: 5px 6px 0 var(--shadow);
+  --shadow-l: 5px 6px 0 var(--shadow);
+  --shadow-note: 2px 4px 0 rgba(59, 52, 70, 0.16), 0 10px 14px -10px rgba(59, 52, 70, 0.5);
+  --shadow-note-hover: 4px 7px 0 rgba(59, 52, 70, 0.2), 0 16px 20px -12px rgba(59, 52, 70, 0.55);
+}
+
+/* ===== Scribblish · dark (a cosy night-time notebook) ===== */
+:root[data-style="scribblish"][data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1f2233;
+  --grid-line: rgba(170, 190, 255, 0.08);
+  --margin-line: rgba(255, 140, 160, 0.28);
+  --surface: #2a2d40;
+  --surface-2: #25283a;
+  --text: #f4efe6;
+  --text-soft: #b8b2c6;
+  --line: #e8e2d6;
+  --shadow: rgba(0, 0, 0, 0.55);
+  --accent: #c9bfff;
+  --on-accent: #2b2640;
+  --scribble: #ff9fb8;
+  --highlight: #5b4fbf;
+  --error: #ff8fa8;
+  --lane-mix: 16%;
+  --tile-mix: 22%;
+  --shadow-note: 2px 4px 0 rgba(0, 0, 0, 0.3), 0 10px 14px -10px rgba(0, 0, 0, 0.7);
+  --shadow-note-hover: 4px 7px 0 rgba(0, 0, 0, 0.35), 0 16px 20px -12px rgba(0, 0, 0, 0.8);
+}
+
+/* ===== Modern 2026 · light =====
+   A lined-paper sheet on a grey grid desk: pixel titles, mono labels,
+   sticky tags, washi tape and torn-paper colour tags. */
+:root[data-style="modern-2026"] {
+  color-scheme: light;
+  --c-blue: #2f4fe0;
+  --c-mint: #b8e6d0;
+  --frame: #8e8e8e;             /* the grey desk around the sheet */
+  --frame-line: #7b7b7b;
+  --rule: #e2e0d8;              /* lines on the paper */
+
+  --bg: #f4f3ee;
+  --bg-image: linear-gradient(to bottom, transparent 27px, var(--rule) 27px);
+  --bg-size: 100% 28px;
+  --surface: #fbfaf6;
+  --surface-2: #efede6;
+  --text: #151515;
+  --text-soft: #5f5d57;
+  --line: #151515;
+  --shadow: #151515;
+  --on-color: #151515;
+  --note-line: rgba(21, 21, 21, 0.14);
+
+  --accent: #151515;
+  --on-accent: #ffffff;
+  --scribble: #e2553a;          /* the red hand-drawn frame */
+  --highlight: #f2c84b;
+  --error: #d6342c;
+  --sticker: #f2c84b;
+  --doodle-a: #ff4fa0;
+  --doodle-b: #2bb673;
+  --step-bg: #151515;
+
+  --mood-5: #2bb673;
+  --mood-4: #a6d84e;
+  --mood-3: #f2c84b;
+  --mood-2: #ff8a3d;
+  --mood-1: #ff4fa0;
+  --lane-mix: 11%;
+  --tile-mix: 0%;
+
+  --font-display: "Jersey 10", "Silkscreen", ui-monospace, monospace;
+  --font-heading: "Geist", "Inter", system-ui, sans-serif;
+  --font-body: "Geist", "Inter", system-ui, sans-serif;
+  --font-label: "Geist Mono", ui-monospace, "Cascadia Mono", monospace;
+  --font-scribble: "Gochi Hand", "Segoe Print", cursive;
+  --display-weight: 400;
+  --display-tracking: 0.01em;
+  --display-words: 0.05em;
+  --display-case: uppercase;
+  --heading-weight: 700;
+  --heading-scale: 1;
+  --label-weight: 500;
+  --label-case: uppercase;
+  --label-tracking: 0.12em;
+  --label-scale: 0.92;
+  --btn-scale: 0.86;
+  --note-scale: 1;
+  --pin-scale: 1.35;
+  --title-size: clamp(3.4rem, 12.5vw, 7.2rem);
+  --journey-title-size: clamp(3rem, 10vw, 6.2rem);
+
+  --bw: 1.5px;
+  --radius-lg: 2px;
+  --radius-md: 2px;
+  --radius-sm: 2px;
+  --radius-pill: 3px;
+  --radius-round: 50%;
+  --radius-note: 1px;
+  --radius-big-note: 2px;
+  --connector-dash: 5 6;
+
+  --shadow-s: 0 2px 0 rgba(21, 21, 21, 0.16);
+  --shadow-s-hover: 0 4px 0 rgba(21, 21, 21, 0.2);
+  --shadow-m: 3px 3px 0 var(--shadow);
+  --shadow-m-hover: 5px 5px 0 var(--shadow);
+  --shadow-l: 0 18px 40px -22px rgba(21, 21, 21, 0.45);
+  --shadow-note: 0 1px 1px rgba(21, 21, 21, 0.08), 0 10px 18px -10px rgba(21, 21, 21, 0.4);
+  --shadow-note-hover: 0 2px 2px rgba(21, 21, 21, 0.1), 0 18px 26px -12px rgba(21, 21, 21, 0.45);
+}
+
+/* ===== Modern 2026 · dark (the sheet at night) ===== */
+:root[data-style="modern-2026"][data-theme="dark"] {
+  color-scheme: dark;
+  --frame: #0e0e0e;
+  --frame-line: #1d1d1d;
+  --rule: rgba(255, 255, 255, 0.06);
+  --bg: #1b1a18;
+  --surface: #242320;
+  --surface-2: #2d2c28;
+  --text: #f1efe8;
+  --text-soft: #a8a59c;
+  --line: #f1efe8;
+  --shadow: #000000;
+  --note-line: rgba(0, 0, 0, 0.25);
+  --accent: #f2c84b;
+  --on-accent: #151515;
+  --error: #ff6b5e;
+  --lane-mix: 9%;
+  --shadow-s: 0 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-s-hover: 0 4px 0 rgba(0, 0, 0, 0.55);
+  --shadow-m: 3px 3px 0 #000000;
+  --shadow-m-hover: 5px 5px 0 #000000;
+  --shadow-l: 0 18px 40px -20px rgba(0, 0, 0, 0.8);
+  --shadow-note: 0 1px 1px rgba(0, 0, 0, 0.3), 0 10px 18px -10px rgba(0, 0, 0, 0.8);
+  --shadow-note-hover: 0 2px 2px rgba(0, 0, 0, 0.3), 0 18px 26px -12px rgba(0, 0, 0, 0.85);
+}
+
+/* ===== Modern Bold · light =====
+   A zine / collage look: grainy cream paper, huge condensed black
+   headlines, pastel colour blocks, lime marker scribbles, grey tape
+   and polaroid cut-outs. */
+:root[data-style="modern-bold"] {
+  color-scheme: light;
+  --c-sky: #a9cbeb;
+  --c-bubblegum: #f59cc0;
+  --c-acid: #d4ee3f;
+  --tape: rgba(70, 70, 70, 0.5);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.14'/%3E%3C/svg%3E");
+
+  --bg: #ece7dc;
+  --bg-image: var(--grain);
+  --bg-size: 160px 160px;
+  --surface: #f7f4ed;
+  --surface-2: #e4ded1;
+  --text: #111111;
+  --text-soft: #4d4a44;
+  --line: #111111;
+  --shadow: #111111;
+  --on-color: #111111;
+  --note-line: #ffffff;         /* notes get a white polaroid frame */
+
+  --accent: var(--c-bubblegum); /* pink "SHOP NEW DROP" buttons */
+  --on-accent: #111111;
+  --scribble: var(--c-acid);    /* lime marker */
+  --highlight: var(--c-acid);
+  --error: #d62e4f;
+  --sticker: var(--c-acid);
+  --doodle-a: #111111;          /* black pen */
+  --doodle-b: var(--c-bubblegum);
+  --step-bg: var(--c-sky);
+
+  --mood-5: #8edb6a;
+  --mood-4: #d4ee3f;
+  --mood-3: #ffe066;
+  --mood-2: #ffa86b;
+  --mood-1: #f59cc0;
+  --lane-mix: 42%;
+  --tile-mix: 60%;
+
+  --font-display: "Anton", "Archivo Black", Impact, sans-serif;
+  --font-heading: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-label: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-scribble: "Permanent Marker", "Segoe Print", cursive;
+  --display-weight: 400;
+  --display-tracking: 0;
+  --display-words: normal;
+  --display-case: uppercase;
+  --heading-weight: 800;
+  --heading-scale: 1;
+  --label-weight: 600;
+  --label-case: uppercase;
+  --label-tracking: 0.04em;
+  --label-scale: 0.95;
+  --btn-scale: 0.88;
+  --note-scale: 1;
+  --pin-scale: 1.4;
+  --title-size: clamp(3.8rem, 15vw, 8.6rem);
+  --journey-title-size: clamp(3.4rem, 12vw, 7.2rem);
+
+  --bw: 2px;
+  --radius-lg: 0;
+  --radius-md: 0;
+  --radius-sm: 0;
+  --radius-pill: 0;
+  --radius-round: 50%;
+  --radius-note: 0;
+  --radius-big-note: 0;
+  --connector-dash: none;
+
+  --shadow-s: 0 2px 6px rgba(17, 17, 17, 0.18);
+  --shadow-s-hover: 0 6px 14px rgba(17, 17, 17, 0.22);
+  --shadow-m: 4px 4px 0 var(--shadow);
+  --shadow-m-hover: 6px 6px 0 var(--shadow);
+  --shadow-l: 0 16px 34px -16px rgba(17, 17, 17, 0.5);
+  --shadow-note: 0 2px 4px rgba(17, 17, 17, 0.15), 0 12px 20px -12px rgba(17, 17, 17, 0.55);
+  --shadow-note-hover: 0 4px 8px rgba(17, 17, 17, 0.18), 0 20px 30px -14px rgba(17, 17, 17, 0.6);
+}
+
+/* ===== Modern Bold · dark (the zine printed on black paper) ===== */
+:root[data-style="modern-bold"][data-theme="dark"] {
+  color-scheme: dark;
+  --tape: rgba(200, 200, 200, 0.35);
+  --bg: #161513;
+  --surface: #211f1c;
+  --surface-2: #2c2a26;
+  --text: #f1ece2;
+  --text-soft: #b3ada2;
+  --line: #f1ece2;
+  --shadow: #000000;
+  --note-line: #f1ece2;
+  --lane-mix: 20%;
+  --tile-mix: 30%;
+  --doodle-a: #f1ece2;
+  --shadow-s: 0 2px 6px rgba(0, 0, 0, 0.5);
+  --shadow-s-hover: 0 6px 14px rgba(0, 0, 0, 0.6);
+  --shadow-m: 4px 4px 0 var(--c-bubblegum);
+  --shadow-m-hover: 6px 6px 0 var(--c-bubblegum);
+  --shadow-l: 0 16px 34px -16px rgba(0, 0, 0, 0.9);
+  --shadow-note: 0 2px 4px rgba(0, 0, 0, 0.4), 0 12px 20px -12px rgba(0, 0, 0, 0.9);
+  --shadow-note-hover: 0 4px 8px rgba(0, 0, 0, 0.45), 0 20px 30px -14px rgba(0, 0, 0, 0.95);
+}
+
+/* Mood colour sets: .mood-N gives an element --mood */
+.mood-5 { --mood: var(--mood-5); }
+.mood-4 { --mood: var(--mood-4); }
+.mood-3 { --mood: var(--mood-3); }
+.mood-2 { --mood: var(--mood-2); }
+.mood-1 { --mood: var(--mood-1); }
+
+/* In-between moods: --mood-hi / --mood-lo are the two neighbours,
+   --mood is their mix (used where one colour is needed) */
+.mood-45 { --mood-hi: var(--mood-5); --mood-lo: var(--mood-4); --mood: color-mix(in srgb, var(--mood-5) 50%, var(--mood-4)); }
+.mood-35 { --mood-hi: var(--mood-4); --mood-lo: var(--mood-3); --mood: color-mix(in srgb, var(--mood-4) 50%, var(--mood-3)); }
+.mood-25 { --mood-hi: var(--mood-3); --mood-lo: var(--mood-2); --mood: color-mix(in srgb, var(--mood-3) 50%, var(--mood-2)); }
+.mood-15 { --mood-hi: var(--mood-2); --mood-lo: var(--mood-1); --mood: color-mix(in srgb, var(--mood-2) 50%, var(--mood-1)); }
+
+
+/* ---------- 2. Page basics ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text);
+  background-color: var(--bg);
+  background-image: var(--bg-image);
+  background-size: var(--bg-size);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--c-cobalt);
+  outline-offset: 3px;
+}
+
+:root[data-theme="dark"] :focus-visible {
+  outline-color: var(--c-lime);
+}
+
+.face {
+  display: block;
+  overflow: visible;
+}
+
+/* Stickers may peek over the edges, but must never make the page scroll sideways */
+.hero,
+.journey-hero {
+  overflow-x: clip;
+}
+
+/* Surfaces fade smoothly when the theme or style changes */
+.card,
+.board,
+.board__labels,
+.pill-link,
+.icon-button,
+.chip,
+.btn,
+.input,
+.mood-option,
+.mode-badge,
+.eyebrow,
+.quick-pick,
+.posting-as {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease,
+    box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+
+/* ---------- 3. Shared pieces ---------- */
+
+/* Top bar */
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 18px 20px 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: calc(1.35rem * var(--heading-scale));
+  font-weight: 500;
+  letter-spacing: var(--display-tracking);
+  word-spacing: var(--display-words);
+  text-decoration: none;
+}
+
+.brand strong {
+  font-weight: 700;
+}
+
+.brand__mark {
+  width: 34px;
+  height: 34px;
+  transition: transform 0.3s ease;
+}
+
+.brand:hover .brand__mark {
+  transform: rotate(-14deg) scale(1.08);
+}
+
+.topbar__tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Home · Check in · Journey map — always visible. The page you are on
+   (aria-current="page") gets a highlight behind it, so you know where you are. */
+.page-nav {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-s);
+}
+
+.page-nav__link {
+  position: relative;
+  padding: 0.45em 1em;
+  font-family: var(--font-label);
+  font-size: calc(0.92rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--text);
+  border: var(--bw) solid transparent;
+  border-radius: var(--radius-pill);
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.page-nav__link:hover {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.page-nav__link[aria-current="page"] {
+  color: var(--bg);
+  background: var(--text);
+  border-color: var(--line);
+}
+
+.pill-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.5em 1.05em;
+  font-family: var(--font-label);
+  font-size: calc(0.95rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  text-decoration: none;
+  white-space: nowrap;
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-s);
+}
+
+.pill-link:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-s-hover);
+}
+
+.pill-link:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* Round icon buttons: settings + light/dark */
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  color: var(--text);
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-round);
+  box-shadow: var(--shadow-s);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.icon-button svg {
+  grid-area: 1 / 1;
+  width: 22px;
+  height: 22px;
+  transition: transform 0.4s cubic-bezier(0.3, 1.4, 0.5, 1), opacity 0.25s ease;
+}
+
+.icon-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-s-hover);
+}
+
+.icon-button:hover svg {
+  transform: rotate(-20deg);
+}
+
+.icon-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* Light mode shows the moon ("go dark"), dark mode shows the sun */
+.theme-toggle__sun {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+}
+
+:root[data-theme="dark"] .theme-toggle__sun {
+  opacity: 1;
+  transform: none;
+  color: var(--c-lemon);
+}
+
+:root[data-theme="dark"] .theme-toggle__moon {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.4);
+}
+
+/* Buttons: thick outline + a shadow that "presses in" */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 0.75em 1.45em;
+  font-family: var(--font-label);
+  font-size: calc(1.02rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  line-height: 1.2;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-m);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-m-hover);
+}
+
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--shadow);
+}
+
+.btn:disabled {
+  cursor: progress;
+  opacity: 0.7;
+  transform: none;
+  box-shadow: var(--shadow-m);
+}
+
+.btn--primary {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+.btn--big {
+  min-width: 260px;
+  padding: 0.95em 2em;
+  font-size: calc(1.18rem * var(--btn-scale));
+}
+
+.btn__icon {
+  width: 1.55em;
+  height: 1.55em;
+  color: var(--c-lemon);
+  transition: transform 0.25s ease;
+}
+
+.btn:hover .btn__icon {
+  transform: translate(3px, -3px) rotate(-8deg);
+}
+
+/* Floating doodles */
+.float-doodle {
+  position: absolute;
+  pointer-events: none;
+}
+
+.float-doodle--sparkle {
+  top: 18px;
+  left: 4%;
+  width: 46px;
+  height: 46px;
+  color: var(--doodle-a);
+  animation: float 5s ease-in-out infinite;
+}
+
+.float-doodle--asterisk {
+  top: 16px;
+  right: 5%;
+  width: 34px;
+  height: 34px;
+  color: var(--doodle-b);
+  animation: spin 14s linear infinite;
+}
+
+/* Pen doodles that only the Modern Bold style shows */
+.float-doodle--flame,
+.float-doodle--flower {
+  display: none;
+}
+
+/* On the input page the top-right corner belongs to the burst sticker */
+.page-input .float-doodle--asterisk {
+  top: auto;
+  bottom: 12px;
+  right: 8%;
+}
+
+/* Burst sticker ("100% anon" / "hey Sam") */
+.sticker {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.sticker > * {
+  grid-area: 1 / 1;
+}
+
+.sticker--burst {
+  top: -14px;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  color: var(--sticker);
+  transform: rotate(12deg);
+}
+
+.sticker--burst svg {
+  width: 100%;
+  height: 100%;
+  animation: spin 22s linear infinite;
+}
+
+.sticker--burst span {
+  max-width: 76px;
+  font-family: var(--font-display);
+  font-size: calc(1rem * var(--heading-scale));
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  text-transform: var(--label-case);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  color: #111111;
+}
+
+
+/* ---------- 4. Input page ---------- */
+
+.input-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 24px 16px 56px;
+}
+
+.hero {
+  position: relative;
+  padding: 26px 0 20px;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0.35em 0.95em;
+  font-family: var(--font-label);
+  font-size: calc(0.78rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  letter-spacing: 0.1em;
+  text-transform: var(--label-case);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+.eyebrow__icon {
+  width: 14px;
+  height: 14px;
+  color: var(--scribble);
+  animation: spin 8s linear infinite;
+}
+
+.hero__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--title-size);
+  font-weight: var(--display-weight);
+  line-height: 0.98;
+  letter-spacing: var(--display-tracking);
+  word-spacing: var(--display-words);
+  text-transform: var(--display-case);
+}
+
+/* Hand-drawn circle around a word */
+.scribble-circle {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.scribble-circle__line {
+  position: absolute;
+  left: -9%;
+  top: -16%;
+  width: 118%;
+  height: 136%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.scribble-circle__line path {
+  fill: none;
+  stroke: var(--scribble);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1.1s 0.25s cubic-bezier(0.6, 0, 0.3, 1) forwards;
+}
+
+.hero__note {
+  position: relative;
+  display: inline-block;
+  margin: 22px 0 0;
+  padding-right: 58px;
+  font-family: var(--font-scribble);
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: pre-line;
+  color: var(--text-soft);
+  transform: rotate(-3deg);
+}
+
+.hero__note-arrow {
+  position: absolute;
+  right: 0;
+  top: 8px;
+  width: 52px;
+  height: 44px;
+  color: var(--scribble);
+}
+
+/* The form card. It picks up a hint of the chosen mood colour. */
+.card {
+  position: relative;
+  padding: clamp(20px, 5vw, 40px);
+  background: color-mix(in srgb, var(--picked, var(--surface)) 10%, var(--surface));
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-l);
+}
+
+.card[data-mood="5"] { --picked: var(--mood-5); }
+.card[data-mood="4"] { --picked: var(--mood-4); }
+.card[data-mood="3"] { --picked: var(--mood-3); }
+.card[data-mood="2"] { --picked: var(--mood-2); }
+.card[data-mood="1"] { --picked: var(--mood-1); }
+.card[data-mood="4.5"] { --picked: color-mix(in srgb, var(--mood-5) 50%, var(--mood-4)); }
+.card[data-mood="3.5"] { --picked: color-mix(in srgb, var(--mood-4) 50%, var(--mood-3)); }
+.card[data-mood="2.5"] { --picked: color-mix(in srgb, var(--mood-3) 50%, var(--mood-2)); }
+.card[data-mood="1.5"] { --picked: color-mix(in srgb, var(--mood-2) 50%, var(--mood-1)); }
+
+.mood-form {
+  display: grid;
+  gap: 24px;
+}
+
+/* Let every row shrink to the card width (a long row must not stretch the form) */
+.mood-form > * {
+  min-width: 0;
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 0;
+  font-family: var(--font-heading);
+  font-size: calc(1.3rem * var(--heading-scale));
+  font-weight: var(--heading-weight);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  word-spacing: var(--display-words);
+}
+
+.step {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 26px;
+  padding: 0 8px;
+  font-family: var(--font-label);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #111111;
+  background: var(--picked, var(--step-bg));
+  border: 2px solid #111111;
+  border-radius: var(--radius-pill);
+  transition: background-color 0.3s ease;
+}
+
+.optional {
+  padding: 0.1em 0.6em;
+  font-family: var(--font-label);
+  font-size: calc(0.72rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  letter-spacing: 0.08em;
+  text-transform: var(--label-case);
+  color: var(--text-soft);
+  border: 1.5px dashed var(--text-soft);
+  border-radius: var(--radius-pill);
+}
+
+/* Mood faces */
+.mood-picker {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mood-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Every face gets its own column; each "+" spans two columns, so it sits
+   exactly on the seam between its two faces. */
+.mood-options > * { grid-row: 1; }
+.mood-options > .mood-5 { grid-column: 1; }
+.mood-options > .mood-4 { grid-column: 2; }
+.mood-options > .mood-3 { grid-column: 3; }
+.mood-options > .mood-2 { grid-column: 4; }
+.mood-options > .mood-1 { grid-column: 5; }
+.mood-options > .mood-45 { grid-column: 1 / span 2; }
+.mood-options > .mood-35 { grid-column: 2 / span 2; }
+.mood-options > .mood-25 { grid-column: 3 / span 2; }
+.mood-options > .mood-15 { grid-column: 4 / span 2; }
+
+/* ---------- The small "+" between two faces (an in-between mood) ---------- */
+.mood-blend {
+  position: relative;
+  z-index: 3;
+  align-self: center;
+  justify-self: center;
+  margin-top: -18px; /* a little above the middle, level with the faces */
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mood-blend input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+}
+
+/* Almost hidden, but not quite: a small dashed circle with a hand-drawn plus */
+.mood-blend__dot {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 26px;
+  background: var(--surface);
+  border: 2px dashed color-mix(in srgb, var(--line) 45%, transparent);
+  border-radius: var(--radius-round);
+  opacity: 0.6;
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1),
+    background 0.2s ease, border-color 0.2s ease;
+}
+
+.mood-blend__dot::before,
+.mood-blend__dot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 11px;
+  height: 2.5px;
+  background: var(--text);
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(-4deg);
+}
+
+.mood-blend__dot::after {
+  transform: translate(-50%, -50%) rotate(86deg);
+}
+
+/* The name pops up above the "+" on hover, keyboard focus, or when chosen */
+.mood-blend::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  padding: 0.15em 0.6em;
+  font-family: var(--font-label);
+  font-size: calc(0.72rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--bg);
+  background: var(--text);
+  border-radius: var(--radius-pill);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.mood-blend:hover .mood-blend__dot,
+.mood-blend input:focus-visible + .mood-blend__dot {
+  opacity: 1;
+  border-style: solid;
+  border-color: var(--line);
+  transform: scale(1.15) rotate(90deg);
+}
+
+.mood-blend input:focus-visible + .mood-blend__dot {
+  outline: 3px solid var(--c-cobalt);
+  outline-offset: 3px;
+}
+
+.mood-blend:hover::after,
+.mood-blend:focus-within::after,
+.mood-blend.is-selected::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Chosen: the dot fills with both colours */
+.mood-blend.is-selected .mood-blend__dot {
+  opacity: 1;
+  background: linear-gradient(135deg, var(--mood-hi) 0 50%, var(--mood-lo) 50% 100%);
+  border: 2.5px solid #111111;
+  box-shadow: var(--shadow-s);
+  transform: scale(1.3) rotate(45deg);
+}
+
+.mood-blend.is-selected .mood-blend__dot::before,
+.mood-blend.is-selected .mood-blend__dot::after {
+  background: #111111;
+}
+
+/* The two faces next to a chosen "+" are half-highlighted */
+.mood-option.is-half {
+  background: color-mix(in srgb, var(--mood) 55%, var(--surface));
+  border: var(--bw) dashed var(--note-line);
+}
+
+.mood-hint {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  text-align: center;
+  color: var(--text-soft);
+}
+
+.mood-hint__plus {
+  display: inline-grid;
+  place-items: center;
+  width: 1.35em;
+  height: 1.35em;
+  font-weight: 800;
+  line-height: 1;
+  border: 1.5px dashed currentColor;
+  border-radius: 50%;
+}
+
+.mood-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 4px 12px;
+  background: color-mix(in srgb, var(--mood) var(--tile-mix), var(--surface));
+  border: var(--bw) solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The real radio button is invisible but still works with the keyboard */
+.mood-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+}
+
+.mood-option .face {
+  width: 100%;
+  max-width: 66px;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transition: transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1), opacity 0.2s ease, filter 0.2s ease;
+}
+
+/* A slightly different tilt per sticker so they look hand-placed */
+.mood-option.mood-5 .face,
+.mood-option.mood-3 .face,
+.mood-option.mood-1 .face { transform: rotate(-5deg); }
+.mood-option.mood-4 .face,
+.mood-option.mood-2 .face { transform: rotate(4deg); }
+
+.mood-option__label {
+  padding: 0.15em 0.65em;
+  font-family: var(--font-label);
+  font-size: calc(0.74rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-align: center;
+  text-transform: var(--label-case);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+.mood-option:hover {
+  border-color: var(--line);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-s);
+}
+
+.mood-option:hover .face {
+  transform: rotate(-12deg) scale(1.08);
+}
+
+.mood-option input:focus-visible + .face {
+  outline: 3px solid var(--c-cobalt);
+  outline-offset: 4px;
+}
+
+/* Selected face (class set by input.js) */
+.mood-option.is-selected {
+  color: var(--on-color);
+  background: var(--mood);
+  border-color: var(--note-line);
+  box-shadow: var(--shadow-m-hover);
+  transform: translate(-3px, -5px) rotate(-2deg);
+}
+
+.mood-option.is-selected .face {
+  transform: scale(1.16) rotate(-6deg);
+  animation: bounce 0.55s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.mood-option.is-selected .mood-option__label {
+  color: #111111;
+  background: #ffffff;
+  border-color: #111111;
+}
+
+/* A tick badge on the chosen mood */
+.mood-option.is-selected::after {
+  content: "✓";
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  font: 900 0.9rem/1 var(--font-body);
+  color: var(--bg);
+  background: var(--text);
+  border: 2.5px solid var(--bg);
+  border-radius: 50%;
+  animation: pop-in 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+/* Once one face is picked, the others fade */
+.mood-options.has-selection .mood-option:not(.is-selected):not(.is-half) .face {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+.mood-options.has-selection .mood-option:not(.is-selected):not(.is-half):hover .face {
+  opacity: 0.9;
+  filter: none;
+}
+
+/* "yesss, love that for you!" */
+.mood-reaction {
+  margin: 14px 0 0;
+  font-family: var(--font-scribble);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--scribble);
+}
+
+.mood-reaction:empty {
+  display: none;
+}
+
+.mood-reaction.is-popping {
+  animation: pop-in 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+/* Text inputs */
+.input {
+  display: block;
+  width: 100%;
+  padding: 0.85em 1em;
+  font-family: var(--font-body);
+  font-size: 1.05rem; /* at least 16px, so phones don't zoom in */
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.input::placeholder {
+  color: var(--text-soft);
+  opacity: 0.75;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 4px 4px 0 var(--picked, var(--accent));
+  transform: translate(-2px, -2px);
+}
+
+.input--area {
+  min-height: 118px;
+  resize: vertical;
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--error);
+  box-shadow: 4px 4px 0 var(--error);
+  animation: shake 0.35s ease;
+}
+
+.field-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.field-error {
+  min-height: 1.35em;
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--error);
+}
+
+.counter {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-soft);
+}
+
+.counter.is-near-limit { color: var(--mood-2); }
+.counter.is-at-limit { color: var(--error); }
+
+/* Quick picks */
+/* Sits above "02 What happened in class?" (it fills in that box) */
+.quick-picks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.quick-picks__label {
+  font-family: var(--font-scribble);
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-soft);
+}
+
+.quick-pick {
+  padding: 0.35em 0.85em;
+  font-family: var(--font-label);
+  font-size: calc(0.84rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  color: var(--text);
+  background: transparent;
+  border: 2px dashed color-mix(in srgb, var(--line) 55%, transparent);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.quick-pick:hover {
+  background: var(--surface);
+  border-style: solid;
+  border-color: var(--line);
+  transform: translate(-1px, -2px) rotate(-1.5deg);
+  box-shadow: var(--shadow-s);
+}
+
+.quick-pick:active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+/* "Posting as [ Anonymous | My name ]" switch, with a name box that slides in */
+.posting-as {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 2px dashed color-mix(in srgb, var(--line) 40%, transparent);
+  border-radius: var(--radius-md);
+}
+
+.posting-as__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.posting-as__label {
+  font-family: var(--font-label);
+  font-size: calc(0.78rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  letter-spacing: 0.08em;
+  text-transform: var(--label-case);
+  color: var(--text-soft);
+}
+
+.identity-toggle {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+.identity-toggle__option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.5em 1em;
+  font-family: var(--font-label);
+  font-size: calc(0.88rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  white-space: nowrap;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.identity-toggle__option svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.identity-toggle__option:hover {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.identity-toggle__option[aria-pressed="true"] {
+  color: var(--bg);
+  background: var(--text);
+}
+
+.posting-as__name:not([hidden]) {
+  animation: pop-in 0.25s ease;
+}
+
+.posting-as__hint {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+
+.posting-as__hint.is-error {
+  font-weight: 700;
+  color: var(--error);
+}
+
+.form-status {
+  margin: 0;
+  font-weight: 700;
+}
+
+.form-status:empty {
+  display: none;
+}
+
+.form-status.is-error {
+  padding: 12px 16px;
+  color: var(--error);
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  border: 2px solid var(--error);
+  border-radius: var(--radius-sm);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* Thank-you message */
+.thank-you {
+  padding: 8px 0 4px;
+  text-align: center;
+  outline: none;
+  animation: pop-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+
+.thank-you__art {
+  position: relative;
+  width: 190px;
+  height: 150px;
+  margin: 0 auto 6px;
+}
+
+.thank-you__art svg {
+  position: absolute;
+}
+
+.thank-you__burst {
+  inset: 10px 30px;
+  width: 130px;
+  height: 130px;
+  color: var(--sticker);
+  animation: spin 20s linear infinite;
+}
+
+.thank-you__plane {
+  left: 58px;
+  top: 38px;
+  width: 76px;
+  height: 76px;
+  color: #ffffff;
+  animation: fly 2.4s ease-in-out infinite;
+}
+
+.thank-you__heart {
+  left: 0;
+  bottom: 4px;
+  width: 42px;
+  height: 42px;
+  color: var(--scribble);
+  transform: rotate(-14deg);
+}
+
+.thank-you__sparkle {
+  right: 4px;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  color: var(--doodle-a);
+  animation: float 3s ease-in-out infinite;
+}
+
+.thank-you__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.3rem, 7vw, 3.3rem);
+  font-weight: var(--display-weight);
+  line-height: 1;
+  letter-spacing: var(--display-tracking);
+  word-spacing: var(--display-words);
+  text-transform: var(--display-case);
+}
+
+.thank-you__message {
+  max-width: 34ch;
+  margin: 12px auto 24px;
+  font-size: 1.1rem;
+  color: var(--text-soft);
+}
+
+.thank-you__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+
+/* ---------- 5. Journey page ---------- */
+
+.journey-hero {
+  position: relative;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 30px 20px 10px;
+  text-align: center;
+}
+
+.journey-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--journey-title-size);
+  font-weight: var(--display-weight);
+  line-height: 0.98;
+  letter-spacing: var(--display-tracking);
+  word-spacing: var(--display-words);
+  text-transform: var(--display-case);
+}
+
+/* Highlighter swipe behind a word */
+.marker {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
+
+.marker__swipe {
+  position: absolute;
+  z-index: -1;
+  left: -5%;
+  top: 36%;
+  width: 110%;
+  height: 62%;
+  transform-origin: left center;
+  animation: swipe 0.7s 0.2s cubic-bezier(0.6, 0, 0.3, 1) backwards;
+}
+
+.marker__swipe path {
+  fill: var(--highlight);
+}
+
+.journey-subtitle {
+  margin: 14px 0 0;
+  font-weight: 500;
+  color: var(--text-soft);
+}
+
+.scribble-note {
+  display: inline-block;
+  margin-left: 4px;
+  font-family: var(--font-scribble);
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--scribble);
+  transform: rotate(-4deg);
+}
+
+.journey-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 16px;
+  margin-top: 20px;
+}
+
+/* Which storage is active */
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.35em 0.9em;
+  font-family: var(--font-label);
+  font-size: calc(0.76rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  letter-spacing: 0.08em;
+  text-transform: var(--label-case);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+.mode-badge::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border: 2px solid #111111;
+  border-radius: 50%;
+  background: var(--dot, var(--c-lemon));
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.mode-badge--local { --dot: var(--c-lemon); }
+.mode-badge--sheets { --dot: #6bea8f; }
+
+/* Mood filter chips */
+.filter {
+  display: flex;
+  gap: 8px;
+  max-width: 100%;
+  padding: 4px 6px 8px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 0.4em 0.95em;
+  font-family: var(--font-label);
+  font-size: calc(0.9rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  color: var(--text);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip .face {
+  width: 22px;
+  height: 22px;
+}
+
+.chip:hover {
+  transform: translateY(-2px);
+}
+
+.chip[aria-pressed="true"] {
+  color: var(--on-color);
+  background: var(--mood, var(--text));
+  border-color: var(--note-line);
+  box-shadow: var(--shadow-s);
+  transform: translate(-1px, -2px);
+}
+
+/* Chips without a mood colour ("All", and the admin's view tabs) */
+.chip:not([class*="mood-"])[aria-pressed="true"] {
+  color: var(--bg);
+  border-color: var(--line);
+}
+
+.journey-count {
+  font-family: var(--font-label);
+  font-size: calc(0.9rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  color: var(--text-soft);
+}
+
+.journey-main {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 14px 20px 36px;
+}
+
+/* The board: labels column + sideways-scrolling timeline */
+.board {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--labels-w) minmax(0, 1fr);
+  min-height: calc(var(--ruler-h) + 5 * var(--lane-h));
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-l);
+  overflow: hidden;
+}
+
+.board__labels {
+  position: relative;
+  z-index: 2;
+  background: var(--surface);
+  border-right: var(--bw) solid var(--line);
+}
+
+.board__ruler-spacer {
+  height: var(--ruler-h);
+  border-bottom: 2px dashed color-mix(in srgb, var(--text) 22%, transparent);
+}
+
+.lane-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: var(--lane-h);
+  font-family: var(--font-label);
+  font-size: calc(0.72rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  line-height: 1.1;
+  letter-spacing: 0.06em;
+  text-transform: var(--label-case);
+  background: color-mix(in srgb, var(--mood) calc(var(--lane-mix) + 4%), transparent);
+}
+
+.lane-label .face {
+  width: 46px;
+  height: 46px;
+}
+
+.board__scroll {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-color: var(--text-soft) transparent;
+}
+
+.board__scroll:focus-visible {
+  outline-offset: -4px;
+}
+
+.board__track {
+  position: relative;
+  min-width: 100%;
+  height: calc(var(--ruler-h) + 5 * var(--lane-h));
+}
+
+/* Top strip where the day labels sit */
+.board__track::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: var(--ruler-h);
+  border-bottom: 2px dashed color-mix(in srgb, var(--text) 22%, transparent);
+}
+
+.board__lanes {
+  position: absolute;
+  top: var(--ruler-h);
+  left: 0;
+  right: 0;
+}
+
+.lane {
+  position: relative;
+  height: var(--lane-h);
+  background: color-mix(in srgb, var(--mood) var(--lane-mix), transparent);
+}
+
+/* Dotted line through the middle of each lane */
+.lane::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 3px dotted color-mix(in srgb, var(--mood) 60%, var(--text));
+  opacity: 0.45;
+}
+
+/* Day markers */
+.board__days {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.day-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 2px dashed color-mix(in srgb, var(--text) 18%, transparent);
+}
+
+.day-marker__label {
+  position: absolute;
+  top: 7px;
+  left: 8px;
+  padding: 0.15em 0.7em;
+  font-family: var(--font-label);
+  font-size: calc(0.7rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  letter-spacing: 0.07em;
+  text-transform: var(--label-case);
+  white-space: nowrap;
+  color: var(--text);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+/* Connector arrows (the arrowhead uses currentColor) */
+.board__connectors {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  color: var(--text);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.connector {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-dasharray: var(--connector-dash);
+}
+
+/* START and END tags */
+.journey-pin {
+  position: absolute;
+  z-index: 3;
+  padding: 0.3em 0.95em;
+  font-family: var(--font-display);
+  font-size: calc(1.2rem * var(--pin-scale));
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.06em;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-m);
+}
+
+.journey-pin--now {
+  color: var(--on-accent);
+  background: var(--accent);
+  transform: rotate(-5deg);
+}
+
+.journey-pin--first {
+  color: #111111;
+  background: var(--scribble);
+  transform: rotate(4deg);
+}
+
+/* Sticky notes */
+.board__notes {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.note-slot {
+  position: absolute;
+  width: var(--note-w);
+  height: var(--note-h);
+}
+
+.note {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  padding: 15px 11px 8px;
+  font-family: var(--font-label);
+  color: var(--on-color);
+  text-align: left;
+  background: var(--mood);
+  border: var(--bw) solid var(--note-line);
+  border-radius: var(--radius-note);
+  box-shadow: var(--shadow-note);
+  transform: rotate(var(--tilt, 0deg));
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.3, 1.4, 0.5, 1), box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* A strip of tape on top of each note */
+.note::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 52px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgba(17, 17, 17, 0.2);
+  border-radius: 3px;
+  transform: translateX(-50%) rotate(-4deg);
+}
+
+:root[data-theme="dark"] .note::before {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.note:hover,
+.note:focus-visible {
+  z-index: 5;
+  transform: rotate(0deg) scale(1.06) translate(-2px, -3px);
+  box-shadow: var(--shadow-note-hover);
+}
+
+.note.is-new {
+  animation: note-drop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) backwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* The small note hides while its big copy is open */
+.note.is-source {
+  visibility: hidden;
+}
+
+.note__text {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: calc(0.9rem * var(--note-scale));
+  font-weight: var(--label-weight);
+  line-height: 1.16;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.note__meta {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  font-size: calc(0.66rem * var(--note-scale));
+  font-weight: var(--label-weight);
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: var(--label-case);
+  white-space: nowrap;
+}
+
+.note__meta time {
+  opacity: 0.72;
+}
+
+.note__demo,
+.note__name {
+  padding: 0 6px;
+  font-size: 0.95em;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-pill);
+}
+
+.note__demo {
+  opacity: 0.72;
+}
+
+.note__name {
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: none;
+  letter-spacing: 0;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* Loading / empty / error overlays */
+.board__state {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+}
+
+.state-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: var(--heading-weight);
+  line-height: 1.1;
+  letter-spacing: var(--display-tracking);
+  word-spacing: var(--display-words);
+}
+
+.state-text {
+  margin: 0 0 12px;
+  color: var(--text-soft);
+}
+
+.state-doodle {
+  width: 80px;
+  height: 80px;
+  animation: float 4s ease-in-out infinite;
+}
+
+.loading-doodle {
+  width: 52px;
+  height: 52px;
+  color: var(--scribble);
+  animation: spin 1.4s linear infinite;
+}
+
+.journey-footnote {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 16px 4px 0;
+  font-family: var(--font-label);
+  font-size: calc(0.85rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  color: var(--text-soft);
+}
+
+
+/* ---------- 6. Focused note ---------- */
+
+.focus-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.focus-backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.focus-card {
+  position: relative;
+  width: min(470px, 100%);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 36px 28px 24px;
+  color: var(--on-color);
+  background: var(--mood);
+  border: 3px solid var(--note-line);
+  border-radius: var(--radius-big-note);
+  box-shadow: 10px 10px 0 var(--shadow);
+}
+
+/* Tape on the big note too */
+.focus-card::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 104px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgba(17, 17, 17, 0.2);
+  border-radius: 3px;
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.focus-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  color: #111111;
+  background: #ffffff;
+  border: var(--bw) solid #111111;
+  border-radius: var(--radius-round);
+  box-shadow: 3px 3px 0 #111111;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.focus-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.focus-close:hover {
+  transform: rotate(90deg);
+}
+
+.focus-close:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.focus-mood {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display);
+  font-size: calc(2rem * var(--heading-scale));
+  font-weight: var(--display-weight);
+  line-height: 1;
+  letter-spacing: var(--display-tracking);
+}
+
+.focus-mood .face {
+  width: 58px;
+  height: 58px;
+}
+
+.focus-what {
+  margin: 18px 0 12px;
+  font-family: var(--font-heading);
+  font-size: calc(1.5rem * var(--heading-scale));
+  font-weight: var(--heading-weight);
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  word-spacing: var(--display-words);
+  overflow-wrap: anywhere;
+}
+
+.focus-comment {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 1.02rem;
+  font-weight: 500;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  background: rgba(255, 255, 255, 0.55);
+  border: 2px solid var(--note-line);
+  border-radius: var(--radius-md);
+}
+
+.focus-comment.is-empty {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.focus-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 16px 0 0;
+  font-family: var(--font-label);
+  font-size: calc(0.74rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  letter-spacing: 0.06em;
+  text-transform: var(--label-case);
+}
+
+.focus-author {
+  padding: 0.15em 0.7em;
+  text-transform: none;
+  letter-spacing: 0;
+  background: rgba(255, 255, 255, 0.65);
+  border: 2px solid var(--note-line);
+  border-radius: var(--radius-pill);
+}
+
+.focus-author.is-anonymous {
+  font-style: italic;
+}
+
+.focus-date {
+  opacity: 0.75;
+}
+
+
+/* ---------- 7. Settings panel ---------- */
+
+.settings {
+  width: min(480px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  overflow: auto;
+  color: var(--text);
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-l);
+}
+
+.settings[open] {
+  animation: pop-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.settings::backdrop {
+  background: rgba(17, 17, 17, 0.45);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.settings__form {
+  display: grid;
+  gap: 20px;
+  padding: 22px 22px 20px;
+}
+
+.settings__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: calc(1.9rem * var(--heading-scale));
+  font-weight: var(--display-weight);
+  line-height: 1;
+  letter-spacing: var(--display-tracking);
+}
+
+.settings__close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.settings__close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.settings__close:hover {
+  transform: rotate(90deg);
+}
+
+.settings__group {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.settings__label {
+  margin-bottom: 2px;
+  padding: 0;
+  font-family: var(--font-label);
+  font-size: calc(0.78rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  letter-spacing: 0.08em;
+  text-transform: var(--label-case);
+  color: var(--text-soft);
+}
+
+/* Segmented switch: [ Stay anonymous | Show my name ] */
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-2);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+.segmented--three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.segmented__option {
+  position: relative;
+  min-width: 0;
+}
+
+.segmented__option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.segmented__option span {
+  display: block;
+  padding: 0.55em 0.5em;
+  font-family: var(--font-label);
+  font-size: calc(0.9rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  line-height: 1.2;
+  text-align: center;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.segmented__option span:hover {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.segmented__option input:checked + span {
+  color: var(--bg);
+  background: var(--text);
+}
+
+.segmented__option input:focus-visible + span {
+  outline: 3px solid var(--c-cobalt);
+  outline-offset: 2px;
+}
+
+.settings__name:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.settings__hint {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+
+.settings__hint.is-warning {
+  font-weight: 700;
+  color: var(--error);
+}
+
+/* Style picker cards with a tiny preview */
+.style-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.style-option {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  background: var(--surface-2);
+  border: var(--bw) solid color-mix(in srgb, var(--line) 25%, transparent);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.style-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.style-option:hover {
+  border-color: var(--line);
+}
+
+.style-option:has(input:checked) {
+  border-color: var(--line);
+  box-shadow: var(--shadow-m);
+  transform: translate(-2px, -2px);
+}
+
+.style-option:has(input:focus-visible) {
+  outline: 3px solid var(--c-cobalt);
+  outline-offset: 3px;
+}
+
+.style-option__name {
+  font-family: var(--font-label);
+  font-size: calc(1rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+}
+
+.style-option__desc {
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: var(--text-soft);
+}
+
+/* The previews always show their own style, whatever is active */
+.style-preview {
+  position: relative;
+  display: block;
+  height: 74px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  border: 2px solid #111111;
+  border-radius: 10px;
+}
+
+.style-preview b {
+  position: absolute;
+  left: 10px;
+  top: 6px;
+  line-height: 1;
+}
+
+.style-preview i {
+  position: absolute;
+}
+
+.style-preview--scribblish {
+  background-color: #fffdf6;
+  background-image:
+    linear-gradient(90deg, transparent 18px, rgba(240, 120, 140, 0.45) 18px, rgba(240, 120, 140, 0.45) 19.5px, transparent 19.5px),
+    linear-gradient(rgba(120, 160, 210, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 160, 210, 0.25) 1px, transparent 1px);
+  background-size: 100% 100%, 12px 12px, 12px 12px;
+}
+
+.style-preview--scribblish b {
+  left: 24px;
+  font-family: "Caveat", cursive;
+  font-size: 2.3rem;
+  font-weight: 700;
+  color: #3b3446;
+}
+
+.style-preview--scribblish i:nth-of-type(1) {
+  right: 12px;
+  top: 10px;
+  width: 30px;
+  height: 26px;
+  background: #cdeec5;
+  border: 1.5px solid #4f8a47;
+  border-radius: 3px 6px 4px 9px / 7px 3px 8px 4px;
+  transform: rotate(-6deg);
+}
+
+.style-preview--scribblish i:nth-of-type(2) {
+  right: 38px;
+  bottom: 9px;
+  width: 30px;
+  height: 24px;
+  background: #ffcad4;
+  border: 1.5px solid #c4455f;
+  border-radius: 6px 3px 8px 4px / 3px 7px 4px 8px;
+  transform: rotate(5deg);
+}
+
+.style-preview--scribblish i:nth-of-type(3) {
+  left: 26px;
+  bottom: 12px;
+  width: 44px;
+  height: 6px;
+  border-bottom: 3px dotted #ff8fab;
+}
+
+.style-preview--modern-2026 {
+  background-color: #f4f3ee;
+  background-image: linear-gradient(to bottom, transparent 11px, #dcd9d0 11px);
+  background-size: 100% 12px;
+}
+
+.style-preview--modern-2026 b {
+  left: 10px;
+  top: 9px;
+  padding: 0 5px;
+  font-family: "Jersey 10", monospace;
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1;
+  color: #151515;
+  border: 1.5px solid #e2553a;
+  transform: rotate(-2deg);
+}
+
+.style-preview--modern-2026 i:nth-of-type(1),
+.style-preview--modern-2026 i:nth-of-type(2) {
+  height: 14px;
+  clip-path: polygon(0 10%, 4% 0, 96% 6%, 100% 0, 97% 50%, 100% 100%, 4% 94%, 0 100%, 3% 50%);
+}
+
+.style-preview--modern-2026 i:nth-of-type(1) {
+  right: 10px;
+  top: 12px;
+  width: 36px;
+  background: #f2c84b;
+}
+
+.style-preview--modern-2026 i:nth-of-type(2) {
+  right: 14px;
+  bottom: 12px;
+  width: 44px;
+  background: #2bb673;
+  transform: rotate(-4deg);
+}
+
+.style-preview--modern-2026 i:nth-of-type(3) {
+  left: 14px;
+  bottom: 10px;
+  width: 30px;
+  height: 11px;
+  background: rgba(47, 79, 224, 0.5);
+  transform: rotate(-14deg);
+}
+
+.style-preview--modern-bold {
+  background: #ece7dc;
+}
+
+.style-preview--modern-bold b {
+  left: 10px;
+  top: 6px;
+  font-family: "Anton", Impact, sans-serif;
+  font-size: 2.4rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: #111111;
+}
+
+.style-preview--modern-bold i:nth-of-type(1) {
+  right: 10px;
+  top: 8px;
+  width: 30px;
+  height: 22px;
+  background: #f59cc0;
+}
+
+.style-preview--modern-bold i:nth-of-type(2) {
+  right: 22px;
+  bottom: 8px;
+  width: 42px;
+  height: 18px;
+  background: #a9cbeb;
+  transform: rotate(-3deg);
+}
+
+.style-preview--modern-bold i:nth-of-type(3) {
+  left: 4px;
+  top: 10px;
+  width: 64px;
+  height: 46px;
+  border: 3px solid #d4ee3f;
+  border-radius: 50%;
+  transform: rotate(-10deg);
+}
+
+.settings__foot {
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+/* ---------- 8. Style-only extras ---------- */
+
+/* ===== Scribblish: tape, softer outlines, doodle details ===== */
+
+/* Tape on the corners of the form card */
+:root[data-style="scribblish"] .card::before,
+:root[data-style="scribblish"] .card::after {
+  content: "";
+  position: absolute;
+  top: -12px;
+  width: 86px;
+  height: 24px;
+  background: rgba(185, 174, 252, 0.55);
+  border: 1px dashed rgba(59, 52, 70, 0.25);
+}
+
+:root[data-style="scribblish"] .card::before {
+  left: -14px;
+  transform: rotate(-24deg);
+}
+
+:root[data-style="scribblish"] .card::after {
+  right: -14px;
+  background: rgba(255, 179, 193, 0.6);
+  transform: rotate(22deg);
+}
+
+/* Coloured things get a darker outline in their own colour */
+:root[data-style="scribblish"] .note,
+:root[data-style="scribblish"] .focus-card,
+:root[data-style="scribblish"] .mood-option.is-selected,
+:root[data-style="scribblish"] .chip.mood-5[aria-pressed="true"],
+:root[data-style="scribblish"] .chip.mood-4[aria-pressed="true"],
+:root[data-style="scribblish"] .chip.mood-3[aria-pressed="true"],
+:root[data-style="scribblish"] .chip.mood-2[aria-pressed="true"],
+:root[data-style="scribblish"] .chip.mood-1[aria-pressed="true"] {
+  --note-line: color-mix(in srgb, var(--mood) 35%, #3b3446);
+}
+
+:root[data-style="scribblish"] .note {
+  border-width: 2px;
+}
+
+:root[data-style="scribblish"] .note::before,
+:root[data-style="scribblish"] .focus-card::before {
+  border: 1px dashed rgba(59, 52, 70, 0.25);
+}
+
+/* Softer, friendlier labels (no pill boxes) */
+:root[data-style="scribblish"] .mood-option__label {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+:root[data-style="scribblish"] .mood-option.is-selected .mood-option__label {
+  background: none;
+  border: 0;
+  color: var(--on-color);
+}
+
+:root[data-style="scribblish"] .mood-option.is-selected::after {
+  content: "♥";
+  font-size: 0.95rem;
+  color: #ffffff;
+  background: #ff8fab;
+  border-color: #ffffff;
+}
+
+:root[data-style="scribblish"] .mood-option:not(.is-selected) {
+  border: 2.5px dashed transparent;
+}
+
+:root[data-style="scribblish"] .mood-option:not(.is-selected):hover {
+  border-color: var(--line);
+  box-shadow: none;
+}
+
+/* The yellow tilted "class mood check-in" label */
+:root[data-style="scribblish"] .eyebrow {
+  color: #3b3446;
+  background: var(--mood-3);
+  border: 0;
+  transform: rotate(-2deg);
+}
+
+:root[data-style="scribblish"] .step {
+  font-weight: 400;
+  color: #3b3446;
+  border: 1.5px solid #3b3446;
+}
+
+:root[data-style="scribblish"] .scribble-circle__line path {
+  stroke-width: 3.5;
+}
+
+:root[data-style="scribblish"] .hero__title,
+:root[data-style="scribblish"] .journey-title {
+  line-height: 1.02;
+}
+
+:root[data-style="scribblish"] .sticker--burst span {
+  color: #3b3446;
+}
+
+:root[data-style="scribblish"] .journey-pin--first {
+  color: #3b3446;
+  background: #ffe0ea;
+}
+
+:root[data-style="scribblish"] .segmented__option input:checked + span {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+:root[data-style="scribblish"] .input:focus {
+  box-shadow: 3px 4px 0 color-mix(in srgb, var(--picked, var(--c-violet)) 70%, #3b3446);
+}
+
+:root[data-style="scribblish"] .identity-toggle__option[aria-pressed="true"] {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+
+/* ===== Modern 2026: sheet on a desk, pixel titles, tape & torn tags ===== */
+
+/* Torn-paper edge used by the colour tags */
+:root[data-style="modern-2026"] {
+  --torn: polygon(0 10%, 3% 0, 50% 4%, 97% 0, 100% 12%, 98% 30%, 100% 50%, 97% 70%, 100% 88%, 97% 100%,
+    50% 95%, 3% 100%, 0 90%, 2% 70%, 0 50%, 3% 30%);
+
+  /* The grey grid "desk" around the page */
+  background-color: var(--frame);
+  background-image:
+    linear-gradient(var(--frame-line) 2px, transparent 2px),
+    linear-gradient(90deg, var(--frame-line) 2px, transparent 2px);
+  background-size: 56px 56px;
+}
+
+/* The page itself is one sheet of lined paper */
+:root[data-style="modern-2026"] body {
+  max-width: min(1180px, calc(100% - 56px));
+  min-height: calc(100vh - 56px);
+  margin: 28px auto;
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.55);
+}
+
+/* Top bar: a white strip with tiny mono labels */
+:root[data-style="modern-2026"] .topbar {
+  max-width: none;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: var(--bw) solid var(--line);
+}
+
+:root[data-style="modern-2026"] .brand {
+  font-family: var(--font-label);
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+:root[data-style="modern-2026"] .brand__mark {
+  width: 26px;
+  height: 26px;
+}
+
+:root[data-style="modern-2026"] .pill-link {
+  padding: 0.7em 1.1em;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #151515;
+  background: var(--highlight);
+  border: 0;
+  box-shadow: none;
+}
+
+:root[data-style="modern-2026"] .icon-button {
+  width: 34px;
+  height: 34px;
+  color: #151515;
+  background: #f2c84b;
+  border: var(--bw) solid #151515;
+  box-shadow: none;
+}
+
+:root[data-style="modern-2026"] .icon-button svg {
+  width: 17px;
+  height: 17px;
+}
+
+:root[data-style="modern-2026"] .theme-toggle {
+  background: #ff4fa0;
+}
+
+:root[data-style="modern-2026"][data-theme="dark"] .theme-toggle__sun {
+  color: #151515;
+}
+
+/* Sticky tags ("MADE THINGS" look) */
+:root[data-style="modern-2026"] .eyebrow,
+:root[data-style="modern-2026"] .day-marker__label {
+  color: #151515;
+  background: var(--c-mint);
+  border: 0;
+  border-radius: 3px;
+  box-shadow: 0 2px 0 rgba(21, 21, 21, 0.18);
+  letter-spacing: 0.14em;
+}
+
+:root[data-style="modern-2026"] .eyebrow {
+  font-size: 0.66rem;
+  transform: rotate(-3deg);
+}
+
+:root[data-style="modern-2026"] .eyebrow__icon {
+  color: #151515;
+  animation: none;
+}
+
+/* Pixel titles with a hand-drawn red frame around one word */
+:root[data-style="modern-2026"] .hero__title,
+:root[data-style="modern-2026"] .journey-title {
+  line-height: 0.88;
+}
+
+:root[data-style="modern-2026"] .scribble-circle__line,
+:root[data-style="modern-2026"] .marker__swipe {
+  display: none;
+}
+
+:root[data-style="modern-2026"] .scribble-circle,
+:root[data-style="modern-2026"] .marker {
+  margin: 0 0.06em;
+  padding: 0 0.1em;
+}
+
+:root[data-style="modern-2026"] .scribble-circle::before,
+:root[data-style="modern-2026"] .scribble-circle::after,
+:root[data-style="modern-2026"] .marker::before,
+:root[data-style="modern-2026"] .marker::after {
+  content: "";
+  position: absolute;
+  border: 2px solid var(--scribble);
+  pointer-events: none;
+  animation: pop-in 0.45s 0.2s cubic-bezier(0.3, 1.5, 0.5, 1) backwards;
+}
+
+:root[data-style="modern-2026"] .scribble-circle::before,
+:root[data-style="modern-2026"] .marker::before {
+  inset: -0.02em -0.08em 0.04em -0.06em;
+  transform: rotate(-1.2deg);
+}
+
+:root[data-style="modern-2026"] .scribble-circle::after,
+:root[data-style="modern-2026"] .marker::after {
+  inset: 0.04em -0.12em -0.02em -0.03em;
+  opacity: 0.75;
+  transform: rotate(0.8deg);
+}
+
+/* Handwriting has just one weight */
+:root[data-style="modern-2026"] .hero__note,
+:root[data-style="modern-2026"] .mood-reaction,
+:root[data-style="modern-2026"] .quick-picks__label,
+:root[data-style="modern-2026"] .scribble-note {
+  font-weight: 400;
+}
+
+:root[data-style="modern-2026"] .hero__note {
+  font-size: 1.35rem;
+}
+
+/* The burst becomes a yellow sticky tag */
+:root[data-style="modern-2026"] .sticker--burst {
+  top: 10px;
+  right: 2%;
+  width: auto;
+  height: auto;
+  transform: rotate(-5deg);
+}
+
+:root[data-style="modern-2026"] .sticker--burst svg {
+  display: none;
+}
+
+:root[data-style="modern-2026"] .sticker--burst span {
+  max-width: none;
+  padding: 6px 12px;
+  font-family: var(--font-scribble);
+  font-size: 1.15rem;
+  font-weight: 400;
+  line-height: 1.05;
+  text-transform: none;
+  color: #151515;
+  background: var(--sticker);
+  box-shadow: 0 3px 0 rgba(21, 21, 21, 0.18);
+}
+
+/* The form card has folder tabs like the project cards */
+:root[data-style="modern-2026"] .card {
+  isolation: isolate;
+  margin-top: 46px;
+  border-top-left-radius: 0;
+}
+
+:root[data-style="modern-2026"] .card::before,
+:root[data-style="modern-2026"] .card::after {
+  position: absolute;
+  top: -34px;
+  display: flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 34px 0 16px;
+  font: 500 0.66rem/1 var(--font-label);
+  letter-spacing: 0.16em;
+  color: #ffffff;
+  clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 100%, 0 100%);
+}
+
+:root[data-style="modern-2026"] .card::before {
+  content: "✦ CHECK-IN";
+  left: calc(-1 * var(--bw));
+  background: var(--c-blue);
+}
+
+:root[data-style="modern-2026"] .card::after {
+  content: "✦ 30 SECONDS";
+  z-index: -1;
+  left: 128px;
+  padding-left: 40px;
+  background: #151515;
+}
+
+:root[data-style="modern-2026"][data-theme="dark"] .card::after {
+  background: #3a3934;
+}
+
+:root[data-style="modern-2026"] .step {
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--bg);
+  background: var(--text);
+  border: 0;
+  border-radius: 2px;
+}
+
+:root[data-style="modern-2026"] .card[data-mood] .step {
+  color: #151515;
+  background: var(--picked);
+}
+
+/* Mood tiles: white cards; the chosen one gets tape */
+:root[data-style="modern-2026"] .mood-option {
+  border-color: color-mix(in srgb, var(--line) 16%, transparent);
+}
+
+/* Pixel art looks jagged when rotated, so these faces only move and grow */
+:root[data-style="modern-2026"] .mood-option .face {
+  border-radius: 0;
+  transform: none;
+}
+
+:root[data-style="modern-2026"] .mood-option:hover .face {
+  transform: translateY(-3px);
+}
+
+:root[data-style="modern-2026"] .mood-option.is-selected .face {
+  transform: scale(1.1);
+}
+
+:root[data-style="modern-2026"] .mood-option__label,
+:root[data-style="modern-2026"] .mood-option.is-selected .mood-option__label {
+  padding: 0;
+  letter-spacing: 0.12em;
+  color: inherit;
+  background: none;
+  border: 0;
+}
+
+/* A light tint (not the full colour) so the pixel face stays visible */
+:root[data-style="modern-2026"] .mood-option.is-selected {
+  color: var(--text);
+  background: color-mix(in srgb, var(--mood) 32%, var(--surface));
+  border-color: var(--line);
+  box-shadow: var(--shadow-m);
+  transform: translate(-2px, -4px); /* lift without tilting the pixels */
+}
+
+:root[data-style="modern-2026"] .mood-option.is-selected::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 46px;
+  height: 14px;
+  background: rgba(47, 79, 224, 0.45);
+  transform: translateX(-50%) rotate(-4deg);
+}
+
+:root[data-style="modern-2026"] .mood-option.is-selected::after {
+  color: #ffffff;
+  background: #151515;
+  border: 0;
+  border-radius: 2px;
+}
+
+:root[data-style="modern-2026"] .input:focus {
+  box-shadow: 3px 3px 0 var(--picked, var(--c-blue));
+}
+
+/* Torn-paper colour tags: quick picks and mood filters */
+:root[data-style="modern-2026"] .quick-pick,
+:root[data-style="modern-2026"] .chip {
+  padding: 0.5em 1.1em;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  clip-path: var(--torn);
+}
+
+:root[data-style="modern-2026"] .quick-pick {
+  --tag: #f2c84b;
+  --tag-text: #151515;
+  color: var(--tag-text);
+  background: var(--tag);
+}
+
+:root[data-style="modern-2026"] .quick-pick:nth-of-type(4n + 2) { --tag: #2bb673; --tag-text: #ffffff; }
+:root[data-style="modern-2026"] .quick-pick:nth-of-type(4n + 3) { --tag: #ff4fa0; --tag-text: #ffffff; }
+:root[data-style="modern-2026"] .quick-pick:nth-of-type(4n + 4) { --tag: #2f4fe0; --tag-text: #ffffff; }
+
+:root[data-style="modern-2026"] .quick-pick:hover {
+  background: var(--tag);
+  box-shadow: none;
+  transform: rotate(-2deg) translateY(-2px);
+}
+
+:root[data-style="modern-2026"] .chip {
+  color: #151515;
+  background: var(--mood, var(--text));
+  opacity: 0.65;
+}
+
+:root[data-style="modern-2026"] .chip:not([class*="mood-"]) {
+  color: var(--bg);
+}
+
+:root[data-style="modern-2026"] .chip:hover {
+  opacity: 0.85;
+}
+
+:root[data-style="modern-2026"] .chip[aria-pressed="true"] {
+  opacity: 1;
+  box-shadow: none;
+  transform: rotate(-2deg) translateY(-2px);
+}
+
+:root[data-style="modern-2026"] .chip .face {
+  width: 20px;
+  height: 20px;
+}
+
+/* Black "CONTACT ME" style buttons with a blue icon square */
+:root[data-style="modern-2026"] .btn {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+
+:root[data-style="modern-2026"] .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-s-hover);
+}
+
+:root[data-style="modern-2026"] .btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+:root[data-style="modern-2026"] .btn--primary {
+  border-color: var(--accent);
+}
+
+:root[data-style="modern-2026"] .btn__icon {
+  order: -1;
+  width: 1.9em;
+  height: 1.9em;
+  padding: 0.3em;
+  color: #ffffff;
+  background: var(--c-blue);
+}
+
+:root[data-style="modern-2026"] .identity-toggle__option {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Journey page */
+:root[data-style="modern-2026"] .mode-badge {
+  padding: 0;
+  background: none;
+  border: 0;
+  --dot: var(--c-blue);
+}
+
+:root[data-style="modern-2026"] .mode-badge--sheets {
+  --dot: #2bb673;
+}
+
+:root[data-style="modern-2026"] .mode-badge::before {
+  border: 0;
+}
+
+:root[data-style="modern-2026"] .journey-pin {
+  border: 0;
+  box-shadow: var(--shadow-s);
+}
+
+:root[data-style="modern-2026"] .journey-pin--now {
+  color: var(--bg);
+  background: var(--text);
+}
+
+:root[data-style="modern-2026"] .journey-pin--first {
+  color: #151515;
+  background: #f2c84b;
+}
+
+/* Sticky notes with washi tape on a corner (blue / yellow, alternating) */
+:root[data-style="modern-2026"] .note {
+  padding: 16px 11px 8px;
+}
+
+:root[data-style="modern-2026"] .note::before {
+  top: -6px;
+  left: -12px;
+  width: 46px;
+  height: 15px;
+  background: rgba(47, 79, 224, 0.42);
+  border: 0;
+  border-radius: 0;
+  transform: rotate(-32deg);
+}
+
+:root[data-style="modern-2026"] .note-slot:nth-child(even) .note::before {
+  left: auto;
+  right: -12px;
+  background: rgba(242, 200, 75, 0.78);
+  transform: rotate(32deg);
+}
+
+:root[data-style="modern-2026"] .note__text {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+:root[data-style="modern-2026"] .focus-card::before {
+  background: rgba(47, 79, 224, 0.42);
+  border: 0;
+  border-radius: 0;
+}
+
+:root[data-style="modern-2026"] .focus-mood {
+  font-size: 2.6rem;
+  text-transform: uppercase;
+}
+
+:root[data-style="modern-2026"] .settings__title {
+  font-size: 2.5rem;
+  text-transform: uppercase;
+}
+
+:root[data-style="modern-2026"] .style-option__name {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  :root[data-style="modern-2026"] {
+    background-size: 40px 40px;
+  }
+
+  :root[data-style="modern-2026"] body {
+    max-width: calc(100% - 20px);
+    min-height: calc(100vh - 20px);
+    margin: 10px auto;
+  }
+
+  :root[data-style="modern-2026"] .sticker--burst {
+    top: 0;
+    right: 0;
+  }
+
+  :root[data-style="modern-2026"] .sticker--burst span {
+    padding: 4px 8px;
+    font-size: 0.95rem;
+  }
+
+  :root[data-style="modern-2026"] .card::after {
+    display: none;
+  }
+
+  :root[data-style="modern-2026"] .mood-option.is-selected::before {
+    width: 28px;
+    height: 10px;
+    top: -6px;
+  }
+
+  :root[data-style="modern-2026"] .pill-link {
+    padding: 0.7em 0.8em;
+  }
+
+  :root[data-style="modern-2026"] .quick-pick,
+  :root[data-style="modern-2026"] .chip {
+    font-size: 0.82rem;
+  }
+}
+
+
+/* ===== Modern Bold: zine collage ===== */
+
+/* Top bar: "moodboard*", underlined text links */
+:root[data-style="modern-bold"] .brand {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+:root[data-style="modern-bold"] .brand strong {
+  font-weight: 900;
+}
+
+:root[data-style="modern-bold"] .brand span::after {
+  content: "*";
+}
+
+:root[data-style="modern-bold"] .pill-link {
+  padding: 0.3em 0.1em;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid currentColor;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+:root[data-style="modern-bold"] .pill-link:hover {
+  box-shadow: none;
+  transform: translateY(-2px);
+}
+
+:root[data-style="modern-bold"] .icon-button {
+  background: var(--surface);
+  border: 2px solid var(--line);
+  box-shadow: none;
+}
+
+:root[data-style="modern-bold"] .icon-button:hover {
+  color: #111111;
+  background: var(--c-acid);
+  box-shadow: none;
+}
+
+/* Left-aligned editorial heroes with huge condensed headlines */
+:root[data-style="modern-bold"] .hero,
+:root[data-style="modern-bold"] .journey-hero {
+  text-align: left;
+}
+
+:root[data-style="modern-bold"] .journey-toolbar {
+  justify-content: flex-start;
+}
+
+:root[data-style="modern-bold"] .hero__title,
+:root[data-style="modern-bold"] .journey-title {
+  line-height: 0.86;
+}
+
+/* Lime marker loop around "today?" */
+:root[data-style="modern-bold"] .scribble-circle__line {
+  left: -12%;
+  top: -12%;
+  width: 124%;
+  height: 128%;
+}
+
+:root[data-style="modern-bold"] .scribble-circle__line path {
+  stroke-width: 7;
+  opacity: 0.9;
+}
+
+:root[data-style="modern-bold"]:not([data-theme="dark"]) .scribble-circle__line {
+  mix-blend-mode: multiply; /* black letters stay black under the marker */
+}
+
+:root[data-style="modern-bold"] .marker__swipe {
+  top: 44%;
+  height: 56%;
+}
+
+/* "A film by..." handwriting on a lime strip */
+:root[data-style="modern-bold"] .eyebrow {
+  padding: 0.2em 0.7em;
+  font-family: var(--font-scribble);
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: #111111;
+  background: var(--c-acid);
+  border: 0;
+  transform: rotate(-3deg);
+}
+
+:root[data-style="modern-bold"] .eyebrow__icon {
+  color: #111111;
+}
+
+/* Marker handwriting everywhere it scribbles */
+:root[data-style="modern-bold"] .hero__note,
+:root[data-style="modern-bold"] .quick-picks__label,
+:root[data-style="modern-bold"] .scribble-note,
+:root[data-style="modern-bold"] .mood-reaction {
+  font-weight: 400;
+  color: var(--text);
+}
+
+:root[data-style="modern-bold"] .hero__note {
+  font-size: 1.25rem;
+  line-height: 1.15;
+}
+
+:root[data-style="modern-bold"] .hero__note-arrow {
+  color: var(--text);
+}
+
+:root[data-style="modern-bold"] .scribble-note {
+  font-size: 1.25rem;
+}
+
+:root[data-style="modern-bold"] .quick-picks__label {
+  font-size: 1.05rem;
+}
+
+:root[data-style="modern-bold"] .mood-reaction {
+  width: fit-content;
+  margin-inline: auto;
+  padding: 0 0.3em;
+  font-size: 1.35rem;
+  background: linear-gradient(transparent 55%, var(--c-acid) 55%);
+}
+
+:root[data-style="modern-bold"][data-theme="dark"] .mood-reaction {
+  color: #111111;
+  background: var(--c-acid);
+}
+
+/* The burst becomes a handwritten "le FLEUR*"-style note */
+:root[data-style="modern-bold"] .sticker--burst {
+  top: 14px;
+  right: 2%;
+  width: auto;
+  height: auto;
+  transform: rotate(-8deg);
+}
+
+:root[data-style="modern-bold"] .sticker--burst svg {
+  display: none;
+}
+
+:root[data-style="modern-bold"] .sticker--burst span {
+  max-width: none;
+  font-family: var(--font-scribble);
+  font-size: 1.9rem;
+  font-weight: 400;
+  line-height: 0.95;
+  text-transform: none;
+  color: var(--text);
+}
+
+:root[data-style="modern-bold"] .sticker--burst span::after {
+  content: "*";
+}
+
+/* Pen doodles */
+:root[data-style="modern-bold"] .float-doodle--flame,
+:root[data-style="modern-bold"] .float-doodle--flower {
+  display: block;
+}
+
+:root[data-style="modern-bold"] .float-doodle--flame {
+  top: 16px;
+  right: 24%;
+  width: 40px;
+  height: 60px;
+  color: var(--doodle-a);
+  transform: rotate(12deg);
+  animation: float 6s ease-in-out infinite;
+}
+
+:root[data-style="modern-bold"] .journey-hero .float-doodle--flame {
+  top: 6px;
+  right: 13%;
+}
+
+:root[data-style="modern-bold"] .float-doodle--flower {
+  right: 3%;
+  bottom: 4px;
+  width: 56px;
+  height: 56px;
+  color: #ffffff;
+  animation: spin 18s linear infinite;
+}
+
+:root[data-style="modern-bold"] .float-doodle--sparkle {
+  top: 10px;
+  left: auto;
+  right: 40%;
+  color: #ffffff;
+}
+
+/* The form card: a paper cut-out held on with grey tape */
+:root[data-style="modern-bold"] .card {
+  border: 0;
+}
+
+:root[data-style="modern-bold"] .card::before,
+:root[data-style="modern-bold"] .card::after {
+  content: "";
+  position: absolute;
+  height: 30px;
+  background: var(--tape);
+}
+
+:root[data-style="modern-bold"] .card::before {
+  top: -14px;
+  left: 50%;
+  width: 120px;
+  transform: translateX(-50%) rotate(-2deg);
+}
+
+:root[data-style="modern-bold"] .card::after {
+  right: 24px;
+  bottom: -12px;
+  width: 90px;
+  transform: rotate(8deg);
+}
+
+/* Section headings in the big condensed type */
+:root[data-style="modern-bold"] .field-label {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+/* "01" like a numbered list */
+:root[data-style="modern-bold"] .step {
+  align-self: center;
+  min-width: 0;
+  height: auto;
+  padding: 0 2px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid currentColor;
+  border-radius: 0;
+}
+
+/* Mood tiles are polaroids: colour "photo" on top, white frame */
+:root[data-style="modern-bold"] .mood-option {
+  padding: 14px 4px 10px;
+  background: linear-gradient(to bottom,
+    color-mix(in srgb, var(--mood) var(--tile-mix), var(--surface)) 0 74%, var(--surface) 74%);
+  border: 6px solid var(--surface);
+  box-shadow: var(--shadow-s);
+}
+
+:root[data-style="modern-bold"] .mood-option.mood-5,
+:root[data-style="modern-bold"] .mood-option.mood-3,
+:root[data-style="modern-bold"] .mood-option.mood-1 { transform: rotate(-1.5deg); }
+:root[data-style="modern-bold"] .mood-option.mood-4,
+:root[data-style="modern-bold"] .mood-option.mood-2 { transform: rotate(1.2deg); }
+
+:root[data-style="modern-bold"] .mood-option:hover {
+  border-color: var(--surface);
+  box-shadow: var(--shadow-s-hover);
+  transform: translateY(-4px);
+}
+
+:root[data-style="modern-bold"] .mood-option__label,
+:root[data-style="modern-bold"] .mood-option.is-selected .mood-option__label {
+  padding: 0;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  background: none;
+  border: 0;
+}
+
+:root[data-style="modern-bold"] .mood-option.is-selected {
+  background: linear-gradient(to bottom, var(--mood) 0 74%, var(--surface) 74%);
+  border-color: var(--surface);
+  box-shadow: var(--shadow-note-hover);
+  transform: translateY(-6px) rotate(-3deg);
+}
+
+/* Tape + a marker tick on the chosen polaroid */
+:root[data-style="modern-bold"] .mood-option.is-selected::before {
+  content: "";
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: 54px;
+  height: 18px;
+  background: var(--tape);
+  transform: translateX(-50%) rotate(-5deg);
+}
+
+:root[data-style="modern-bold"] .mood-option.is-selected::after {
+  top: -22px;
+  right: -12px;
+  width: auto;
+  height: auto;
+  font: 400 2rem/1 var(--font-scribble);
+  color: var(--text);
+  background: none;
+  border: 0;
+}
+
+/* Quick picks: little colour-block labels */
+:root[data-style="modern-bold"] .quick-pick {
+  --tag: var(--c-bubblegum);
+  padding: 0.55em 0.9em;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #111111;
+  background: var(--tag);
+  border: 0;
+}
+
+:root[data-style="modern-bold"] .quick-pick:nth-of-type(4n + 2) { --tag: var(--c-sky); }
+:root[data-style="modern-bold"] .quick-pick:nth-of-type(4n + 3) { --tag: var(--c-acid); }
+:root[data-style="modern-bold"] .quick-pick:nth-of-type(4n + 4) { --tag: #ffe066; }
+:root[data-style="modern-bold"] .quick-pick:nth-of-type(odd) { transform: rotate(-1.5deg); }
+:root[data-style="modern-bold"] .quick-pick:nth-of-type(even) { transform: rotate(1deg); }
+
+:root[data-style="modern-bold"] .quick-pick:hover {
+  background: var(--tag);
+  border: 0;
+  box-shadow: var(--shadow-m);
+  transform: translate(-2px, -2px);
+}
+
+/* Buttons: pink or black blocks with a long arrow, like "SHOP NEW DROP →" */
+:root[data-style="modern-bold"] .btn {
+  padding: 0.95em 1.4em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--text);
+  border: 0;
+  box-shadow: none;
+}
+
+:root[data-style="modern-bold"] .btn::after {
+  content: "→";
+  margin-left: 0.3em;
+  font-size: 1.3em;
+  line-height: 0;
+  transition: transform 0.2s ease;
+}
+
+:root[data-style="modern-bold"] .btn:hover {
+  box-shadow: var(--shadow-m);
+  transform: translate(-2px, -2px);
+}
+
+:root[data-style="modern-bold"] .btn:hover::after {
+  transform: translateX(4px);
+}
+
+:root[data-style="modern-bold"] .btn--primary {
+  color: #111111;
+  background: var(--accent);
+}
+
+:root[data-style="modern-bold"] .btn__icon {
+  display: none;
+}
+
+/* Journey page */
+:root[data-style="modern-bold"] .mode-badge {
+  padding: 0;
+  background: none;
+  border: 0;
+  --dot: var(--c-bubblegum);
+}
+
+:root[data-style="modern-bold"] .chip {
+  padding: 0.6em 1em;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 2px solid var(--line);
+}
+
+:root[data-style="modern-bold"] .chip[aria-pressed="true"] {
+  color: #111111;
+  background: var(--mood, var(--c-acid));
+  border-color: var(--line);
+  box-shadow: var(--shadow-m);
+  transform: translate(-2px, -2px) rotate(-1.5deg);
+}
+
+:root[data-style="modern-bold"] .chip:not([class*="mood-"])[aria-pressed="true"] {
+  color: var(--bg);
+  background: var(--text);
+}
+
+:root[data-style="modern-bold"] .lane-label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+}
+
+:root[data-style="modern-bold"] .lane::after {
+  border-top: 1.5px solid var(--text);
+  opacity: 0.2;
+}
+
+:root[data-style="modern-bold"] .day-marker {
+  border-left: 2px solid color-mix(in srgb, var(--text) 20%, transparent);
+}
+
+:root[data-style="modern-bold"] .day-marker__label {
+  color: var(--bg);
+  background: var(--text);
+  border: 0;
+}
+
+:root[data-style="modern-bold"] .board__connectors {
+  opacity: 0.8;
+}
+
+:root[data-style="modern-bold"] .connector {
+  stroke-width: 2;
+}
+
+:root[data-style="modern-bold"] .journey-pin {
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  border: 0;
+  box-shadow: var(--shadow-s);
+}
+
+/* Sticky notes are polaroid cut-outs with grey tape */
+:root[data-style="modern-bold"] .note {
+  padding: 12px 9px 6px;
+  border-width: 5px;
+}
+
+:root[data-style="modern-bold"] .note::before {
+  top: -13px;
+  width: 50px;
+  height: 16px;
+  background: var(--tape);
+  border: 0;
+  border-radius: 0;
+}
+
+:root[data-style="modern-bold"] .note__text {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+:root[data-style="modern-bold"] .focus-card {
+  border-width: 10px;
+  box-shadow: var(--shadow-note-hover);
+}
+
+:root[data-style="modern-bold"] .focus-card::before {
+  background: var(--tape);
+  border: 0;
+  border-radius: 0;
+}
+
+:root[data-style="modern-bold"] .focus-mood {
+  font-size: 2.6rem;
+  text-transform: uppercase;
+}
+
+:root[data-style="modern-bold"] .focus-comment,
+:root[data-style="modern-bold"] .focus-author {
+  border-color: #111111;
+}
+
+:root[data-style="modern-bold"] .state-title {
+  text-transform: uppercase;
+}
+
+:root[data-style="modern-bold"] .settings__title {
+  font-size: 2.6rem;
+  text-transform: uppercase;
+}
+
+:root[data-style="modern-bold"] .style-option__name {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  :root[data-style="modern-bold"] .mood-option {
+    border-width: 4px;
+  }
+
+  :root[data-style="modern-bold"] .mood-option__label,
+  :root[data-style="modern-bold"] .mood-option.is-selected .mood-option__label {
+    font-size: 0.5rem;
+    letter-spacing: 0;
+  }
+
+  :root[data-style="modern-bold"] .mood-option.is-selected::after {
+    top: -16px;
+    right: -6px;
+    font-size: 1.5rem;
+  }
+
+  :root[data-style="modern-bold"] .field-label {
+    font-size: 1.5rem;
+  }
+
+  :root[data-style="modern-bold"] .sticker--burst {
+    top: 0;
+    right: 0;
+  }
+
+  :root[data-style="modern-bold"] .sticker--burst span {
+    font-size: 1.3rem;
+  }
+
+  :root[data-style="modern-bold"] .float-doodle--flame {
+    right: 34%;
+    width: 28px;
+    height: 42px;
+  }
+
+  :root[data-style="modern-bold"] .float-doodle--flower {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+
+/* ===================================================================
+   Admin: navbar button, login, pins, and the Admin Desk (admin.html)
+   Built only from the tokens, so it matches every style and theme.
+   =================================================================== */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The 🔒 Admin button in the top bar */
+.admin-link {
+  color: var(--text);
+  cursor: pointer;
+}
+
+.admin-link__icon {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-link.is-admin {
+  color: #111111;
+  background: var(--highlight);
+}
+
+/* Pinned notes get a red pushpin (journey map + admin desk) */
+.note.is-pinned::after,
+.admin-note.is-pinned::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  right: 14px;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  background: radial-gradient(circle at 35% 35%, #ff9d93, #e2553a 55%, #a3301f);
+  border: 2px solid #111111;
+  border-radius: 50%;
+  box-shadow: 1px 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* ---------- Admin Desk layout ---------- */
+
+.admin-page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 20px 72px;
+}
+
+.admin-login-card {
+  display: grid;
+  gap: 10px;
+  max-width: 440px;
+  margin: 48px auto;
+}
+
+.admin-login-card__form {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-hero {
+  position: relative;
+  padding: 10px 0 4px;
+  text-align: center;
+}
+
+.admin-title {
+  font-size: calc(var(--journey-title-size) * 0.8);
+}
+
+.admin-section {
+  margin-top: 40px;
+}
+
+.admin-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-section__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: calc(1.9rem * var(--heading-scale));
+  font-weight: var(--display-weight);
+  line-height: 1;
+  letter-spacing: var(--display-tracking);
+  word-spacing: var(--display-words);
+  text-transform: var(--display-case);
+}
+
+/* Numbers at a glance */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 2.2fr);
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-s);
+}
+
+.stat__value {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: var(--display-weight);
+  line-height: 1;
+}
+
+.stat__label {
+  font-family: var(--font-label);
+  font-size: calc(0.74rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  letter-spacing: 0.08em;
+  text-transform: var(--label-case);
+  color: var(--text-soft);
+}
+
+.stat--alert .stat__value {
+  color: var(--error);
+}
+
+.mood-bars {
+  display: grid;
+  gap: 5px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mood-bar {
+  display: grid;
+  grid-template-columns: 100px 1fr 28px;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.mood-bar__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mood-bar__label .face {
+  width: 18px;
+  height: 18px;
+}
+
+.mood-bar__track {
+  height: 10px;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1.5px solid color-mix(in srgb, var(--line) 30%, transparent);
+  border-radius: 999px;
+}
+
+.mood-bar__fill {
+  display: block;
+  height: 100%;
+  background: var(--mood);
+  transition: width 0.4s ease;
+}
+
+.mood-bar__count {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* New pile form */
+.new-pile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.new-pile .input {
+  width: auto;
+  padding: 0.55em 0.8em;
+}
+
+.new-pile__name {
+  min-width: 230px;
+}
+
+select.input {
+  cursor: pointer;
+}
+
+/* ---------- Piles: stacks of sticky notes ---------- */
+
+.pile-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px 26px;
+  padding: 18px 4px 4px;
+}
+
+.pile {
+  --pile-tape: rgba(255, 255, 255, 0.7);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 172px;
+  padding: 12px 6px;
+  font: inherit;
+  color: var(--text);
+  background: none;
+  border: var(--bw) dashed transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pile--yellow { --pile-tape: rgba(255, 214, 0, 0.8); }
+.pile--pink { --pile-tape: rgba(255, 95, 162, 0.7); }
+.pile--blue { --pile-tape: rgba(61, 90, 254, 0.55); }
+.pile--green { --pile-tape: rgba(43, 182, 115, 0.65); }
+.pile--orange { --pile-tape: rgba(255, 138, 61, 0.7); }
+.pile--purple { --pile-tape: rgba(139, 123, 255, 0.7); }
+
+.pile:hover {
+  transform: translateY(-3px);
+}
+
+.pile[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
+  border-color: var(--line);
+}
+
+/* While a note is being dragged, every pile shows it can take it */
+body.is-dragging-note .pile {
+  border-color: color-mix(in srgb, var(--line) 40%, transparent);
+}
+
+.pile.is-drop-target {
+  background: color-mix(in srgb, var(--highlight) 35%, transparent);
+  border-style: solid;
+  border-color: var(--line);
+  transform: scale(1.06);
+}
+
+.pile__stack {
+  position: relative;
+  display: block;
+  width: 142px;
+  height: 110px;
+}
+
+/* Each sheet is a little sticky note; lower layers fan out behind the top one */
+.pile__sheet {
+  position: absolute;
+  inset: 0;
+  display: block;
+  display: -webkit-box;
+  padding: 20px 10px 8px;
+  overflow: hidden;
+  font-family: var(--font-label);
+  font-size: calc(0.8rem * var(--note-scale));
+  font-weight: var(--label-weight);
+  line-height: 1.2;
+  text-align: left;
+  overflow-wrap: anywhere;
+  color: var(--on-color);
+  background: var(--mood, var(--surface));
+  border: var(--bw) solid var(--note-line);
+  border-radius: var(--radius-note);
+  box-shadow: var(--shadow-note);
+  transform:
+    translate(calc(var(--layer, 0) * 6px), calc(var(--layer, 0) * -5px))
+    rotate(calc(var(--layer, 0) * 5deg - 2deg));
+  transition: transform 0.3s cubic-bezier(0.3, 1.4, 0.5, 1);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.pile:hover .pile__sheet,
+.pile.is-drop-target .pile__sheet {
+  transform:
+    translate(calc(var(--layer, 0) * 11px), calc(var(--layer, 0) * -8px))
+    rotate(calc(var(--layer, 0) * 9deg - 3deg));
+}
+
+/* A strip of tape in the pile's colour */
+.pile__sheet::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 52px;
+  height: 13px;
+  background: var(--pile-tape);
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.pile__sheet--empty {
+  display: grid;
+  place-items: center;
+  font-style: italic;
+  color: var(--text-soft);
+  background: transparent;
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.pile__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-label);
+  font-size: calc(0.9rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  text-align: center;
+}
+
+.pile__count {
+  min-width: 24px;
+  padding: 0 7px;
+  font-size: 0.8em;
+  line-height: 1.6;
+  color: var(--bg);
+  background: var(--text);
+  border-radius: 999px;
+}
+
+.pile__alert {
+  width: 100%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--error);
+}
+
+/* ---------- The chosen pile, spread out ---------- */
+
+.spread__pile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn--small {
+  padding: 0.45em 0.95em;
+  font-size: calc(0.82rem * var(--btn-scale));
+}
+
+.btn--danger {
+  color: #ffffff;
+  background: var(--error);
+}
+
+.spread__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.spread__empty {
+  margin: 24px 0;
+  font-family: var(--font-scribble);
+  font-size: 1.5rem;
+  text-align: center;
+  color: var(--text-soft);
+}
+
+.admin-note {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 14px 12px;
+  color: var(--on-color);
+  background: var(--mood);
+  border: var(--bw) solid var(--note-line);
+  border-radius: var(--radius-note);
+  box-shadow: var(--shadow-note);
+  cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.admin-note:nth-child(odd) { transform: rotate(-0.6deg); }
+.admin-note:nth-child(even) { transform: rotate(0.7deg); }
+
+.admin-note:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-note-hover);
+}
+
+.admin-note::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 56px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgba(17, 17, 17, 0.2);
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.admin-note.is-dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+/* Hidden notes look "crossed out" with stripes */
+.admin-note.is-hidden {
+  opacity: 0.7;
+  background: repeating-linear-gradient(135deg,
+    var(--mood) 0 10px, color-mix(in srgb, var(--mood) 65%, #ffffff) 10px 20px);
+}
+
+/* Waiting notes get a dashed red outline */
+.admin-note.is-pending {
+  outline: 3px dashed var(--error);
+  outline-offset: 4px;
+}
+
+.admin-note__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-note__mood {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+  font-family: var(--font-label);
+  font-size: calc(0.8rem * var(--label-scale));
+  font-weight: var(--label-weight);
+  letter-spacing: 0.06em;
+  text-transform: var(--label-case);
+}
+
+.admin-note__mood .face {
+  width: 28px;
+  height: 28px;
+}
+
+.badge {
+  padding: 0.1em 0.55em;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #111111;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1.5px solid #111111;
+  border-radius: 999px;
+}
+
+.badge--pending { color: #ffffff; background: #e0245e; }
+.badge--hidden { color: #ffffff; background: #111111; }
+.badge--pinned { background: #ffe14a; }
+
+.admin-note__what {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: calc(1.05rem * var(--heading-scale));
+  font-weight: var(--heading-weight);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.admin-note__comment {
+  margin: 0;
+  font-size: 0.9rem;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.admin-note__comment.is-empty {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.admin-note__meta {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.admin-note__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1.5px dashed rgba(17, 17, 17, 0.3);
+}
+
+.mini-btn,
+.mini-select {
+  padding: 0.38em 0.7em;
+  font: 700 0.76rem/1.1 var(--font-body);
+  color: #111111;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1.5px solid #111111;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.mini-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mini-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.mini-btn:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+.mini-select {
+  max-width: 100%;
+}
+
+.mini-btn--go {
+  background: #6bea8f;
+}
+
+.mini-btn--danger {
+  color: #ffffff;
+  background: #d6342c;
+}
+
+.mini-btn--danger:hover {
+  background: #b8231c;
+}
+
+/* ---------- Class controls ---------- */
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.controls > * {
+  padding: 18px;
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-s);
+}
+
+.controls__words {
+  display: grid;
+  grid-row: span 2;
+  align-content: start;
+  gap: 8px;
+}
+
+.controls__words .btn,
+.controls__export .btn {
+  justify-self: start;
+}
+
+.controls__export {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+/* On/off switch */
+.switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.switch__track {
+  position: relative;
+  flex-shrink: 0;
+  width: 54px;
+  height: 30px;
+  background: var(--surface-2);
+  border: var(--bw) solid var(--line);
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+}
+
+.switch__track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: var(--text);
+  border-radius: 50%;
+  transition: transform 0.25s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.switch input:checked + .switch__track {
+  background: #6bea8f;
+}
+
+.switch input:checked + .switch__track::after {
+  background: #111111;
+  transform: translateX(23px);
+}
+
+.switch input:focus-visible + .switch__track {
+  outline: 3px solid var(--c-cobalt);
+  outline-offset: 3px;
+}
+
+.switch__text {
+  display: grid;
+  gap: 2px;
+}
+
+.switch__text small {
+  font-size: 0.84rem;
+  color: var(--text-soft);
+}
+
+/* Little message at the bottom */
+.toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  z-index: 60;
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 12px 18px;
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--text);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-m);
+  transform: translateX(-50%);
+  animation: pop-in 0.25s ease;
+}
+
+.toast.is-error {
+  color: #ffffff;
+  background: var(--error);
+}
+
+@media (max-width: 700px) {
+  .admin-link__label {
+    display: none; /* just the lock icon on phones */
+  }
+
+  .admin-link {
+    padding: 0.5em 0.7em;
+  }
+
+  .admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat--wide {
+    grid-column: 1 / -1;
+  }
+
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .controls__words {
+    grid-row: auto;
+  }
+
+  .pile-row {
+    gap: 14px;
+  }
+
+  .pile {
+    width: 148px;
+  }
+
+  .pile__stack {
+    width: 120px;
+    height: 94px;
+  }
+
+  .new-pile {
+    width: 100%;
+  }
+
+  .new-pile__name {
+    flex: 1 1 100%; /* the name box gets its own full row */
+    min-width: 0;
+  }
+
+  .new-pile__color {
+    flex: 1;
+  }
+
+  .spread__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ===================================================================
+   In-between moods, *censored* stickers and the Home page
+   =================================================================== */
+
+/* "A bit of both": in-between notes are split into their two colours */
+.note.is-blend,
+.focus-card.is-blend,
+.admin-note.is-blend:not(.is-hidden),
+.pile__sheet.is-blend,
+.about-card.is-blend {
+  background: linear-gradient(135deg, var(--mood-hi) 0 50%, var(--mood-lo) 50% 100%);
+}
+
+/* Two overlapping faces, e.g. Great + Good */
+.face-pair {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.focus-mood .face-pair .face + .face { margin-left: -20px; }
+.admin-note__mood .face-pair .face + .face { margin-left: -11px; }
+.mood-bar__label .face-pair .face + .face { margin-left: -8px; }
+
+.admin-note__between {
+  font-size: 0.85em;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0.7;
+}
+
+.mood-bar {
+  grid-template-columns: 116px 1fr 28px;
+}
+
+.mood-bar--blend {
+  padding-left: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.mood-bar--blend .mood-bar__fill {
+  background: linear-gradient(90deg, var(--mood-hi), var(--mood-lo));
+}
+
+.badge--flag {
+  color: #111111;
+  background: #ff9f45;
+}
+
+/* The *censored* sticker that covers a swear word */
+.censor-sticker {
+  display: inline-block;
+  margin: 0 0.1em;
+  padding: 0 0.45em;
+  font-family: var(--font-label);
+  font-size: 0.8em;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  white-space: nowrap;
+  color: #111111;
+  background: var(--sticker);
+  border: 1.5px solid #111111;
+  border-radius: 4px;
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.25);
+  transform: rotate(-3deg);
+  user-select: none;
+}
+
+:root[data-style="scribblish"] .censor-sticker {
+  color: #3b3446;
+  border: 1.5px dashed #3b3446;
+  border-radius: 12px 4px 10px 5px / 5px 10px 4px 12px;
+}
+
+:root[data-style="modern-2026"] .censor-sticker {
+  font-family: var(--font-label);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  border: 0;
+  border-radius: 1px;
+  box-shadow: 0 2px 0 rgba(21, 21, 21, 0.18);
+}
+
+:root[data-style="modern-bold"] .censor-sticker {
+  font-family: var(--font-scribble);
+  font-weight: 400;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ---------- Home page ---------- */
+
+.home {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 20px 72px;
+}
+
+.home-hero {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.home-hero__text {
+  max-width: 46ch;
+  margin: 16px auto 0;
+  font-size: 1.05rem;
+  color: var(--text-soft);
+}
+
+.home-hero__jump {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 16px;
+  margin-top: 22px;
+}
+
+.home-hero__about {
+  font-family: var(--font-label);
+  font-size: calc(0.95rem * var(--btn-scale));
+  font-weight: var(--label-weight);
+  color: var(--text);
+  text-decoration: underline wavy var(--scribble);
+  text-underline-offset: 6px;
+}
+
+.home-section {
+  margin-top: 64px;
+  scroll-margin-top: 16px;
+}
+
+.home-section--checkin {
+  max-width: 780px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.home-section__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: var(--display-weight);
+  line-height: 1;
+  letter-spacing: var(--display-tracking);
+  word-spacing: var(--display-words);
+  text-transform: var(--display-case);
+}
+
+.home-section__num {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.4em;
+  height: 1.6em;
+  padding: 0 0.5em;
+  font-family: var(--font-label);
+  font-size: 0.36em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--bg);
+  background: var(--text);
+  border-radius: var(--radius-pill);
+}
+
+.home-section--journey .journey-subtitle {
+  margin-top: 0;
+}
+
+.home-section--journey .journey-toolbar {
+  justify-content: flex-start;
+  margin: 14px 0 16px;
+}
+
+/* About: a few sticky notes explaining the site */
+.about__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.about-card {
+  position: relative;
+  padding: 24px 20px 20px;
+  color: var(--on-color);
+  background: var(--mood);
+  border: var(--bw) solid var(--note-line);
+  border-radius: var(--radius-note);
+  box-shadow: var(--shadow-note);
+}
+
+.about-card:nth-child(odd) { transform: rotate(-0.6deg); }
+.about-card:nth-child(even) { transform: rotate(0.5deg); }
+
+.about-card--wide {
+  grid-column: span 2;
+}
+
+.about-card:last-child {
+  grid-column: 1 / -1;
+}
+
+.about-card::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 60px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgba(17, 17, 17, 0.2);
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.about-card__title {
+  margin: 0 0 8px;
+  font-family: var(--font-heading);
+  font-size: calc(1.2rem * var(--heading-scale));
+  font-weight: var(--heading-weight);
+  line-height: 1.2;
+}
+
+.about-card p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.about-card__steps {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 1.3em;
+  line-height: 1.45;
+}
+
+/* ---------- The page nav in each style ---------- */
+
+/* Modern 2026: tiny mono tabs, the current one is the yellow tab (like "HOME" in the reference) */
+:root[data-style="modern-2026"] .page-nav {
+  gap: 2px;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+:root[data-style="modern-2026"] .page-nav__link {
+  padding: 0.8em 1.1em;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 0;
+  border-radius: 0;
+}
+
+:root[data-style="modern-2026"] .page-nav__link[aria-current="page"] {
+  color: #151515;
+  background: var(--highlight);
+}
+
+:root[data-style="modern-2026"] .admin-link {
+  background: transparent;
+  border: var(--bw) solid var(--line);
+}
+
+:root[data-style="modern-2026"] .admin-link.is-admin {
+  color: #151515;
+  background: var(--c-mint);
+}
+
+/* Modern Bold: plain uppercase links, the current one gets a lime marker block */
+:root[data-style="modern-bold"] .page-nav {
+  gap: 10px;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+:root[data-style="modern-bold"] .page-nav__link {
+  padding: 0.4em 0.6em;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 0;
+  border-radius: 0;
+}
+
+:root[data-style="modern-bold"] .page-nav__link[aria-current="page"] {
+  color: #111111;
+  background: var(--c-acid);
+  transform: rotate(-2deg);
+}
+
+:root[data-style="modern-bold"] .home-hero__jump {
+  justify-content: flex-start;
+}
+
+:root[data-style="modern-bold"] .home-hero__text {
+  margin-left: 0;
+}
+
+/* Scribblish: the current page gets a soft lavender blob */
+:root[data-style="scribblish"] .page-nav__link[aria-current="page"] {
+  color: var(--on-accent);
+  background: var(--accent);
+  border: 2px dashed var(--line);
+}
+
+/* ---------- Phones ---------- */
+@media (max-width: 700px) {
+  /* Row 1: logo + buttons. Row 2: the three pages, full width. */
+  .topbar__tools {
+    margin-left: auto;
+  }
+
+  .page-nav {
+    order: 3;
+    width: 100%;
+  }
+
+  .page-nav__link {
+    flex: 1;
+    padding: 0.55em 0.3em;
+  }
+
+  :root[data-style="modern-2026"] .page-nav__link {
+    padding: 0.8em 0.3em;
+    letter-spacing: 0.08em;
+  }
+
+  .home {
+    padding: 0 16px 56px;
+  }
+
+  .home-section {
+    margin-top: 48px;
+  }
+
+  .about__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-card--wide,
+  .about-card:last-child {
+    grid-column: auto;
+  }
+
+  .mood-blend {
+    margin-top: -14px;
+  }
+
+  .mood-blend__dot {
+    width: 22px;
+    height: 22px;
+  }
+
+  .mood-blend__dot::before,
+  .mood-blend__dot::after {
+    width: 9px;
+  }
+}
+
+
+/* ---------- Home: the journey map card (a button to journey.html) ---------- */
+
+.journey-teaser {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: 28px;
+  padding: clamp(20px, 4vw, 36px);
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-l);
+}
+
+/* A little pile of sticky notes as a preview */
+.journey-teaser__stack {
+  position: relative;
+  height: 170px;
+}
+
+.journey-teaser__note {
+  position: absolute;
+  width: 150px;
+  height: 104px;
+  padding: 20px 12px 10px;
+  font-family: var(--font-label);
+  font-size: calc(0.9rem * var(--note-scale));
+  font-weight: var(--label-weight);
+  color: var(--on-color);
+  background: var(--mood);
+  border: var(--bw) solid var(--note-line);
+  border-radius: var(--radius-note);
+  box-shadow: var(--shadow-note);
+}
+
+.journey-teaser__note:nth-child(1) { top: 0; left: 4%; transform: rotate(-7deg); }
+.journey-teaser__note:nth-child(2) { top: 30px; left: 30%; transform: rotate(4deg); }
+.journey-teaser__note:nth-child(3) { top: 58px; left: 12%; transform: rotate(-2deg); }
+
+.journey-teaser__note.is-blend {
+  background: linear-gradient(135deg, var(--mood-hi) 0 50%, var(--mood-lo) 50% 100%);
+}
+
+.journey-teaser__note::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 48px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgba(17, 17, 17, 0.2);
+  transform: translateX(-50%) rotate(-4deg);
+}
+
+.journey-teaser:hover .journey-teaser__note:nth-child(2) {
+  transform: rotate(8deg) translate(8px, -6px);
+}
+
+.journey-teaser__note {
+  transition: transform 0.3s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.journey-teaser__title {
+  margin: 0 0 6px;
+  font-family: var(--font-heading);
+  font-size: calc(1.4rem * var(--heading-scale));
+  font-weight: var(--heading-weight);
+  line-height: 1.2;
+}
+
+.journey-teaser__text p:not(.journey-teaser__title) {
+  margin: 0 0 18px;
+  color: var(--text-soft);
+}
+
+/* Home: the check-in card shows the five faces instead of sticky notes */
+.checkin-teaser__faces {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.checkin-teaser__faces .face {
+  width: 58px;
+  height: 58px;
+  transition: transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.checkin-teaser__faces .face:nth-child(odd) { transform: rotate(-6deg); }
+.checkin-teaser__faces .face:nth-child(even) { transform: rotate(5deg) translateY(6px); }
+
+.checkin-teaser:hover .checkin-teaser__faces .face:nth-child(1) {
+  transform: rotate(-14deg) scale(1.12);
+}
+
+/* Pixel faces look jagged when rotated */
+:root[data-style="modern-2026"] .checkin-teaser__faces .face {
+  transform: none;
+}
+
+:root[data-style="modern-2026"] .checkin-teaser__faces .face:nth-child(even) {
+  transform: translateY(6px);
+}
+
+@media (max-width: 700px) {
+  .checkin-teaser__faces .face {
+    width: 46px;
+    height: 46px;
+  }
+}
+
+/* ---------- Journey map: admin bar in the big note ---------- */
+
+.focus-admin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1.5px dashed rgba(17, 17, 17, 0.35);
+}
+
+.focus-admin__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.focus-admin__label svg {
+  width: 14px;
+  height: 14px;
+}
+
+.focus-admin__hint {
+  width: 100%;
+  margin: 0;
+  font-size: 0.78rem;
+  opacity: 0.75;
+}
+
+.focus-admin__hint.is-error {
+  font-weight: 700;
+  color: #b8231c;
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  .journey-teaser {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .journey-teaser__stack {
+    height: 150px;
+  }
+
+  .journey-teaser .btn--big {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+
+/* ---------- 9. Animations ---------- */
+
+@keyframes float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -7px; }
+}
+
+@keyframes spin {
+  to { rotate: 360deg; }
+}
+
+@keyframes bounce {
+  0% { scale: 0.8; }
+  60% { scale: 1.12; }
+  100% { scale: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { translate: 0 0; }
+  25% { translate: -5px 0; }
+  75% { translate: 5px 0; }
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes swipe {
+  from { scale: 0 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.25; }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; scale: 0.88; }
+  to { opacity: 1; scale: 1; }
+}
+
+@keyframes fly {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  50% { translate: 6px -8px; rotate: -6deg; }
+}
+
+@keyframes note-drop {
+  from { opacity: 0; translate: 0 -18px; scale: 0.85; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
+}
+
+
+/* ---------- 10. Small screens ---------- */
+
+@media (max-width: 700px) {
+  :root {
+    --lane-h: 100px;
+    --ruler-h: 34px;
+    --note-w: 116px;
+    --note-h: 82px;
+    --labels-w: 60px;
+  }
+
+  .topbar {
+    padding: 14px 16px 0;
+  }
+
+  .topbar__tools {
+    gap: 8px;
+  }
+
+  .brand span {
+    display: none; /* just the face logo on phones */
+  }
+
+  .icon-button {
+    width: 42px;
+    height: 42px;
+  }
+
+  .sticker--burst {
+    top: -8px;
+    right: 0;
+    width: 76px;
+    height: 76px;
+  }
+
+  .sticker--burst span {
+    max-width: 58px;
+    font-size: calc(0.78rem * var(--heading-scale));
+  }
+
+  .float-doodle--sparkle {
+    top: 4px;
+    left: -2px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .hero {
+    padding-top: 30px;
+  }
+
+  .hero__note {
+    font-size: 1.4rem;
+  }
+
+  .mood-options {
+    gap: 6px;
+  }
+
+  .mood-option {
+    gap: 7px;
+    padding: 12px 2px 9px;
+  }
+
+  .mood-option__label {
+    padding: 0.1em 0.35em;
+    font-size: calc(0.56rem * var(--label-scale));
+    letter-spacing: 0;
+    overflow-wrap: normal; /* never split "Frustrated" in the middle */
+  }
+
+  .mood-option.is-selected::after {
+    top: -8px;
+    right: -5px;
+    width: 22px;
+    height: 22px;
+    font-size: 0.72rem;
+  }
+
+  .card {
+    padding: 22px 16px 26px;
+  }
+
+  .posting-as {
+    padding: 12px;
+  }
+
+  .identity-toggle {
+    width: 100%;
+  }
+
+  .journey-hero {
+    padding: 26px 16px 6px;
+  }
+
+  .journey-main {
+    padding: 12px 12px 28px;
+  }
+
+  .board {
+    border-radius: 20px;
+  }
+
+  .lane-label {
+    font-size: calc(0.56rem * var(--label-scale));
+    letter-spacing: 0.03em;
+  }
+
+  .lane-label .face {
+    width: 34px;
+    height: 34px;
+  }
+
+  .journey-pin {
+    font-size: calc(0.95rem * var(--pin-scale));
+  }
+
+  .note {
+    padding: 13px 8px 6px;
+  }
+
+  .note__text {
+    font-size: calc(0.8rem * var(--note-scale));
+  }
+
+  .note__meta {
+    font-size: calc(0.58rem * var(--note-scale));
+  }
+
+  .focus-card {
+    padding: 32px 20px 20px;
+  }
+
+  .focus-what {
+    font-size: calc(1.3rem * var(--heading-scale));
+  }
+
+  .settings__form {
+    padding: 18px 16px 16px;
+  }
+
+  .style-options {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .btn--big {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .scribble-note {
+    display: block;
+    margin: 6px 0 0;
+  }
+}
+
+
+/* ---------- 11. Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

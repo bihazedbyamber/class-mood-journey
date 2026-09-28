@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" data-style="modern-2026">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Class Mood Check-in</title>
+  <meta name="description" content="Tell us how you felt in class today. Anonymous unless you choose to add your name.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23C8F25A' stroke='%23111' stroke-width='4'/%3E%3Cpath d='M20 38q12 12 24 0' fill='none' stroke='%23111' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='26' r='3.5' fill='%23111'/%3E%3Ccircle cx='41' cy='26' r='3.5' fill='%23111'/%3E%3C/svg%3E">
+
+  <!-- Fonts for all four styles (Fontshare + Google Fonts) -->
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;family=Nunito:wght@400;600;700&amp;family=Patrick+Hand&amp;family=Jersey+10&amp;family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;family=Gochi+Hand&amp;family=Anton&amp;family=Archivo:wght@400;500;600;800;900&amp;family=Permanent+Marker&amp;display=swap">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- settings.js has no "defer": it must pick theme + style before the page is drawn -->
+  <script src="settings.js"></script>
+  <script src="moods.js" defer></script>
+  <script src="admin-login.js" defer></script>
+  <script type="module" src="input.js"></script>
+</head>
+<body class="page-input">
+
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Mood board home">
+      <svg class="brand__mark" aria-hidden="true"><use data-face="4" href="sprite.svg#face-modern-2026-4"/></svg>
+      <span>mood<strong>board</strong></span>
+    </a>
+    <!-- The page you are on gets aria-current="page" (and a highlight behind it) -->
+    <nav class="page-nav" aria-label="Pages">
+      <a class="page-nav__link" href="index.html">Home</a>
+      <a class="page-nav__link" href="checkin.html" aria-current="page">Check in</a>
+      <a class="page-nav__link" href="journey.html">Journey map</a>
+    </nav>
+    <div class="topbar__tools">
+      <button type="button" class="pill-link admin-link" data-admin-button title="Admin login">
+        <svg class="admin-link__icon" aria-hidden="true"><use href="sprite.svg#icon-lock"/></svg>
+        <span class="admin-link__label">Admin</span>
+      </button>
+      <button type="button" class="icon-button" data-open-settings aria-label="Open settings" title="Settings">
+        <svg aria-hidden="true"><use href="sprite.svg#icon-gear"/></svg>
+      </button>
+      <button type="button" class="icon-button theme-toggle" data-theme-toggle aria-label="Switch colour theme">
+        <svg class="theme-toggle__sun" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 1.5v2.5M12 20v2.5M1.5 12H4M20 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <svg class="theme-toggle__moon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20.5 14.8A8.5 8.5 0 1 1 9.2 3.5a7 7 0 0 0 11.3 11.3z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="input-page">
+    <section class="hero" aria-labelledby="page-title">
+      <!-- Floating stickers (decoration only) -->
+      <div class="sticker sticker--burst" aria-hidden="true">
+        <svg><use href="sprite.svg#doodle-burst"/></svg>
+        <span id="sticker-text">100%
+anon</span>
+      </div>
+      <svg class="float-doodle float-doodle--sparkle" aria-hidden="true"><use href="sprite.svg#doodle-sparkle"/></svg>
+      <svg class="float-doodle float-doodle--asterisk" aria-hidden="true"><use href="sprite.svg#doodle-asterisk"/></svg>
+      <!-- Only shown in the Modern Bold style -->
+      <svg class="float-doodle float-doodle--flame" aria-hidden="true"><use href="sprite.svg#doodle-flame"/></svg>
+      <svg class="float-doodle float-doodle--flower" aria-hidden="true"><use href="sprite.svg#doodle-flower"/></svg>
+
+      <p class="eyebrow">
+        <svg class="eyebrow__icon" aria-hidden="true"><use href="sprite.svg#doodle-asterisk"/></svg>
+        Class mood check-in
+      </p>
+
+      <h1 class="hero__title" id="page-title">
+        How was class
+        <span class="scribble-circle">today?<svg class="scribble-circle__line" aria-hidden="true" viewBox="0 0 300 120" preserveAspectRatio="none"><path pathLength="1" vector-effect="non-scaling-stroke" d="M46 24C118 4 252 6 285 42c22 30-34 64-134 68C60 114 8 94 14 62 20 32 92 13 196 15"/></svg></span>
+      </h1>
+
+      <p class="hero__note">
+        <span id="hero-note-text">no names. no logins.
+just honest vibes</span>
+        <svg class="hero__note-arrow" aria-hidden="true" viewBox="0 0 60 50"><path d="M6 6c4 22 18 34 44 36M40 32l11 10-14 5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </p>
+    </section>
+
+    <section class="card" id="form-card" aria-label="Mood check-in form">
+      <!-- The form. input.js checks it and sends it to the server. -->
+      <form id="mood-form" class="mood-form" novalidate>
+        <fieldset class="mood-picker" id="mood-picker" aria-describedby="mood-error">
+          <legend class="field-label"><span class="step" aria-hidden="true">01</span> Pick your mood</legend>
+
+          <!-- 5 faces, with a small "+" between each pair for "a bit of both" -->
+          <div class="mood-options">
+            <label class="mood-option mood-5">
+              <input type="radio" name="mood" value="5">
+              <svg class="face" aria-hidden="true"><use data-face="5" href="sprite.svg#face-modern-2026-5"/></svg>
+              <span class="mood-option__label">Great</span>
+            </label>
+            <label class="mood-blend mood-45" data-name="Cheerful" title="Cheerful: between Great and Good">
+              <input type="radio" name="mood" value="4.5">
+              <span class="mood-blend__dot" aria-hidden="true"></span>
+              <span class="visually-hidden">Cheerful, between Great and Good</span>
+            </label>
+            <label class="mood-option mood-4">
+              <input type="radio" name="mood" value="4">
+              <svg class="face" aria-hidden="true"><use data-face="4" href="sprite.svg#face-modern-2026-4"/></svg>
+              <span class="mood-option__label">Good</span>
+            </label>
+            <label class="mood-blend mood-35" data-name="Chill" title="Chill: between Good and Okay">
+              <input type="radio" name="mood" value="3.5">
+              <span class="mood-blend__dot" aria-hidden="true"></span>
+              <span class="visually-hidden">Chill, between Good and Okay</span>
+            </label>
+            <label class="mood-option mood-3">
+              <input type="radio" name="mood" value="3">
+              <svg class="face" aria-hidden="true"><use data-face="3" href="sprite.svg#face-modern-2026-3"/></svg>
+              <span class="mood-option__label">Okay</span>
+            </label>
+            <label class="mood-blend mood-25" data-name="Meh" title="Meh: between Okay and Bad">
+              <input type="radio" name="mood" value="2.5">
+              <span class="mood-blend__dot" aria-hidden="true"></span>
+              <span class="visually-hidden">Meh, between Okay and Bad</span>
+            </label>
+            <label class="mood-option mood-2">
+              <input type="radio" name="mood" value="2">
+              <svg class="face" aria-hidden="true"><use data-face="2" href="sprite.svg#face-modern-2026-2"/></svg>
+              <span class="mood-option__label">Bad</span>
+            </label>
+            <label class="mood-blend mood-15" data-name="Stressed" title="Stressed: between Bad and Frustrated">
+              <input type="radio" name="mood" value="1.5">
+              <span class="mood-blend__dot" aria-hidden="true"></span>
+              <span class="visually-hidden">Stressed, between Bad and Frustrated</span>
+            </label>
+            <label class="mood-option mood-1">
+              <input type="radio" name="mood" value="1">
+              <svg class="face" aria-hidden="true"><use data-face="1" href="sprite.svg#face-modern-2026-1"/></svg>
+              <span class="mood-option__label">Frustrated</span>
+            </label>
+          </div>
+          <p class="mood-hint">Feeling a bit of both? Tap a <span class="mood-hint__plus" aria-hidden="true">+</span> between two faces.</p>
+
+          <!-- A little reaction appears here when a mood is picked -->
+          <p class="mood-reaction" id="mood-reaction" aria-live="polite"></p>
+          <p class="field-error" id="mood-error" aria-live="polite"></p>
+        </fieldset>
+
+        <div class="field">
+          <!-- Quick ideas for question 2: tapping one fills in the box below -->
+          <div class="quick-picks" role="group" aria-label="Quick ideas for question 2">
+            <span class="quick-picks__label" aria-hidden="true">tap an idea for no. 2 ↓</span>
+            <button type="button" class="quick-pick">Group work</button>
+            <button type="button" class="quick-pick">A surprise quiz</button>
+            <button type="button" class="quick-pick">Science experiment</button>
+            <button type="button" class="quick-pick">Presentations</button>
+            <button type="button" class="quick-pick">Too much homework</button>
+            <button type="button" class="quick-pick">Free time</button>
+          </div>
+          <label class="field-label" for="what-happened"><span class="step" aria-hidden="true">02</span> What happened in class?</label>
+          <input class="input" id="what-happened" name="whatHappened" type="text"
+                 maxlength="80" autocomplete="off" required
+                 placeholder="e.g. We did a fun science experiment"
+                 aria-describedby="what-error what-counter">
+          <div class="field-footer">
+            <p class="field-error" id="what-error" aria-live="polite"></p>
+            <span class="counter" id="what-counter">0 / 80</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="comment">
+            <span class="step" aria-hidden="true">03</span> Anything you want to say?
+            <span class="optional">optional</span>
+          </label>
+          <textarea class="input input--area" id="comment" name="comment" rows="4"
+                    maxlength="300"
+                    placeholder="A wish, an idea, a thank-you... anything!"
+                    aria-describedby="comment-error comment-counter"></textarea>
+          <div class="field-footer">
+            <p class="field-error" id="comment-error" aria-live="polite"></p>
+            <span class="counter" id="comment-counter">0 / 300</span>
+          </div>
+        </div>
+
+        <!-- Who the note is from: a quick switch, right here in the form -->
+        <div class="posting-as">
+          <div class="posting-as__top">
+            <span class="posting-as__label" id="posting-as-label">Posting as</span>
+            <div class="identity-toggle" role="group" aria-labelledby="posting-as-label">
+              <button type="button" class="identity-toggle__option" data-identity="anonymous" aria-pressed="true">
+                <svg aria-hidden="true"><use href="sprite.svg#icon-mask"/></svg>
+                Anonymous
+              </button>
+              <button type="button" class="identity-toggle__option" data-identity="named" aria-pressed="false">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>
+                My name
+              </button>
+            </div>
+          </div>
+          <div class="posting-as__name" id="posting-name-field" hidden>
+            <input class="input" id="posting-name-input" type="text" maxlength="24"
+                   autocomplete="nickname" placeholder="Type your name or nickname"
+                   aria-label="Your name" aria-describedby="posting-hint">
+          </div>
+          <p class="posting-as__hint" id="posting-hint" aria-live="polite"></p>
+        </div>
+
+        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary btn--big" id="submit-btn">
+            <span class="btn__label">Send my feeling</span>
+            <svg class="btn__icon" aria-hidden="true"><use href="sprite.svg#doodle-plane"/></svg>
+          </button>
+        </div>
+      </form>
+
+      <!-- Shown after a successful submit -->
+      <div class="thank-you" id="thank-you" tabindex="-1" hidden>
+        <div class="thank-you__art" aria-hidden="true">
+          <svg class="thank-you__burst"><use href="sprite.svg#doodle-burst"/></svg>
+          <svg class="thank-you__plane"><use href="sprite.svg#doodle-plane"/></svg>
+          <svg class="thank-you__heart"><use href="sprite.svg#doodle-heart"/></svg>
+          <svg class="thank-you__sparkle"><use href="sprite.svg#doodle-sparkle"/></svg>
+        </div>
+        <h2 class="thank-you__title">Sent! Thank you</h2>
+        <p class="thank-you__message" id="thank-you-message"></p>
+        <div class="thank-you__actions">
+          <button type="button" class="btn" id="again-btn">Share another</button>
+          <a class="btn btn--primary" href="journey.html">See the journey map ↗</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================
+       Settings panel (the same on every page; logic in settings.js)
+       ============================================================ -->
+  <dialog class="settings" id="settings-dialog" aria-labelledby="settings-title">
+    <form method="dialog" class="settings__form">
+      <div class="settings__head">
+        <h2 class="settings__title" id="settings-title">Settings</h2>
+        <button class="settings__close" value="close" aria-label="Close settings">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <fieldset class="settings__group">
+        <legend class="settings__label">Your name</legend>
+        <div class="segmented">
+          <label class="segmented__option"><input type="radio" name="identity" value="anonymous"><span>Stay anonymous</span></label>
+          <label class="segmented__option"><input type="radio" name="identity" value="named"><span>Show my name</span></label>
+        </div>
+        <input class="input settings__name" id="settings-name" type="text" maxlength="24"
+               autocomplete="nickname" placeholder="Your name or nickname"
+               aria-label="Your name" aria-describedby="settings-name-hint">
+        <p class="settings__hint" id="settings-name-hint" aria-live="polite"></p>
+      </fieldset>
+
+      <fieldset class="settings__group">
+        <legend class="settings__label">Style</legend>
+        <div class="style-options">
+          <label class="style-option">
+            <input type="radio" name="style" value="modern-2026">
+            <span class="style-preview style-preview--modern-2026" aria-hidden="true"><b>Aa</b><i></i><i></i><i></i></span>
+            <span class="style-option__name">Modern 2026</span>
+            <span class="style-option__desc">Pixel type, tape &amp; torn tags</span>
+          </label>
+          <label class="style-option">
+            <input type="radio" name="style" value="scribblish">
+            <span class="style-preview style-preview--scribblish" aria-hidden="true"><b>Aa</b><i></i><i></i><i></i></span>
+            <span class="style-option__name">Scribblish</span>
+            <span class="style-option__desc">Friendly notebook doodles</span>
+          </label>
+          <label class="style-option">
+            <input type="radio" name="style" value="modern-bold">
+            <span class="style-preview style-preview--modern-bold" aria-hidden="true"><b>Aa</b><i></i><i></i><i></i></span>
+            <span class="style-option__name">Modern Bold</span>
+            <span class="style-option__desc">Zine collage, marker scribbles</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="settings__group">
+        <legend class="settings__label">Theme</legend>
+        <div class="segmented segmented--three">
+          <label class="segmented__option"><input type="radio" name="theme" value="light"><span>Light</span></label>
+          <label class="segmented__option"><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+          <label class="segmented__option"><input type="radio" name="theme" value="auto"><span>Device</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="settings__group">
+        <legend class="settings__label">Censor</legend>
+        <label class="switch">
+          <input type="checkbox" name="censor" checked>
+          <span class="switch__track" aria-hidden="true"></span>
+          <span class="switch__text"><strong>Hide swear words</strong><small>Covers swear words (English, Indonesian and Javanese) on the journey map with a <em>*censored*</em> sticker. On by default.</small></span>
+        </label>
+      </fieldset>
+
+      <div class="settings__foot">
+        <button class="btn btn--primary" value="done">Done</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Admin login (logic in admin-login.js; the password is checked by the server) -->
+  <dialog class="settings admin-login" id="admin-dialog" aria-labelledby="admin-login-title">
+    <form class="settings__form" id="admin-login-form" novalidate>
+      <div class="settings__head">
+        <h2 class="settings__title" id="admin-login-title">Admin login</h2>
+        <button type="button" class="settings__close" data-close-dialog aria-label="Close">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <p class="settings__hint">Only for the student admins (moderators) of this class. No email needed, just the password.</p>
+      <div class="settings__group">
+        <label class="settings__label" for="admin-password">Password</label>
+        <input class="input" id="admin-password" type="password" maxlength="200" autocomplete="current-password" required>
+        <p class="settings__hint is-warning" id="admin-login-error" aria-live="polite"></p>
+      </div>
+      <div class="settings__foot">
+        <button type="submit" class="btn btn--primary">Log in</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

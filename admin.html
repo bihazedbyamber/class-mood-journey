@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" data-style="modern-2026">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Admin Desk</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23C8F25A' stroke='%23111' stroke-width='4'/%3E%3Cpath d='M20 38q12 12 24 0' fill='none' stroke='%23111' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='26' r='3.5' fill='%23111'/%3E%3Ccircle cx='41' cy='26' r='3.5' fill='%23111'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;family=Nunito:wght@400;600;700&amp;family=Patrick+Hand&amp;family=Jersey+10&amp;family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;family=Gochi+Hand&amp;family=Anton&amp;family=Archivo:wght@400;500;600;800;900&amp;family=Permanent+Marker&amp;display=swap">
+  <link rel="stylesheet" href="style.css">
+
+  <script src="settings.js"></script>
+  <script src="moods.js" defer></script>
+  <script src="censor.js" defer></script>
+  <script type="module" src="admin.js"></script>
+</head>
+<body class="page-admin">
+
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Mood board home">
+      <svg class="brand__mark" aria-hidden="true"><use data-face="4" href="sprite.svg#face-modern-2026-4"/></svg>
+      <span>mood<strong>board</strong></span>
+    </a>
+    <nav class="page-nav" aria-label="Pages">
+      <a class="page-nav__link" href="index.html">Home</a>
+      <a class="page-nav__link" href="checkin.html">Check in</a>
+      <a class="page-nav__link" href="journey.html">Journey map</a>
+    </nav>
+    <div class="topbar__tools">
+      <button type="button" class="pill-link admin-link is-admin" id="logout-btn" aria-current="page" hidden>
+        <svg class="admin-link__icon" aria-hidden="true"><use href="sprite.svg#icon-lock"/></svg>
+        <span class="admin-link__label">Log out</span>
+      </button>
+      <button type="button" class="icon-button theme-toggle" data-theme-toggle aria-label="Switch colour theme">
+        <svg class="theme-toggle__sun" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 1.5v2.5M12 20v2.5M1.5 12H4M20 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <svg class="theme-toggle__moon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20.5 14.8A8.5 8.5 0 1 1 9.2 3.5a7 7 0 0 0 11.3 11.3z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="admin-page">
+    <!-- Shown until the password is accepted -->
+    <section class="card admin-login-card" id="login-view" hidden aria-labelledby="login-title">
+      <h1 class="settings__title" id="login-title">Admin login</h1>
+      <p class="settings__hint">Only for the student admins (moderators) of this class.</p>
+      <form class="admin-login-card__form" id="login-form" novalidate>
+        <label class="settings__label" for="login-password">Password</label>
+        <input class="input" id="login-password" type="password" maxlength="200" autocomplete="current-password" required>
+        <p class="settings__hint is-warning" id="login-error" aria-live="polite"></p>
+        <button type="submit" class="btn btn--primary">Log in</button>
+      </form>
+    </section>
+
+    <!-- The admin desk -->
+    <div id="admin-view" hidden>
+      <section class="admin-hero" aria-labelledby="admin-title">
+        <p class="eyebrow">
+          <svg class="eyebrow__icon" aria-hidden="true"><use href="sprite.svg#doodle-asterisk"/></svg>
+          Admin desk
+        </p>
+        <h1 class="journey-title admin-title" id="admin-title">
+          Sort the <span class="marker">notes<svg class="marker__swipe" aria-hidden="true" viewBox="0 0 300 70" preserveAspectRatio="none"><path d="M6 22C70 8 210 4 294 14l-4 40C200 46 90 50 10 60z"/></svg></span>
+        </h1>
+        <p class="journey-subtitle">
+          Drag a sticky note onto a pile, or use <strong>Move to</strong>.
+          Hidden and waiting notes are only visible here.
+        </p>
+      </section>
+
+      <!-- Numbers at a glance -->
+      <section class="admin-stats" aria-label="Numbers at a glance">
+        <div class="stat"><span class="stat__value" id="stat-total">0</span><span class="stat__label">notes</span></div>
+        <div class="stat"><span class="stat__value" id="stat-today">0</span><span class="stat__label">today</span></div>
+        <div class="stat stat--alert"><span class="stat__value" id="stat-pending">0</span><span class="stat__label">need review</span></div>
+        <div class="stat"><span class="stat__value" id="stat-hidden">0</span><span class="stat__label">hidden</span></div>
+        <div class="stat stat--wide">
+          <span class="stat__label">moods</span>
+          <ul class="mood-bars" id="mood-bars" aria-label="Notes per mood"></ul>
+        </div>
+      </section>
+
+      <!-- The piles (stacks of sticky notes) -->
+      <section class="admin-section" aria-labelledby="piles-title">
+        <div class="admin-section__head">
+          <h2 class="admin-section__title" id="piles-title">Piles</h2>
+          <form class="new-pile" id="new-pile-form" novalidate>
+            <label class="visually-hidden" for="new-pile-name">New pile name</label>
+            <input class="input new-pile__name" id="new-pile-name" maxlength="30" placeholder="New pile, e.g. To discuss" autocomplete="off">
+            <label class="visually-hidden" for="new-pile-color">Pile colour</label>
+            <select class="input new-pile__color" id="new-pile-color"></select>
+            <button type="submit" class="btn">+ Add pile</button>
+          </form>
+        </div>
+        <div class="pile-row" id="pile-row"></div>
+      </section>
+
+      <!-- The notes of the chosen pile, spread out -->
+      <section class="admin-section spread" aria-labelledby="spread-title">
+        <div class="admin-section__head">
+          <h2 class="admin-section__title" id="spread-title">Inbox</h2>
+          <div class="spread__pile-actions" id="spread-pile-actions" hidden>
+            <button type="button" class="btn btn--small" id="rename-pile-btn">Rename</button>
+            <button type="button" class="btn btn--small btn--danger" id="delete-pile-btn">Delete pile</button>
+          </div>
+        </div>
+        <div class="filter" role="group" aria-label="Show">
+          <button type="button" class="chip" data-view="all" aria-pressed="true">All</button>
+          <button type="button" class="chip" data-view="pending" aria-pressed="false">Need review</button>
+          <button type="button" class="chip" data-view="hidden" aria-pressed="false">Hidden</button>
+          <button type="button" class="chip" data-view="pinned" aria-pressed="false">Pinned</button>
+        </div>
+        <ul class="spread__grid" id="spread-grid" aria-label="Notes in this pile"></ul>
+        <p class="spread__empty" id="spread-empty" hidden>No notes here. ✿</p>
+      </section>
+
+      <!-- Class controls -->
+      <section class="admin-section" aria-labelledby="controls-title">
+        <h2 class="admin-section__title" id="controls-title">Class controls</h2>
+        <div class="controls">
+          <label class="switch">
+            <input type="checkbox" id="toggle-paused">
+            <span class="switch__track" aria-hidden="true"></span>
+            <span class="switch__text"><strong>Pause check-ins</strong><small>Nobody can send new notes until you switch it off.</small></span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="toggle-approval">
+            <span class="switch__track" aria-hidden="true"></span>
+            <span class="switch__text"><strong>Check new notes first</strong><small>New notes wait in "Need review" until you approve them.</small></span>
+          </label>
+
+          <div class="controls__words">
+            <label class="settings__label" for="blocked-words">Blocked words</label>
+            <textarea class="input" id="blocked-words" rows="4" spellcheck="false"></textarea>
+            <p class="settings__hint">Notes (and names) with these words are <strong>refused completely</strong>. One per line or separated by commas.
+              Swear words don't need to be here: the censor already covers them with a <em>*censored*</em> sticker.
+              Use this for things like a classmate's name that is being used for teasing. Tricks such as <em>@syafa</em> or <em>a s y a f a</em> are caught too.</p>
+            <button type="button" class="btn" id="save-words-btn">Save words</button>
+          </div>
+
+          <div class="controls__export">
+            <span class="settings__label">Export</span>
+            <a class="btn" href="/api/admin/export.csv" download>Download all notes (CSV)</a>
+            <p class="settings__hint" id="storage-hint"></p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Render "Blueprint": tells Render how to run this website.
+# Render reads this file when you choose New > Blueprint and pick your GitHub repo.
+services:
+  - type: web
+    name: class-mood-journey
+    runtime: node
+    plan: free
+    buildCommand: echo "Nothing to build or install"
+    startCommand: node server.js
+    healthCheckPath: /api/status
+    envVars:
+      # Secret values: Render asks you to paste them (they are never stored in GitHub).
+      - key: APPS_SCRIPT_URL      # your Apps Script web app URL (.../exec)
+        sync: false
+      - key: ADMIN_PASSWORD_HASH  # the "adminPasswordHash" value from your config.json
+        sync: false
+      - key: SHEET_SECRET         # the "sheetSecret" value from your config.json
+        sync: false

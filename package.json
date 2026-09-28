@@ -1,0 +1,13 @@
+{
+  "name": "class-mood-journey",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A class mood check-in and journey map, made by the class, for the class. No dependencies: only Node.js built-in modules.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  // Press F5 in VS Code to start the Class Mood Journey server.
+  // Then open http://localhost:3000 in your browser.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Start Class Mood Journey",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/server.js",
+      "console": "integratedTerminal"
+    }
+  ]
+}

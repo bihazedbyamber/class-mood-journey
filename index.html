@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" data-style="modern-2026">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Class Mood Journey</title>
+  <meta name="description" content="Check in with how class felt, and see the whole class's mood as a journey map of sticky notes.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23C8F25A' stroke='%23111' stroke-width='4'/%3E%3Cpath d='M20 38q12 12 24 0' fill='none' stroke='%23111' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='26' r='3.5' fill='%23111'/%3E%3Ccircle cx='41' cy='26' r='3.5' fill='%23111'/%3E%3C/svg%3E">
+
+  <!-- Fonts for all four styles (Fontshare + Google Fonts) -->
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;family=Nunito:wght@400;600;700&amp;family=Patrick+Hand&amp;family=Jersey+10&amp;family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;family=Gochi+Hand&amp;family=Anton&amp;family=Archivo:wght@400;500;600;800;900&amp;family=Permanent+Marker&amp;display=swap">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- settings.js has no "defer": it must pick theme + style before the page is drawn.
+       The home page only links to the check-in and journey map pages. -->
+  <script src="settings.js"></script>
+  <script src="moods.js" defer></script>
+  <script src="admin-login.js" defer></script>
+</head>
+<body class="page-home page-input">
+
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Mood board home">
+      <svg class="brand__mark" aria-hidden="true"><use data-face="4" href="sprite.svg#face-modern-2026-4"/></svg>
+      <span>mood<strong>board</strong></span>
+    </a>
+    <nav class="page-nav" aria-label="Pages">
+      <a class="page-nav__link" href="index.html" aria-current="page">Home</a>
+      <a class="page-nav__link" href="checkin.html">Check in</a>
+      <a class="page-nav__link" href="journey.html">Journey map</a>
+    </nav>
+    <div class="topbar__tools">
+      <button type="button" class="pill-link admin-link" data-admin-button title="Admin login">
+        <svg class="admin-link__icon" aria-hidden="true"><use href="sprite.svg#icon-lock"/></svg>
+        <span class="admin-link__label">Admin</span>
+      </button>
+      <button type="button" class="icon-button" data-open-settings aria-label="Open settings" title="Settings">
+        <svg aria-hidden="true"><use href="sprite.svg#icon-gear"/></svg>
+      </button>
+      <button type="button" class="icon-button theme-toggle" data-theme-toggle aria-label="Switch colour theme">
+        <svg class="theme-toggle__sun" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 1.5v2.5M12 20v2.5M1.5 12H4M20 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <svg class="theme-toggle__moon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20.5 14.8A8.5 8.5 0 1 1 9.2 3.5a7 7 0 0 0 11.3 11.3z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="home">
+    <!-- ================= A short welcome ================= -->
+    <section class="hero home-hero" aria-labelledby="home-title">
+      <div class="sticker sticker--burst" aria-hidden="true">
+        <svg><use href="sprite.svg#doodle-burst"/></svg>
+        <span id="sticker-text">100%
+anon</span>
+      </div>
+      <svg class="float-doodle float-doodle--sparkle" aria-hidden="true"><use href="sprite.svg#doodle-sparkle"/></svg>
+      <svg class="float-doodle float-doodle--asterisk" aria-hidden="true"><use href="sprite.svg#doodle-asterisk"/></svg>
+      <!-- Only shown in the Modern Bold style -->
+      <svg class="float-doodle float-doodle--flame" aria-hidden="true"><use href="sprite.svg#doodle-flame"/></svg>
+      <svg class="float-doodle float-doodle--flower" aria-hidden="true"><use href="sprite.svg#doodle-flower"/></svg>
+
+      <p class="eyebrow">
+        <svg class="eyebrow__icon" aria-hidden="true"><use href="sprite.svg#doodle-asterisk"/></svg>
+        Class mood board
+      </p>
+      <h1 class="hero__title" id="home-title">
+        How's our class
+        <span class="scribble-circle">feeling?<svg class="scribble-circle__line" aria-hidden="true" viewBox="0 0 300 120" preserveAspectRatio="none"><path pathLength="1" vector-effect="non-scaling-stroke" d="M46 24C118 4 252 6 285 42c22 30-34 64-134 68C60 114 8 94 14 62 20 32 92 13 196 15"/></svg></span>
+      </h1>
+      <p class="home-hero__text">Check in with how class felt in 30 seconds, then see everyone's feelings on the journey map.</p>
+      <div class="home-hero__jump">
+        <a class="btn btn--primary" href="checkin.html">Check in ↗</a>
+        <a class="btn" href="journey.html">See the journey map ↗</a>
+        <a class="home-hero__about" href="#about">What is this?</a>
+      </div>
+      <p class="hero__note">
+        <span id="hero-note-text">no names. no logins.
+just honest vibes</span>
+        <svg class="hero__note-arrow" aria-hidden="true" viewBox="0 0 60 50"><path d="M6 6c4 22 18 34 44 36M40 32l11 10-14 5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </p>
+    </section>
+
+    <!-- ================= 1. Check in: just a button to its own page ================= -->
+    <section class="home-section home-section--checkin" id="checkin" aria-labelledby="checkin-title">
+      <h2 class="home-section__title" id="checkin-title"><span class="home-section__num" aria-hidden="true">01</span> Check in</h2>
+
+      <div class="journey-teaser checkin-teaser">
+        <div class="checkin-teaser__faces" aria-hidden="true">
+          <svg class="face"><use data-face="5" href="sprite.svg#face-modern-2026-5"/></svg>
+          <svg class="face"><use data-face="4" href="sprite.svg#face-modern-2026-4"/></svg>
+          <svg class="face"><use data-face="3" href="sprite.svg#face-modern-2026-3"/></svg>
+          <svg class="face"><use data-face="2" href="sprite.svg#face-modern-2026-2"/></svg>
+          <svg class="face"><use data-face="1" href="sprite.svg#face-modern-2026-1"/></svg>
+        </div>
+        <div class="journey-teaser__text">
+          <p class="journey-teaser__title">How was class today?</p>
+          <p>Pick a face, say what happened in a few words, done. It takes about 30 seconds, and it's anonymous unless you add your name.</p>
+          <a class="btn btn--primary btn--big" href="checkin.html">Start my check-in ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 2. Journey map: just a button to its own page ================= -->
+    <section class="home-section home-section--journey" id="journey" aria-labelledby="journey-title">
+      <h2 class="home-section__title" id="journey-title"><span class="home-section__num" aria-hidden="true">02</span> Journey map</h2>
+
+      <div class="journey-teaser">
+        <div class="journey-teaser__stack" aria-hidden="true">
+          <span class="journey-teaser__note mood-5">Science experiment!</span>
+          <span class="journey-teaser__note mood-45 is-blend">Group work</span>
+          <span class="journey-teaser__note mood-2">Surprise quiz</span>
+        </div>
+        <div class="journey-teaser__text">
+          <p class="journey-teaser__title">See how the whole class feels</p>
+          <p>Every check-in becomes a sticky note on the journey map, newest first. Tap a note to read it.</p>
+          <a class="btn btn--primary btn--big" href="journey.html">Open the journey map ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3. What is this? ================= -->
+    <section class="home-section about" id="about" aria-labelledby="about-title">
+      <h2 class="home-section__title" id="about-title"><span class="home-section__num" aria-hidden="true">03</span> What is this?</h2>
+
+      <div class="about__grid">
+        <article class="about-card about-card--wide mood-4">
+          <h3 class="about-card__title">A mood check-in for our class</h3>
+          <p>After a lesson, everyone can say how it felt, in a few seconds. All the notes together draw the
+            <strong>mood of the class over time</strong>, like an emotional journey map: the good days, the rough days,
+            and what made the difference. That helps all of us see what works, made by the class, for the class.</p>
+        </article>
+
+        <article class="about-card mood-5">
+          <h3 class="about-card__title">How it works</h3>
+          <ol class="about-card__steps">
+            <li>Pick a face, or a small <strong>+</strong> between two faces when you feel a bit of both.</li>
+            <li>Say what happened in a few words (or tap a quick idea).</li>
+            <li>Your sticky note lands on the journey map, <strong>newest first</strong>.</li>
+          </ol>
+        </article>
+
+        <article class="about-card mood-3">
+          <h3 class="about-card__title">Anonymous by default</h3>
+          <p>No login, no email. Your name is only added if you switch <strong>Posting as</strong> to
+            <em>My name</em>. The choice is saved on your device only.</p>
+        </article>
+
+        <article class="about-card mood-2">
+          <h3 class="about-card__title">Kind by design</h3>
+          <p>Swear words in English, Indonesian and Javanese get covered with a
+            <span class="censor-sticker">*censored*</span> sticker (you can switch it off in ⚙ Settings).
+            The admin can hide notes, check new notes first, or pause check-ins.</p>
+        </article>
+
+        <article class="about-card mood-1">
+          <h3 class="about-card__title">Make it yours</h3>
+          <p>Three styles: <strong>Modern 2026</strong>, <strong>Scribblish</strong> and
+            <strong>Modern Bold</strong>, each in light or dark mode. Find them under ⚙ Settings.</p>
+        </article>
+
+        <article class="about-card mood-45 is-blend">
+          <h3 class="about-card__title">For the student admins</h3>
+          <p>A few classmates act as <strong>moderators</strong>: from the community, for the community. Their 🔒
+            <strong>Admin desk</strong> sorts notes into piles, pins, hides or deletes them and shows the mood numbers,
+            including the in-between moods like <em>Cheerful</em> or <em>Stressed</em>.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+<!-- ============================================================
+       Settings panel (the same on every page; logic in settings.js)
+       ============================================================ -->
+  <dialog class="settings" id="settings-dialog" aria-labelledby="settings-title">
+    <form method="dialog" class="settings__form">
+      <div class="settings__head">
+        <h2 class="settings__title" id="settings-title">Settings</h2>
+        <button class="settings__close" value="close" aria-label="Close settings">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <fieldset class="settings__group">
+        <legend class="settings__label">Your name</legend>
+        <div class="segmented">
+          <label class="segmented__option"><input type="radio" name="identity" value="anonymous"><span>Stay anonymous</span></label>
+          <label class="segmented__option"><input type="radio" name="identity" value="named"><span>Show my name</span></label>
+        </div>
+        <input class="input settings__name" id="settings-name" type="text" maxlength="24"
+               autocomplete="nickname" placeholder="Your name or nickname"
+               aria-label="Your name" aria-describedby="settings-name-hint">
+        <p class="settings__hint" id="settings-name-hint" aria-live="polite"></p>
+      </fieldset>
+
+      <fieldset class="settings__group">
+        <legend class="settings__label">Style</legend>
+        <div class="style-options">
+          <label class="style-option">
+            <input type="radio" name="style" value="modern-2026">
+            <span class="style-preview style-preview--modern-2026" aria-hidden="true"><b>Aa</b><i></i><i></i><i></i></span>
+            <span class="style-option__name">Modern 2026</span>
+            <span class="style-option__desc">Pixel type, tape &amp; torn tags</span>
+          </label>
+          <label class="style-option">
+            <input type="radio" name="style" value="scribblish">
+            <span class="style-preview style-preview--scribblish" aria-hidden="true"><b>Aa</b><i></i><i></i><i></i></span>
+            <span class="style-option__name">Scribblish</span>
+            <span class="style-option__desc">Friendly notebook doodles</span>
+          </label>
+          <label class="style-option">
+            <input type="radio" name="style" value="modern-bold">
+            <span class="style-preview style-preview--modern-bold" aria-hidden="true"><b>Aa</b><i></i><i></i><i></i></span>
+            <span class="style-option__name">Modern Bold</span>
+            <span class="style-option__desc">Zine collage, marker scribbles</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="settings__group">
+        <legend class="settings__label">Theme</legend>
+        <div class="segmented segmented--three">
+          <label class="segmented__option"><input type="radio" name="theme" value="light"><span>Light</span></label>
+          <label class="segmented__option"><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+          <label class="segmented__option"><input type="radio" name="theme" value="auto"><span>Device</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="settings__group">
+        <legend class="settings__label">Censor</legend>
+        <label class="switch">
+          <input type="checkbox" name="censor" checked>
+          <span class="switch__track" aria-hidden="true"></span>
+          <span class="switch__text"><strong>Hide swear words</strong><small>Covers swear words (English, Indonesian and Javanese) on the journey map with a <em>*censored*</em> sticker. On by default.</small></span>
+        </label>
+      </fieldset>
+
+      <div class="settings__foot">
+        <button class="btn btn--primary" value="done">Done</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Admin login (logic in admin-login.js; the password is checked by the server) -->
+  <dialog class="settings admin-login" id="admin-dialog" aria-labelledby="admin-login-title">
+    <form class="settings__form" id="admin-login-form" novalidate>
+      <div class="settings__head">
+        <h2 class="settings__title" id="admin-login-title">Admin login</h2>
+        <button type="button" class="settings__close" data-close-dialog aria-label="Close">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <p class="settings__hint">Only for the student admins (moderators) of this class. No email needed, just the password.</p>
+      <div class="settings__group">
+        <label class="settings__label" for="admin-password">Password</label>
+        <input class="input" id="admin-password" type="password" maxlength="200" autocomplete="current-password" required>
+        <p class="settings__hint is-warning" id="admin-login-error" aria-live="polite"></p>
+      </div>
+      <div class="settings__foot">
+        <button type="submit" class="btn btn--primary">Log in</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
