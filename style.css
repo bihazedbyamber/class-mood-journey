@@ -7140,3 +7140,35 @@ html.has-lightbox body {
 .site-footer__brand .brand__by {
   font-size: 0.85em;
 }
+
+
+/* ===== "unverified": a name typed by someone who isn't signed in ===== */
+.unverified {
+  display: inline-block;
+  margin-right: 0.35em;
+  padding: 0.05em 0.45em;
+  font-family: var(--font-label);
+  font-size: 0.62em;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
+  vertical-align: 0.12em;
+  color: #5c5866;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(21, 21, 21, 0.25);
+  border-radius: 999px;
+}
+
+/* On the small sticky notes: just a tiny grey "?" */
+.unverified--compact {
+  display: inline-grid;
+  place-items: center;
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.25em;
+  padding: 0;
+  font-size: 0.8em;
+  vertical-align: 0;
+  border-radius: 50%;
+}

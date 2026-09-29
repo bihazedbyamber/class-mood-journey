@@ -136,6 +136,9 @@ window.MoodI18n = (function createI18n() {
     // verified, likes, profile
     'Verified: signed in with Google': 'Terverifikasi: masuk dengan Google',
     'Verified': 'Terverifikasi',
+    'unverified': 'belum verif',
+    'Unverified': 'Belum terverifikasi',
+    'Not signed in: anyone could type this name': 'Belum masuk: siapa saja bisa mengetik nama ini',
     'Edited': 'Diedit',
     '(edited)': '(diedit)',
     'So many likes! Please wait a minute.': 'Banyak banget like! Tunggu semenit ya.',

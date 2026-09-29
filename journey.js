@@ -458,6 +458,7 @@ function createWallCard(entry) {
   if (entry.name) fillText(who, `by ${entry.name}`);
   else who.textContent = 'anonymous';
   if (entry.verified && window.MoodAccount) who.append(MoodAccount.badge());
+  else if (entry.name && window.MoodAccount && MoodAccount.enabled) who.prepend(MoodAccount.unverifiedBadge());
   const time = document.createElement('time');
   time.dateTime = entry.timestamp;
   time.textContent = formatDay(date);
@@ -1072,6 +1073,7 @@ function drawNotes(positions) {
       nameTag.className = 'note__name';
       fillText(nameTag, entry.name);
       if (entry.verified && window.MoodAccount) nameTag.append(MoodAccount.badge());
+      else if (window.MoodAccount && MoodAccount.enabled) nameTag.prepend(MoodAccount.unverifiedBadge(true)); // tiny "?" on the small note
       meta.append(nameTag);
     } else if (entry.demo) {
       const demoTag = document.createElement('span');
@@ -1198,6 +1200,7 @@ function fillFocusCard(entry) {
   if (entry.name) fillText(els.focusAuthor, `by ${entry.name}`);
   else els.focusAuthor.textContent = 'anonymous';
   if (entry.verified && window.MoodAccount) els.focusAuthor.append(MoodAccount.badge());
+  else if (entry.name && window.MoodAccount && MoodAccount.enabled) els.focusAuthor.prepend(MoodAccount.unverifiedBadge());
   if (entry.edited) {
     const editedTag = document.createElement('span');
     editedTag.className = 'focus-edited';

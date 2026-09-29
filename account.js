@@ -302,6 +302,14 @@ window.MoodAccount = (function createAccount() {
     return mark;
   }
 
+  /** The small grey tag in front of a name typed by someone who isn't signed in. */
+  function unverifiedBadge(compact = false) {
+    const mark = el('span', compact ? 'unverified unverified--compact' : 'unverified', compact ? '?' : 'unverified');
+    mark.title = 'Not signed in: anyone could type this name';
+    mark.setAttribute('aria-label', 'Unverified');
+    return mark;
+  }
+
   return {
     get user() { return getUser(); },
     get enabled() { return enabled(); },
@@ -310,5 +318,6 @@ window.MoodAccount = (function createAccount() {
     openUsername,
     expired,
     badge,
+    unverifiedBadge,
   };
 })();
