@@ -179,14 +179,19 @@ function loadImage(file) {
  */
 async function shrinkPhoto(file) {
   const img = await loadImage(file);
-  const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+  return toSmallJpeg(img, img.naturalWidth, img.naturalHeight);
+}
+
+/** Draws a picture (image or camera frame) small, as a JPEG "data:" text. */
+function toSmallJpeg(source, width, height) {
+  const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(width, height));
   const canvas = document.createElement('canvas');
-  canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
-  canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  canvas.width = Math.max(1, Math.round(width * scale));
+  canvas.height = Math.max(1, Math.round(height * scale));
   const context = canvas.getContext('2d');
   context.fillStyle = '#ffffff'; // see-through PNGs get a white background
   context.fillRect(0, 0, canvas.width, canvas.height);
-  context.drawImage(img, 0, 0, canvas.width, canvas.height);
+  context.drawImage(source, 0, 0, canvas.width, canvas.height);
   let quality = 0.82;
   let data = canvas.toDataURL('image/jpeg', quality);
   while (data.length > 1400000 && quality > 0.4) { // stay under the Sheet's limit
@@ -226,6 +231,92 @@ function removePhoto() {
   photoData = '';
   if (photoError) setFieldError(photoError, '');
   showPhoto();
+}
+
+// ---------- Live camera ("Take a photo") ----------
+// Laptops ignore the "use the camera" hint on file pickers, so we open the
+// camera ourselves. If that isn't possible, we fall back to the file picker.
+
+const camera = {
+  dialog: document.getElementById('camera-dialog'),
+  video: document.getElementById('camera-video'),
+  status: document.getElementById('camera-status'),
+  snap: document.getElementById('camera-snap'),
+  switchButton: document.getElementById('camera-switch'),
+  close: document.getElementById('camera-close'),
+  stream: null,
+  facing: 'environment', // back camera on phones; laptops just use their webcam
+};
+
+function stopCamera() {
+  if (camera.stream) camera.stream.getTracks().forEach((track) => track.stop());
+  camera.stream = null;
+  camera.video.srcObject = null;
+  camera.snap.disabled = true;
+}
+
+async function startCamera() {
+  stopCamera();
+  camera.status.hidden = false;
+  camera.status.textContent = 'Starting the camera…';
+  try {
+    camera.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: camera.facing, width: { ideal: 1280 }, height: { ideal: 960 } },
+      audio: false,
+    });
+    camera.video.srcObject = camera.stream;
+    camera.video.play().catch(() => {}); // don't wait: "loadeddata" below says when it's ready
+    // Only offer "Switch camera" when there is more than one
+    const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+    camera.switchButton.hidden = devices.filter((device) => device.kind === 'videoinput').length < 2;
+  } catch (error) {
+    stopCamera();
+    camera.status.textContent = error && error.name === 'NotAllowedError'
+      ? 'The camera is blocked. Allow the camera for this website (the icon next to the address bar), or choose a photo instead.'
+      : "We couldn't open a camera on this device. You can choose a photo instead.";
+  }
+}
+
+function openCamera() {
+  setFieldError(photoError, '');
+  // No camera support at all (or no dialog support)? Use the phone's own camera picker.
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !camera.dialog.showModal) {
+    document.getElementById('photo-camera').click();
+    return;
+  }
+  camera.dialog.showModal();
+  startCamera();
+}
+
+function snapPhoto() {
+  const { videoWidth: width, videoHeight: height } = camera.video;
+  if (!width || !height) return;
+  photoData = toSmallJpeg(camera.video, width, height);
+  showPhoto();
+  closeCamera();
+}
+
+/** Turns the camera off right away and closes the window. */
+function closeCamera() {
+  stopCamera();
+  if (camera.dialog.open) camera.dialog.close();
+}
+
+if (camera.dialog) {
+  camera.snap.addEventListener('click', snapPhoto);
+  camera.close.addEventListener('click', closeCamera);
+  camera.switchButton.addEventListener('click', () => {
+    camera.facing = camera.facing === 'environment' ? 'user' : 'environment';
+    startCamera();
+  });
+  // However the window closes (Snap, ✕, Esc), turn the camera off
+  camera.dialog.addEventListener('close', stopCamera);
+  // The first picture from the camera has arrived: ready to snap
+  camera.video.addEventListener('loadeddata', () => {
+    if (!camera.stream) return;
+    camera.status.hidden = true;
+    camera.snap.disabled = false;
+  });
 }
 
 // ---------- Counters and errors ----------
@@ -440,6 +531,7 @@ if (photoField && window.MoodApi.usesSheet) {
   photoField.hidden = false;
   photoInputs.forEach((input) => input.addEventListener('change', handlePhotoChosen));
   photoRemove.addEventListener('click', removePhoto);
+  document.getElementById('photo-camera-btn').addEventListener('click', openCamera);
 }
 
 form.addEventListener('submit', handleSubmit);

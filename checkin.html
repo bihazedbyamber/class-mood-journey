@@ -13,16 +13,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;family=Nunito:wght@400;600;700&amp;family=Patrick+Hand&amp;family=Jersey+10&amp;family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;family=Gochi+Hand&amp;family=Anton&amp;family=Archivo:wght@400;500;600;800;900&amp;family=Permanent+Marker&amp;display=swap">
-  <link rel="stylesheet" href="style.css?v=20260929b">
+  <link rel="stylesheet" href="style.css?v=20260929c">
 
   <!-- settings.js has no "defer": it must pick theme + style before the page is drawn -->
-  <script src="settings.js?v=20260929b"></script>
-  <script src="i18n.js?v=20260929b"></script>
-  <script src="site-config.js?v=20260929b"></script>
-  <script src="api.js?v=20260929b"></script>
-  <script src="moods.js?v=20260929b" defer></script>
-  <script src="admin-login.js?v=20260929b" defer></script>
-  <script type="module" src="input.js?v=20260929b"></script>
+  <script src="settings.js?v=20260929c"></script>
+  <script src="i18n.js?v=20260929c"></script>
+  <script src="site-config.js?v=20260929c"></script>
+  <script src="api.js?v=20260929c"></script>
+  <script src="moods.js?v=20260929c" defer></script>
+  <script src="admin-login.js?v=20260929c" defer></script>
+  <script type="module" src="input.js?v=20260929c"></script>
 </head>
 <body class="page-input">
 
@@ -189,10 +189,11 @@ just honest vibes</span>
             <span class="optional">optional</span>
           </span>
           <div class="photo-picker" id="photo-picker" role="group" aria-labelledby="photo-label">
-            <label class="btn photo-btn">
-              <input type="file" class="visually-hidden" id="photo-camera" accept="image/*" capture="environment">
+            <!-- Opens the live camera window (input.js); the hidden input is the fallback -->
+            <button type="button" class="btn photo-btn" id="photo-camera-btn">
               <span aria-hidden="true">📷</span> Take a photo
-            </label>
+            </button>
+            <input type="file" class="visually-hidden" id="photo-camera" accept="image/*" capture="environment" tabindex="-1" aria-hidden="true">
             <label class="btn photo-btn">
               <input type="file" class="visually-hidden" id="photo-file" accept="image/*">
               <span aria-hidden="true">🖼</span> Choose a photo
@@ -327,6 +328,26 @@ just honest vibes</span>
         <button class="btn btn--primary" value="done">Done</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- Camera window for "Take a photo" (logic in input.js). Nothing is recorded or sent until you press Snap and then send your note. -->
+  <dialog class="settings camera-dialog" id="camera-dialog" aria-labelledby="camera-title">
+    <div class="settings__form">
+      <div class="settings__head">
+        <h2 class="settings__title" id="camera-title">Take a photo</h2>
+        <button type="button" class="settings__close" id="camera-close" aria-label="Close camera">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="camera-view">
+        <video id="camera-video" autoplay playsinline muted></video>
+        <p class="camera-status" id="camera-status" aria-live="polite">Starting the camera…</p>
+      </div>
+      <div class="settings__foot camera-actions">
+        <button type="button" class="btn" id="camera-switch" hidden>Switch camera</button>
+        <button type="button" class="btn btn--primary" id="camera-snap" disabled><span aria-hidden="true">📸</span> Snap</button>
+      </div>
+    </div>
   </dialog>
 
   <!-- Admin login (logic in admin-login.js; the password is checked by the server) -->

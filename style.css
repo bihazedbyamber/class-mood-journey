@@ -5651,3 +5651,55 @@ body.is-dragging-note .pile {
 :root[data-style="modern-bold"] .admin-note__photo img {
   border-radius: 0;
 }
+
+
+/* ===== Camera window ("Take a photo") ===== */
+.camera-dialog {
+  width: min(560px, calc(100vw - 32px));
+}
+
+.camera-view {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  overflow: hidden;
+  background: #151515;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.camera-view video {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+}
+
+.camera-status {
+  position: absolute;
+  inset: auto 12px 12px;
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: var(--radius-sm);
+}
+
+.camera-status[hidden] {
+  display: none;
+}
+
+.camera-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+:root[data-style="modern-2026"] .camera-view,
+:root[data-style="modern-bold"] .camera-view {
+  border-radius: 0;
+}

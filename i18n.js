@@ -70,6 +70,14 @@ window.MoodI18n = (function createI18n() {
     'Choose a photo': 'Pilih foto',
     'Your photo': 'Fotomu',
     'Remove photo': 'Hapus foto',
+    'Close camera': 'Tutup kamera',
+    'Starting the camera…': 'Menyalakan kamera…',
+    'Switch camera': 'Ganti kamera',
+    'Snap': 'Jepret',
+    'The camera is blocked. Allow the camera for this website (the icon next to the address bar), or choose a photo instead.':
+      'Kamera diblokir. Izinkan kamera untuk website ini (ikon di sebelah alamat website), atau pilih foto saja.',
+    "We couldn't open a camera on this device. You can choose a photo instead.":
+      'Kamera tidak bisa dibuka di perangkat ini. Kamu bisa pilih foto saja.',
     "Photos are checked by an admin before they appear. Please don't post photos of classmates without asking them first.":
       'Foto dicek admin dulu sebelum muncul. Jangan unggah foto teman tanpa izin mereka ya.',
     'That file is not a photo. Please pick a picture.': 'File itu bukan foto. Pilih gambar ya.',
