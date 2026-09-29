@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Class Mood Journey</title>
-  <meta name="description" content="Check in with how class felt, and see the whole class's mood as a journey map of sticky notes.">
+  <title>Class Moods</title>
+  <meta name="description" content="Share your mood about class in 30 seconds, and see how everyone else feels.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23C8F25A' stroke='%23111' stroke-width='4'/%3E%3Cpath d='M20 38q12 12 24 0' fill='none' stroke='%23111' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='26' r='3.5' fill='%23111'/%3E%3Ccircle cx='41' cy='26' r='3.5' fill='%23111'/%3E%3C/svg%3E">
 
   <!-- Fonts for all four styles (Fontshare + Google Fonts) -->
@@ -33,8 +33,8 @@
     </a>
     <nav class="page-nav" aria-label="Pages">
       <a class="page-nav__link" href="index.html" aria-current="page">Home</a>
-      <a class="page-nav__link" href="checkin.html">Check in</a>
-      <a class="page-nav__link" href="journey.html">Journey map</a>
+      <a class="page-nav__link" href="checkin.html">Share my mood</a>
+      <a class="page-nav__link" href="journey.html">Class moods</a>
     </nav>
     <div class="topbar__tools">
       <button type="button" class="pill-link admin-link" data-admin-button title="Admin login">
@@ -70,13 +70,37 @@ anon</span>
         Class mood board
       </p>
       <h1 class="hero__title" id="home-title">
-        How's our class
-        <span class="scribble-circle">feeling?<svg class="scribble-circle__line" aria-hidden="true" viewBox="0 0 300 120" preserveAspectRatio="none"><path pathLength="1" vector-effect="non-scaling-stroke" d="M46 24C118 4 252 6 285 42c22 30-34 64-134 68C60 114 8 94 14 62 20 32 92 13 196 15"/></svg></span>
+        How was class
+        <span class="scribble-circle">today?<svg class="scribble-circle__line" aria-hidden="true" viewBox="0 0 300 120" preserveAspectRatio="none"><path pathLength="1" vector-effect="non-scaling-stroke" d="M46 24C118 4 252 6 285 42c22 30-34 64-134 68C60 114 8 94 14 62 20 32 92 13 196 15"/></svg></span>
       </h1>
-      <p class="home-hero__text">Check in with how class felt in 30 seconds, then see everyone's feelings on the journey map.</p>
+      <p class="home-hero__text">Tell us how class felt in 30 seconds, then see how everyone else feels.</p>
+
+      <!-- The two big choices: impossible to miss, the whole card is the link -->
+      <div class="choice-cards">
+        <a class="choice-card choice-card--share" href="checkin.html">
+          <span class="choice-card__step">Step 1</span>
+          <span class="choice-card__art" aria-hidden="true">
+            <svg class="face"><use data-face="5" href="sprite.svg#face-modern-2026-5"/></svg>
+            <svg class="face"><use data-face="3" href="sprite.svg#face-modern-2026-3"/></svg>
+            <svg class="face"><use data-face="1" href="sprite.svg#face-modern-2026-1"/></svg>
+          </span>
+          <span class="choice-card__title">Share my mood</span>
+          <span class="choice-card__text">Pick a face and say what happened. Takes 30 seconds.</span>
+          <span class="choice-card__go">Tap here <span class="choice-card__arrow" aria-hidden="true">→</span></span>
+        </a>
+        <a class="choice-card choice-card--see" href="journey.html">
+          <span class="choice-card__step">Step 2</span>
+          <span class="choice-card__art choice-card__art--notes" aria-hidden="true">
+            <span class="choice-card__note mood-5"></span>
+            <span class="choice-card__note mood-3"></span>
+            <span class="choice-card__note mood-2"></span>
+          </span>
+          <span class="choice-card__title">See class moods</span>
+          <span class="choice-card__text">Read everyone's sticky notes, newest first.</span>
+          <span class="choice-card__go">Tap here <span class="choice-card__arrow" aria-hidden="true">→</span></span>
+        </a>
+      </div>
       <div class="home-hero__jump">
-        <a class="btn btn--primary" href="checkin.html">Check in ↗</a>
-        <a class="btn" href="journey.html">See the journey map ↗</a>
         <a class="home-hero__about" href="#about">What is this?</a>
       </div>
       <p class="hero__note">
@@ -88,7 +112,7 @@ just honest vibes</span>
 
     <!-- ================= 1. Check in: just a button to its own page ================= -->
     <section class="home-section home-section--checkin" id="checkin" aria-labelledby="checkin-title">
-      <h2 class="home-section__title" id="checkin-title"><span class="home-section__num" aria-hidden="true">01</span> Check in</h2>
+      <h2 class="home-section__title" id="checkin-title"><span class="home-section__num" aria-hidden="true">01</span> Share your mood</h2>
 
       <div class="journey-teaser checkin-teaser">
         <div class="checkin-teaser__faces" aria-hidden="true">
@@ -99,16 +123,16 @@ just honest vibes</span>
           <svg class="face"><use data-face="1" href="sprite.svg#face-modern-2026-1"/></svg>
         </div>
         <div class="journey-teaser__text">
-          <p class="journey-teaser__title">How was class today?</p>
+          <p class="journey-teaser__title">Tell us your mood</p>
           <p>Pick a face, say what happened in a few words, done. It takes about 30 seconds, and it's anonymous unless you add your name.</p>
-          <a class="btn btn--primary btn--big" href="checkin.html">Start my check-in ↗</a>
+          <a class="btn btn--primary btn--big" href="checkin.html">Share my mood ↗</a>
         </div>
       </div>
     </section>
 
     <!-- ================= 2. Journey map: just a button to its own page ================= -->
     <section class="home-section home-section--journey" id="journey" aria-labelledby="journey-title">
-      <h2 class="home-section__title" id="journey-title"><span class="home-section__num" aria-hidden="true">02</span> Journey map</h2>
+      <h2 class="home-section__title" id="journey-title"><span class="home-section__num" aria-hidden="true">02</span> Class moods</h2>
 
       <div class="journey-teaser">
         <div class="journey-teaser__stack" aria-hidden="true">
@@ -118,8 +142,8 @@ just honest vibes</span>
         </div>
         <div class="journey-teaser__text">
           <p class="journey-teaser__title">See how the whole class feels</p>
-          <p>Every check-in becomes a sticky note on the journey map, newest first. Tap a note to read it.</p>
-          <a class="btn btn--primary btn--big" href="journey.html">Open the journey map ↗</a>
+          <p>Every mood shared becomes a sticky note, newest first. Tap a note to read it.</p>
+          <a class="btn btn--primary btn--big" href="journey.html">See class moods ↗</a>
         </div>
       </div>
     </section>
@@ -130,9 +154,9 @@ just honest vibes</span>
 
       <div class="about__grid">
         <article class="about-card about-card--wide mood-4">
-          <h3 class="about-card__title">A mood check-in for our class</h3>
+          <h3 class="about-card__title">A quick mood check for our class</h3>
           <p>After a lesson, everyone can say how it felt, in a few seconds. All the notes together draw the
-            <strong>mood of the class over time</strong>, like an emotional journey map: the good days, the rough days,
+            <strong>mood of the class over time</strong>: the good days, the rough days,
             and what made the difference. That helps all of us see what works, made by the class, for the class.</p>
         </article>
 
@@ -141,7 +165,7 @@ just honest vibes</span>
           <ol class="about-card__steps">
             <li>Pick a face, or a small <strong>+</strong> between two faces when you feel a bit of both.</li>
             <li>Say what happened in a few words (or tap a quick idea).</li>
-            <li>Your sticky note lands on the journey map, <strong>newest first</strong>.</li>
+            <li>Your sticky note lands on the Class moods page, <strong>newest first</strong>.</li>
           </ol>
         </article>
 
@@ -236,7 +260,7 @@ just honest vibes</span>
         <label class="switch">
           <input type="checkbox" name="censor" checked>
           <span class="switch__track" aria-hidden="true"></span>
-          <span class="switch__text"><strong>Hide swear words</strong><small>Covers swear words (English, Indonesian and Javanese) on the journey map with a <em>*censored*</em> sticker. On by default.</small></span>
+          <span class="switch__text"><strong>Hide swear words</strong><small>Covers swear words (English, Indonesian and Javanese) on the Class moods page with a <em>*censored*</em> sticker. On by default.</small></span>
         </label>
       </fieldset>
 

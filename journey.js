@@ -289,7 +289,7 @@ function render() {
 
   if (state.entries.length === 0) {
     els.emptyTitle.textContent = 'No feelings shared yet!';
-    els.emptyText.textContent = 'Be the first to add a sticky note to our journey.';
+    els.emptyText.textContent = 'Be the first to share your mood.';
     els.emptyLink.hidden = false;
     showBoardState('empty');
   } else if (visible.length === 0) {

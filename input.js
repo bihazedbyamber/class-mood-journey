@@ -16,7 +16,7 @@ const LIMITS = { whatHappened: 80, comment: 300 };
 
 /** One of these is picked at random after sending. */
 const THANK_YOU_MESSAGES = [
-  'Your note is now stuck on our class journey map. ✿',
+  'Your note is now stuck on the Class moods page. ✿',
   'Feelings received! Thanks for helping our class get better.',
   'Yay! Your sticky note just landed on the map.',
   'Thanks for sharing. Every note helps! ♡',
@@ -308,7 +308,7 @@ function resetForm() {
 function showThankYou(waitingForReview = false) {
   const index = Math.floor(Math.random() * THANK_YOU_MESSAGES.length);
   thankYouMessage.textContent = waitingForReview
-    ? 'Got it! Your note will appear on the journey map after the admin has checked it.'
+    ? 'Got it! Your note will appear on the Class moods page after the admin has checked it.'
     : THANK_YOU_MESSAGES[index];
   form.hidden = true;
   thankYouBox.hidden = false;

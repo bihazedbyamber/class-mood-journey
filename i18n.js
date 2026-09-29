@@ -23,14 +23,14 @@ window.MoodI18n = (function createI18n() {
   // ---------- English -> Indonesian ----------
   const ID = {
     // Page titles, top bar, nav
-    'Class Mood Journey': 'Perjalanan Mood Kelas',
-    'Class Mood Check-in': 'Check-in Mood Kelas',
+    'Class Moods': 'Mood Kelas',
+    'Share My Mood': 'Bagikan Mood-mu',
     'Admin Desk': 'Meja Admin',
     'Mood board home': 'Beranda mood board',
     'Pages': 'Halaman',
     'Home': 'Beranda',
-    'Check in': 'Check-in',
-    'Journey map': 'Peta perjalanan',
+    'Share my mood': 'Bagikan mood',
+    'Class moods': 'Mood kelas',
     'Language': 'Bahasa',
     'Admin login': 'Login admin',
     'Admin desk': 'Meja admin',
@@ -45,38 +45,45 @@ window.MoodI18n = (function createI18n() {
     '100% anon': '100%\nanonim',
     'no names. no logins. just honest vibes': 'tanpa nama. tanpa login.\ncuma perasaan jujur',
     'Class mood board': 'Mood board kelas',
-    "How's our class": 'Kelas kita lagi',
-    'feeling?': 'gimana?',
-    "Check in with how class felt in 30 seconds, then see everyone's feelings on the journey map.":
-      'Ceritakan rasanya kelas hari ini dalam 30 detik, lalu lihat perasaan semua orang di peta perjalanan.',
-    'Check in ↗': 'Check-in ↗',
-    'See the journey map ↗': 'Lihat peta perjalanan ↗',
+    'Tell us how class felt in 30 seconds, then see how everyone else feels.':
+      'Ceritakan rasanya kelas dalam 30 detik, lalu lihat perasaan teman-teman yang lain.',
+    'Share my mood ↗': 'Bagikan mood ↗',
+    'See class moods ↗': 'Lihat mood kelas ↗',
     'What is this?': 'Ini apa sih?',
 
     // Home: cards
     'How was class today?': 'Gimana kelas hari ini?',
     "Pick a face, say what happened in a few words, done. It takes about 30 seconds, and it's anonymous unless you add your name.":
       'Pilih wajah, ceritakan apa yang terjadi dalam beberapa kata, selesai. Cuma sekitar 30 detik, dan tetap anonim kecuali kamu menambahkan namamu.',
-    'Start my check-in ↗': 'Mulai check-in ↗',
+    'Share your mood': 'Bagikan mood-mu',
+    'Tell us your mood': 'Ceritakan mood-mu',
+    // the two big choice cards on Home
+    'Step 1': 'Langkah 1',
+    'Step 2': 'Langkah 2',
+    'See class moods': 'Lihat mood kelas',
+    'Pick a face and say what happened. Takes 30 seconds.': 'Pilih wajah dan ceritakan apa yang terjadi. Cuma 30 detik.',
+    "Read everyone's sticky notes, newest first.": 'Baca sticky note semua orang, yang terbaru duluan.',
+    'Tap here': 'Ketuk di sini',
+    '✦ MY MOOD': '✦ MOOD-KU',
+    '✦ 30 SECONDS': '✦ 30 DETIK',
     'Science experiment!': 'Eksperimen sains!',
     'Surprise quiz': 'Kuis dadakan',
     'See how the whole class feels': 'Lihat perasaan seluruh kelas',
-    'Every check-in becomes a sticky note on the journey map, newest first. Tap a note to read it.':
-      'Setiap check-in jadi sticky note di peta perjalanan, yang terbaru duluan. Ketuk catatan untuk membacanya.',
-    'Open the journey map ↗': 'Buka peta perjalanan ↗',
+    'Every mood shared becomes a sticky note, newest first. Tap a note to read it.':
+      'Setiap mood yang dibagikan jadi sticky note, yang terbaru duluan. Ketuk catatan untuk membacanya.',
 
     // Home: "What is this?"
-    'A mood check-in for our class': 'Check-in mood untuk kelas kita',
+    'A quick mood check for our class': 'Cek mood singkat untuk kelas kita',
     'After a lesson, everyone can say how it felt, in a few seconds. All the notes together draw the':
       'Setelah pelajaran, semua orang bisa cerita rasanya dalam beberapa detik. Semua catatan bersama-sama menggambarkan',
     'mood of the class over time': 'mood kelas dari waktu ke waktu',
-    ', like an emotional journey map: the good days, the rough days, and what made the difference. That helps all of us see what works, made by the class, for the class.':
-      ', seperti peta perjalanan emosi: hari-hari seru, hari-hari berat, dan apa yang membuat bedanya. Itu membantu kita semua melihat apa yang berhasil, dari kelas, untuk kelas.',
+    ': the good days, the rough days, and what made the difference. That helps all of us see what works, made by the class, for the class.':
+      ': hari-hari seru, hari-hari berat, dan apa yang membuat bedanya. Itu membantu kita semua melihat apa yang berhasil, dari kelas, untuk kelas.',
     'How it works': 'Cara kerjanya',
     'Pick a face, or a small': 'Pilih wajah, atau tanda',
     'between two faces when you feel a bit of both.': 'kecil di antara dua wajah kalau kamu merasa sedikit dari keduanya.',
     'Say what happened in a few words (or tap a quick idea).': 'Ceritakan apa yang terjadi dalam beberapa kata (atau ketuk ide cepat).',
-    'Your sticky note lands on the journey map,': 'Sticky note-mu mendarat di peta perjalanan,',
+    'Your sticky note lands on the Class moods page,': 'Sticky note-mu mendarat di halaman Mood kelas,',
     'newest first': 'yang terbaru duluan',
     'Anonymous by default': 'Anonim dari awal',
     'No login, no email. Your name is only added if you switch': 'Tanpa login, tanpa email. Namamu hanya ditambahkan kalau kamu mengganti',
@@ -127,8 +134,8 @@ window.MoodI18n = (function createI18n() {
     'Device': 'Perangkat',
     'Censor': 'Sensor',
     'Hide swear words': 'Sembunyikan kata kasar',
-    'Covers swear words (English, Indonesian and Javanese) on the journey map with a':
-      'Menutup kata kasar (Inggris, Indonesia, dan Jawa) di peta perjalanan dengan stiker',
+    'Covers swear words (English, Indonesian and Javanese) on the Class moods page with a':
+      'Menutup kata kasar (Inggris, Indonesia, dan Jawa) di halaman Mood kelas dengan stiker',
     'sticker. On by default.': '. Aktif dari awal.',
     'Done': 'Selesai',
     'Type a name first, otherwise your notes stay anonymous.': 'Ketik nama dulu, kalau tidak catatanmu tetap anonim.',
@@ -148,10 +155,11 @@ window.MoodI18n = (function createI18n() {
     'No admin password is set on the server yet (see README).': 'Belum ada kata sandi admin (lihat README).',
 
     // Check-in page
-    'Class mood check-in': 'Check-in mood kelas',
+    '30 seconds · anonymous': '30 detik · anonim',
+    'Your mood in class': 'Mood-mu di kelas',
     'How was class': 'Gimana kelas',
     'today?': 'hari ini?',
-    'Mood check-in form': 'Formulir check-in mood',
+    'Share your mood form': 'Formulir bagikan mood',
     'Pick your mood': 'Pilih mood-mu',
     'Feeling a bit of both? Tap a': 'Merasa sedikit dari keduanya? Ketuk tanda',
     'between two faces.': 'di antara dua wajah.',
@@ -184,12 +192,12 @@ window.MoodI18n = (function createI18n() {
     "We couldn't reach the server. Check your internet (or that the server is running) and try again. 🌧":
       'Server tidak bisa dihubungi. Cek internetmu lalu coba lagi. 🌧',
     'Whoa, so many notes! Please wait a minute and try again. ⏳': 'Wah, banyak banget catatan! Tunggu semenit lalu coba lagi ya. ⏳',
-    'Got it! Your note will appear on the journey map after the admin has checked it.':
-      'Oke! Catatanmu akan muncul di peta perjalanan setelah dicek admin.',
+    'Got it! Your note will appear on the Class moods page after the admin has checked it.':
+      'Oke! Catatanmu akan muncul di halaman Mood kelas setelah dicek admin.',
     'Check-ins are paused by the admin right now. Please come back a bit later! ⏸':
       'Check-in sedang dijeda oleh admin. Coba lagi nanti ya! ⏸',
     // thank-you messages
-    'Your note is now stuck on our class journey map. ✿': 'Catatanmu sekarang sudah menempel di peta perjalanan kelas kita. ✿',
+    'Your note is now stuck on the Class moods page. ✿': 'Catatanmu sekarang sudah menempel di halaman Mood kelas. ✿',
     'Feelings received! Thanks for helping our class get better.': 'Perasaan diterima! Makasih sudah bantu kelas kita jadi lebih baik.',
     'Yay! Your sticky note just landed on the map.': 'Yay! Sticky note-mu baru saja mendarat di peta.',
     'Thanks for sharing. Every note helps! ♡': 'Makasih sudah berbagi. Setiap catatan membantu! ♡',
@@ -206,13 +214,13 @@ window.MoodI18n = (function createI18n() {
     'stressed? that sounds heavy. want to share why?': 'stres? kedengarannya berat. mau cerita kenapa?',
 
     // Journey map page
-    'Our class': 'Perjalanan',
-    'journey': 'kelas kita',
-    'Newest notes first. Every sticky note is one class check-in.': 'Catatan terbaru duluan. Setiap sticky note adalah satu check-in kelas.',
+    'How everyone': 'Perasaan',
+    'feels': 'semua orang',
+    "Newest first. Every sticky note is one person's mood after class.": 'Terbaru duluan. Setiap sticky note adalah mood satu orang setelah kelas.',
     'tap one to read it!': 'ketuk untuk membacanya!',
     'Show only one mood': 'Tampilkan satu mood saja',
     'All': 'Semua',
-    'Class mood journey map': 'Peta perjalanan mood kelas',
+    'Class moods board': 'Papan mood kelas',
     'Timeline of notes, newest first. Scroll sideways to go back in time.':
       'Garis waktu catatan, terbaru duluan. Geser ke samping untuk kembali ke masa lalu.',
     'NOW': 'SEKARANG',
@@ -220,14 +228,14 @@ window.MoodI18n = (function createI18n() {
     'Notes, newest first': 'Catatan, terbaru duluan',
     'Collecting sticky notes…': 'Mengumpulkan sticky note…',
     'No feelings shared yet!': 'Belum ada perasaan yang dibagikan!',
-    'Be the first to add a sticky note to our journey.': 'Jadilah yang pertama menambahkan sticky note ke perjalanan kita.',
+    'Be the first to share your mood.': 'Jadilah yang pertama membagikan mood-mu.',
     'Share how you feel': 'Bagikan perasaanmu',
     'Oops, the notes got lost.': 'Ups, catatannya hilang.',
     "We'll try again soon.": 'Kami akan coba lagi sebentar lagi.',
     'Try again': 'Coba lagi',
     'newest first · scroll → to go back in time': 'terbaru duluan · geser → untuk kembali ke masa lalu',
     'Close note': 'Tutup catatan',
-    'Hide from map': 'Sembunyikan dari peta',
+    'Hide from map': 'Sembunyikan dari halaman',
     'Hidden notes can be shown again in the Admin desk.': 'Catatan tersembunyi bisa ditampilkan lagi di Meja admin.',
     'Censored. You can turn this off in Settings.': 'Disensor. Kamu bisa mematikannya di Pengaturan.',
     "Couldn't refresh just now. Trying again soon…": 'Belum bisa refresh. Mencoba lagi sebentar lagi…',
@@ -299,11 +307,11 @@ window.MoodI18n = (function createI18n() {
     'Hide': 'Sembunyikan',
     'Delete': 'Hapus',
     'Move to pile': 'Pindahkan ke tumpukan',
-    'Approved: it is on the journey map now.': 'Disetujui: sekarang ada di peta perjalanan.',
+    'Approved: it is on the Class moods page now.': 'Disetujui: sekarang ada di halaman Mood kelas.',
     'Unpinned.': 'Pin dilepas.',
     'Pinned: it gets a pin on the map.': 'Disematkan: catatan ini dapat pin di peta.',
     'Visible again.': 'Terlihat lagi.',
-    'Hidden from the journey map.': 'Disembunyikan dari peta perjalanan.',
+    'Hidden from the Class moods page.': 'Disembunyikan dari halaman Mood kelas.',
     'Notes are in your Google Sheet. "Delete" removes the note and its row for good.':
       'Catatan ada di Google Sheet-mu. "Hapus" menghapus catatan dan barisnya selamanya.',
     'Note deleted.': 'Catatan dihapus.',
@@ -412,7 +420,7 @@ window.MoodI18n = (function createI18n() {
 
   // ---------- Swapping the text on the page ----------
 
-  const ATTRIBUTES = ['placeholder', 'aria-label', 'title', 'data-name'];
+  const ATTRIBUTES = ['placeholder', 'aria-label', 'title', 'data-name', 'data-tab', 'data-tab-2'];
   // Students' own words: never translated (the *censored* stickers inside still are)
   const USER_TEXT = '.note__text, .note__name, #focus-what, #focus-comment:not(.is-empty), '
     + '.admin-note__what, .admin-note__comment:not(.is-empty), .pile__sheet, [data-no-translate]';

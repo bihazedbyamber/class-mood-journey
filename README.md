@@ -3,10 +3,10 @@
 An **anonymous** class mood and feedback website, made from the community, for the community.
 
 - **Home** (`index.html`): two cards with buttons (Check in, Journey map) and "What is this?".
-- **Check in** (`checkin.html`): students pick a mood face (or a small **+** between two faces for "a bit of both"), say what happened in class and (optionally) add a comment. Anonymous unless they choose to add a name.
-- **Journey map** (`journey.html`): every check-in becomes a sticky note on an emotional journey map, with five mood lanes from *Great* (top) to *Frustrated* (bottom). **Newest notes first**: the newest is next to **NOW** on the left, the oldest next to **START** on the right.
+- **Share my mood** (`checkin.html`): students pick a mood face (or a small **+** between two faces for "a bit of both"), say what happened in class and (optionally) add a comment. Anonymous unless they choose to add a name.
+- **Class moods** (`journey.html`): every check-in becomes a sticky note on an emotional journey map, with five mood lanes from *Great* (top) to *Frustrated* (bottom). **Newest notes first**: the newest is next to **NOW** on the left, the oldest next to **START** on the right.
 
-The top bar always shows **Home · Check in · Journey map**; the page you are on is highlighted. Next to it, **EN / ID** switches the whole site between English and Bahasa Indonesia (saved on each device). Students' own notes are never translated.
+The top bar always shows **Home · Share my mood · Class moods**; the page you are on is highlighted. Next to it, **EN / ID** switches the whole site between English and Bahasa Indonesia (saved on each device). Students' own notes are never translated.
 
 Built with plain HTML, CSS and JavaScript, hosted on GitHub Pages. The notes are saved in a Google Sheet through a Google Apps Script (`apps-script/Code.gs`).
 

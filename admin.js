@@ -451,7 +451,7 @@ function createNoteCard(entry) {
   actions.className = 'admin-note__actions';
   if (entry.pending) {
     actions.append(createButton('Approve', 'mini-btn mini-btn--go', () => (
-      updateNote(entry.id, { pending: false }, 'Approved: it is on the journey map now.')
+      updateNote(entry.id, { pending: false }, 'Approved: it is on the Class moods page now.')
     ), 'check'));
   }
   actions.append(
@@ -459,7 +459,7 @@ function createNoteCard(entry) {
       updateNote(entry.id, { pinned: !entry.pinned }, entry.pinned ? 'Unpinned.' : 'Pinned: it gets a pin on the map.')
     ), 'pin'),
     createButton(entry.hidden ? 'Show' : 'Hide', 'mini-btn', () => (
-      updateNote(entry.id, { hidden: !entry.hidden }, entry.hidden ? 'Visible again.' : 'Hidden from the journey map.')
+      updateNote(entry.id, { hidden: !entry.hidden }, entry.hidden ? 'Visible again.' : 'Hidden from the Class moods page.')
     ), 'eye'),
     createMoveSelect(entry),
     createButton('Delete', 'mini-btn mini-btn--danger', () => deleteNote(entry), 'trash'),

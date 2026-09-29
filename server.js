@@ -90,6 +90,7 @@ const PUBLIC_FILES = {
   '/admin.js': 'admin.js',
   '/admin-login.js': 'admin-login.js',
   '/settings.js': 'settings.js',
+  '/i18n.js': 'i18n.js',
   '/site-config.js': 'site-config.js',
   '/api.js': 'api.js',
   '/sprite.svg': 'sprite.svg',

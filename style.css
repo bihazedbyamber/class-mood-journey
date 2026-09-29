@@ -2983,13 +2983,25 @@ a {
 }
 
 :root[data-style="modern-2026"] .card::before {
-  content: "✦ CHECK-IN";
+  content: "✦ MY MOOD";
   left: calc(-1 * var(--bw));
   background: var(--c-blue);
 }
 
 :root[data-style="modern-2026"] .card::after {
   content: "✦ 30 SECONDS";
+}
+
+/* The tab labels can come from the page (data-tab / data-tab-2), so i18n.js can translate them */
+:root[data-style="modern-2026"] .card[data-tab]::before {
+  content: attr(data-tab);
+}
+
+:root[data-style="modern-2026"] .card[data-tab-2]::after {
+  content: attr(data-tab-2);
+}
+
+:root[data-style="modern-2026"] .card::after {
   z-index: -1;
   left: 128px;
   padding-left: 40px;
@@ -5362,4 +5374,195 @@ body.is-dragging-note .pile {
   padding-inline: 0.7em;
   background: transparent;
   cursor: pointer;
+}
+
+
+/* ===== Home: the two big choice cards (Share my mood / See class moods) =====
+   The whole card is the link, so nobody has to hunt for a small button. */
+.choice-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 760px;
+  margin: 26px auto 0;
+  text-align: left;
+}
+
+.choice-card {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 20px 20px 18px;
+  color: #151515;
+  text-decoration: none;
+  background: var(--mood-4);
+  border: var(--bw) solid var(--note-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-m);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.choice-card--see {
+  background: var(--mood-3);
+}
+
+.choice-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-m-hover);
+}
+
+.choice-card:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.choice-card:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.choice-card__step {
+  justify-self: start;
+  padding: 0.25em 0.7em;
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  font-weight: var(--label-weight);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: #151515;
+  border-radius: var(--radius-pill);
+}
+
+.choice-card__art {
+  display: flex;
+  gap: 6px;
+  min-height: 46px;
+  align-items: center;
+}
+
+.choice-card__art .face {
+  width: 42px;
+  height: 42px;
+}
+
+.choice-card__note {
+  width: 38px;
+  height: 34px;
+  background: var(--mood-color, var(--surface));
+  border: 2px solid var(--note-line);
+  border-radius: 4px 4px 4px 10px;
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+
+.choice-card__note.mood-5 { background: var(--mood-5); transform: rotate(-6deg); }
+.choice-card__note.mood-3 { background: #ffffff; transform: rotate(3deg) translateY(-4px); }
+.choice-card__note.mood-2 { background: var(--mood-2); transform: rotate(-2deg); }
+
+.choice-card__title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  font-weight: var(--heading-weight);
+  line-height: 1.05;
+  text-transform: var(--display-case);
+}
+
+.choice-card__text {
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.choice-card__go {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  margin-top: 4px;
+  padding: 0.55em 1.1em;
+  font-family: var(--font-label);
+  font-size: 0.9rem;
+  font-weight: var(--label-weight);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: #151515;
+  border-radius: var(--radius-pill);
+}
+
+/* A little nudge on the arrow says "tap me" */
+.choice-card__arrow {
+  display: inline-block;
+  animation: choice-nudge 1.6s ease-in-out infinite;
+}
+
+@keyframes choice-nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+:root[data-style="modern-2026"] .choice-card,
+:root[data-style="modern-2026"] .choice-card__step,
+:root[data-style="modern-2026"] .choice-card__go {
+  border-radius: 0;
+}
+
+:root[data-style="modern-bold"] .choice-cards {
+  margin-left: 0;
+}
+
+:root[data-style="modern-bold"] .choice-card {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+:root[data-style="modern-bold"] .choice-card--share { transform: rotate(-1deg); }
+:root[data-style="modern-bold"] .choice-card--see { transform: rotate(1deg); }
+:root[data-style="modern-bold"] .choice-card:hover { transform: rotate(0) translateY(-3px); }
+
+/* ===== Class moods page: a floating "+ Share my mood" button ===== */
+.share-fab {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 40;
+  box-shadow: var(--shadow-m);
+}
+
+.share-fab__plus {
+  font-size: 1.3em;
+  line-height: 0;
+}
+
+/* No extra "→" on this one in Modern Bold, the + already says it */
+:root[data-style="modern-bold"] .share-fab::after {
+  content: none;
+}
+
+/* No notes yet? The empty board already has its own big button */
+.page-journey:has(#empty-state:not([hidden])) .share-fab {
+  display: none;
+}
+
+/* Leave room at the bottom so the button never covers the last line */
+.page-journey .journey-footnote {
+  padding-bottom: 64px;
+}
+
+@media (max-width: 640px) {
+  .choice-cards {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice-card__arrow {
+    animation: none;
+  }
+
+  .choice-card,
+  .choice-card:hover {
+    transition: none;
+    transform: none;
+  }
 }

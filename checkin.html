@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Class Mood Check-in</title>
+  <title>Share My Mood</title>
   <meta name="description" content="Tell us how you felt in class today. Anonymous unless you choose to add your name.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23C8F25A' stroke='%23111' stroke-width='4'/%3E%3Cpath d='M20 38q12 12 24 0' fill='none' stroke='%23111' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='26' r='3.5' fill='%23111'/%3E%3Ccircle cx='41' cy='26' r='3.5' fill='%23111'/%3E%3C/svg%3E">
 
@@ -34,8 +34,8 @@
     <!-- The page you are on gets aria-current="page" (and a highlight behind it) -->
     <nav class="page-nav" aria-label="Pages">
       <a class="page-nav__link" href="index.html">Home</a>
-      <a class="page-nav__link" href="checkin.html" aria-current="page">Check in</a>
-      <a class="page-nav__link" href="journey.html">Journey map</a>
+      <a class="page-nav__link" href="checkin.html" aria-current="page">Share my mood</a>
+      <a class="page-nav__link" href="journey.html">Class moods</a>
     </nav>
     <div class="topbar__tools">
       <button type="button" class="pill-link admin-link" data-admin-button title="Admin login">
@@ -68,11 +68,11 @@ anon</span>
 
       <p class="eyebrow">
         <svg class="eyebrow__icon" aria-hidden="true"><use href="sprite.svg#doodle-asterisk"/></svg>
-        Class mood check-in
+        30 seconds · anonymous
       </p>
 
       <h1 class="hero__title" id="page-title">
-        How was class
+        Your mood in class
         <span class="scribble-circle">today?<svg class="scribble-circle__line" aria-hidden="true" viewBox="0 0 300 120" preserveAspectRatio="none"><path pathLength="1" vector-effect="non-scaling-stroke" d="M46 24C118 4 252 6 285 42c22 30-34 64-134 68C60 114 8 94 14 62 20 32 92 13 196 15"/></svg></span>
       </h1>
 
@@ -83,7 +83,7 @@ just honest vibes</span>
       </p>
     </section>
 
-    <section class="card" id="form-card" aria-label="Mood check-in form">
+    <section class="card" id="form-card" aria-label="Share your mood form" data-tab="✦ MY MOOD" data-tab-2="✦ 30 SECONDS">
       <!-- The form. input.js checks it and sends it to the server. -->
       <form id="mood-form" class="mood-form" novalidate>
         <fieldset class="mood-picker" id="mood-picker" aria-describedby="mood-error">
@@ -226,7 +226,7 @@ just honest vibes</span>
         <p class="thank-you__message" id="thank-you-message"></p>
         <div class="thank-you__actions">
           <button type="button" class="btn" id="again-btn">Share another</button>
-          <a class="btn btn--primary" href="journey.html">See the journey map ↗</a>
+          <a class="btn btn--primary" href="journey.html">See class moods ↗</a>
         </div>
       </div>
     </section>
@@ -294,7 +294,7 @@ just honest vibes</span>
         <label class="switch">
           <input type="checkbox" name="censor" checked>
           <span class="switch__track" aria-hidden="true"></span>
-          <span class="switch__text"><strong>Hide swear words</strong><small>Covers swear words (English, Indonesian and Javanese) on the journey map with a <em>*censored*</em> sticker. On by default.</small></span>
+          <span class="switch__text"><strong>Hide swear words</strong><small>Covers swear words (English, Indonesian and Javanese) on the Class moods page with a <em>*censored*</em> sticker. On by default.</small></span>
         </label>
       </fieldset>
 
