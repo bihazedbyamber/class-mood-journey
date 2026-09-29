@@ -468,6 +468,12 @@ function createNoteCard(entry) {
       img.referrerPolicy = 'no-referrer';
       img.draggable = false;
       link.append(img);
+      // Normal click: the photo comes up close on this page (Ctrl/⌘-click still opens a new tab)
+      link.addEventListener('click', (event) => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || !window.MoodLightbox) return;
+        event.preventDefault();
+        MoodLightbox.open(photoBig, index, img);
+      });
       photo.append(link);
     });
   }

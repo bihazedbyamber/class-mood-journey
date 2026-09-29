@@ -626,22 +626,23 @@ function fillFocusCard(entry) {
   else els.focusComment.textContent = 'No extra comment.';
   els.focusComment.classList.toggle('is-empty', !entry.comment);
 
-  // All the photos (up to 5); tap one to open it full size
+  // All the photos (up to 5); tap one and it comes up close (lightbox.js)
   els.focusPhotos.replaceChildren();
   els.focusPhotos.hidden = entry.photos.length === 0;
   els.focusPhotos.dataset.count = String(entry.photos.length);
+  const bigPhotos = entry.photos.map((src) => src.replace(/sz=w\d+/, 'sz=w2000'));
   entry.photos.forEach((src, index) => {
-    const link = document.createElement('a');
-    link.className = 'focus-photos__item';
-    link.href = src.replace(/sz=w\d+/, 'sz=w2000');
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'focus-photos__item';
+    button.setAttribute('aria-label', `Open photo ${index + 1} of ${entry.photos.length}`);
     const img = document.createElement('img');
     img.src = src;
-    img.alt = `Photo ${index + 1} of ${entry.photos.length}`;
+    img.alt = '';
     img.referrerPolicy = 'no-referrer';
-    link.append(img);
-    els.focusPhotos.append(link);
+    button.append(img);
+    button.addEventListener('click', () => MoodLightbox.open(bigPhotos, index, img));
+    els.focusPhotos.append(button);
   });
   els.focusDate.textContent = formatFullDate(date);
   els.focusDate.dateTime = entry.timestamp;

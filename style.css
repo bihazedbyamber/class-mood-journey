@@ -5904,3 +5904,244 @@ body.is-dragging-note .pile {
 :root[data-style="modern-bold"] .photo-previews__item img {
   border-radius: 0;
 }
+
+
+/* ===== A menu people actually notice =====
+   The top bar stays at the top while scrolling, and the three pages are
+   real buttons with an icon, a border and a clear "you are here" colour. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding-bottom: 12px;
+  background: var(--bg);
+  border-bottom: var(--bw) solid var(--line);
+}
+
+:root[data-style="modern-2026"] .topbar {
+  background: var(--surface);
+}
+
+.page-nav:not(.lang-switch) {
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.page-nav:not(.lang-switch) .page-nav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.62em 1.05em;
+  font-size: 0.92rem;
+  color: var(--text);
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  box-shadow: var(--shadow-s);
+  transition: transform 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.page-nav:not(.lang-switch) .page-nav__link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-s-hover);
+}
+
+.page-nav:not(.lang-switch) .page-nav__link:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.page-nav__icon {
+  font-size: 1.15em;
+  line-height: 1;
+}
+
+/* The page you are on: bright and a little bigger */
+.page-nav:not(.lang-switch) .page-nav__link[aria-current="page"] {
+  color: #151515;
+  background: var(--highlight);
+  transform: translateY(-1px);
+}
+
+:root[data-style="modern-2026"] .page-nav:not(.lang-switch) .page-nav__link {
+  padding: 0.75em 1.15em;
+  font-size: 0.86rem;
+  box-shadow: 3px 3px 0 var(--line);
+}
+
+:root[data-style="modern-2026"] .page-nav:not(.lang-switch) .page-nav__link:hover {
+  box-shadow: 5px 5px 0 var(--line);
+}
+
+:root[data-style="modern-bold"] .page-nav:not(.lang-switch) .page-nav__link {
+  border-width: 2px;
+  box-shadow: none;
+}
+
+:root[data-style="modern-bold"] .page-nav:not(.lang-switch) .page-nav__link[aria-current="page"] {
+  background: var(--c-acid);
+  transform: rotate(-2deg);
+}
+
+/* Phones: three equal buttons in their own row, icon above the word */
+@media (max-width: 700px) {
+  .page-nav:not(.lang-switch) {
+    gap: 6px;
+  }
+
+  .page-nav:not(.lang-switch) .page-nav__link {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 0.5em 0.3em;
+    font-size: 0.74rem;
+    line-height: 1.15;
+    white-space: normal;
+    text-align: center;
+  }
+
+  :root[data-style="modern-2026"] .page-nav:not(.lang-switch) .page-nav__link {
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+  }
+
+  .page-nav__icon {
+    font-size: 1.35em;
+  }
+}
+
+
+/* ===== Photo viewer (lightbox.js): the photo comes up close ===== */
+.focus-photos__item {
+  padding: 0;
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: zoom-in;
+}
+
+.focus-photos__item:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 56px 16px 64px;
+}
+
+.lightbox[hidden] {
+  display: none;
+}
+
+.lightbox__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 12, 0.82);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  cursor: zoom-out;
+}
+
+.lightbox__img {
+  position: relative;
+  display: block;
+  max-width: min(100%, 1100px);
+  max-height: calc(100vh - 130px);
+  max-height: calc(100dvh - 130px);
+  object-fit: contain;
+  background: #1c1c1f;
+  border: 3px solid #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+}
+
+.lightbox__btn {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  font-size: 1.7rem;
+  line-height: 1;
+  color: #151515;
+  background: #ffffff;
+  border: 2px solid #151515;
+  border-radius: 50%;
+  box-shadow: 3px 3px 0 #151515;
+  cursor: pointer;
+}
+
+.lightbox__btn:hover {
+  background: var(--c-lime, #c8f25a);
+}
+
+.lightbox__btn:focus-visible {
+  outline: 3px solid var(--c-lime, #c8f25a);
+  outline-offset: 3px;
+}
+
+.lightbox__btn[hidden] {
+  display: none;
+}
+
+.lightbox__close {
+  top: 12px;
+  right: 12px;
+  font-size: 1.2rem;
+}
+
+.lightbox__prev {
+  left: 12px;
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.lightbox__next {
+  right: 12px;
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.lightbox__counter {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  translate: -50% 0;
+  margin: 0;
+  padding: 4px 12px;
+  font-family: var(--font-label);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #151515;
+  background: #ffffff;
+  border-radius: 999px;
+}
+
+.lightbox__counter:empty {
+  display: none;
+}
+
+/* No scrolling the page behind an open photo */
+html.has-lightbox,
+html.has-lightbox body {
+  overflow: hidden;
+}
+
+/* Phones: arrows at the bottom corners so they don't cover the photo */
+@media (max-width: 700px) {
+  .lightbox__prev,
+  .lightbox__next {
+    top: auto;
+    bottom: 12px;
+    translate: none;
+  }
+}

@@ -71,6 +71,10 @@ window.MoodI18n = (function createI18n() {
     'Choose photos': 'Pilih foto',
     'Up to 5 photos': 'Maksimal 5 foto',
     'Remove this photo': 'Hapus foto ini',
+    'Photo': 'Foto',
+    'Close photo': 'Tutup foto',
+    'Previous photo': 'Foto sebelumnya',
+    'Next photo': 'Foto berikutnya',
     'You can add up to 5 photos.': 'Maksimal 5 foto ya.',
     'Your photo': 'Fotomu',
     'Remove photo': 'Hapus foto',
@@ -415,6 +419,7 @@ window.MoodI18n = (function createI18n() {
     [/^📷 (\d+) photos$/, (n) => `📷 ${n} foto`],
     [/^Photo (\d+)$/, (n) => `Foto ${n}`],
     [/^Photo (\d+) of (\d+)$/, (a, b) => `Foto ${a} dari ${b}`],
+    [/^Open photo (\d+) of (\d+)$/, (a, b) => `Buka foto ${a} dari ${b}`],
     [/^You can add up to 5 photos, so only the first (\d+) were added\.$/, (n) => `Maksimal 5 foto, jadi hanya ${n} foto pertama yang ditambahkan.`],
     [/^(.+), (\d+) notes\. Open pile\.$/, (p, n) => `${T(p)}, ${n} catatan. Buka tumpukan.`],
     [/^In: (.+)$/, (p) => `Di: ${T(p)}`],
@@ -431,9 +436,9 @@ window.MoodI18n = (function createI18n() {
   function loadLang() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return LANGS.includes(saved) ? saved : 'en';
+      return LANGS.includes(saved) ? saved : 'id'; // Bahasa Indonesia unless the visitor picked EN
     } catch {
-      return 'en';
+      return 'id';
     }
   }
 
