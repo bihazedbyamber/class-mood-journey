@@ -625,7 +625,7 @@ a {
   background: color-mix(in srgb, var(--text) 8%, transparent);
 }
 
-.page-nav__link[aria-current="page"] {
+.page-nav__link:is([aria-current="page"], [aria-pressed="true"]) {
   color: var(--bg);
   background: var(--text);
   border-color: var(--line);
@@ -4843,7 +4843,7 @@ body.is-dragging-note .pile {
   border-radius: 0;
 }
 
-:root[data-style="modern-2026"] .page-nav__link[aria-current="page"] {
+:root[data-style="modern-2026"] .page-nav__link:is([aria-current="page"], [aria-pressed="true"]) {
   color: #151515;
   background: var(--highlight);
 }
@@ -4876,7 +4876,7 @@ body.is-dragging-note .pile {
   border-radius: 0;
 }
 
-:root[data-style="modern-bold"] .page-nav__link[aria-current="page"] {
+:root[data-style="modern-bold"] .page-nav__link:is([aria-current="page"], [aria-pressed="true"]) {
   color: #111111;
   background: var(--c-acid);
   transform: rotate(-2deg);
@@ -4891,7 +4891,7 @@ body.is-dragging-note .pile {
 }
 
 /* Scribblish: the current page gets a soft lavender blob */
-:root[data-style="scribblish"] .page-nav__link[aria-current="page"] {
+:root[data-style="scribblish"] .page-nav__link:is([aria-current="page"], [aria-pressed="true"]) {
   color: var(--on-accent);
   background: var(--accent);
   border: 2px dashed var(--line);
@@ -5346,4 +5346,20 @@ body.is-dragging-note .pile {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ===== EN / ID language switch (added to the top bar by i18n.js) =====
+   It reuses the page-nav look, so it matches every style. */
+.page-nav.lang-switch {
+  order: 0;
+  width: auto;
+  flex: none;
+  gap: 2px;
+}
+
+:where(.lang-switch) .page-nav__link {
+  flex: none;
+  padding-inline: 0.7em;
+  background: transparent;
+  cursor: pointer;
 }

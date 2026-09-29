@@ -109,15 +109,15 @@ function seededRandom(text) {
 }
 
 function formatDay(date) {
-  return date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+  return date.toLocaleDateString(MoodI18n.locale(), { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 function formatTime(date) {
-  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return date.toLocaleTimeString(MoodI18n.locale(), { hour: 'numeric', minute: '2-digit' });
 }
 
 function formatFullDate(date) {
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString(MoodI18n.locale(), {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit',
   });
 }
@@ -755,6 +755,11 @@ if (document.fonts) {
 
 // A new style has different sizes, and the censor may be switched on/off: redraw.
 document.addEventListener('moodsettingschange', () => {
+  if (state.hasLoaded) render();
+});
+
+// EN / ID switched: redraw so dates use the new language and NOW/START get their new width
+document.addEventListener('moodlangchange', () => {
   if (state.hasLoaded) render();
 });
 

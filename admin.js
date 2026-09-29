@@ -108,7 +108,7 @@ function reportError(error) {
 }
 
 function formatDateTime(date) {
-  return date.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  return date.toLocaleString(MoodI18n.locale(), { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 }
 
 function pileOf(entry) {
@@ -551,7 +551,7 @@ function moveNote(id, pileId) {
 
 async function deleteNote(entry) {
   const preview = entry.whatHappened.length > 40 ? `${entry.whatHappened.slice(0, 40)}…` : entry.whatHappened;
-  if (!window.confirm(`Delete this note for good?\n\n"${preview}"`)) return;
+  if (!window.confirm(MoodI18n.t(`Delete this note for good?\n\n"${preview}"`))) return;
   try {
     await api(`/api/admin/notes/${encodeURIComponent(entry.id)}`, { method: 'DELETE' });
     state.entries = state.entries.filter((item) => item.id !== entry.id);
@@ -586,7 +586,7 @@ async function createPile(event) {
 async function renameCurrentPile() {
   const pile = state.piles.find((item) => item.id === state.currentPile);
   if (!pile) return;
-  const name = window.prompt('New name for this pile:', pile.name);
+  const name = window.prompt(MoodI18n.t('New name for this pile:'), pile.name);
   if (name === null || !name.trim()) return;
   try {
     const { pile: saved } = await api(`/api/admin/piles/${pile.id}`, { method: 'PATCH', body: { name } });
@@ -601,7 +601,7 @@ async function renameCurrentPile() {
 async function deleteCurrentPile() {
   const pile = state.piles.find((item) => item.id === state.currentPile);
   if (!pile) return;
-  if (!window.confirm(`Delete the pile "${pile.name}"?\nIts notes go back to the Inbox (they are not deleted).`)) return;
+  if (!window.confirm(MoodI18n.t(`Delete the pile "${pile.name}"?\nIts notes go back to the Inbox (they are not deleted).`))) return;
   try {
     await api(`/api/admin/piles/${pile.id}`, { method: 'DELETE' });
     state.piles = state.piles.filter((item) => item.id !== pile.id);
@@ -692,6 +692,11 @@ function exportCsv() {
   setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
 els.exportButton.addEventListener('click', exportCsv);
+
+// EN / ID switched: redraw so dates use the new language
+document.addEventListener('moodlangchange', () => {
+  if (!els.adminView.hidden) renderAll();
+});
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && !els.adminView.hidden) loadState();
