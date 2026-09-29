@@ -77,6 +77,17 @@ const els = {
   shareSave: document.getElementById('share-save'),
   shareCopy: document.getElementById('share-copy'),
   shareWhatsApp: document.getElementById('share-whatsapp'),
+  comments: document.getElementById('focus-comments'),
+  commentsList: document.getElementById('focus-comments-list'),
+  commentsEmpty: document.getElementById('focus-comments-empty'),
+  commentForm: document.getElementById('comment-form'),
+  commentInput: document.getElementById('comment-input'),
+  commentAs: document.getElementById('comment-as'),
+  commentCounter: document.getElementById('comment-counter'),
+  commentSend: document.getElementById('comment-send'),
+  commentError: document.getElementById('comment-error'),
+  commentSignIn: document.getElementById('comment-signin'),
+  commentsOff: document.getElementById('comments-off'),
   shareClose: document.getElementById('share-close'),
   focusDate: document.getElementById('focus-date'),
   focusAuthor: document.getElementById('focus-author'),
@@ -209,6 +220,7 @@ function cleanEntries(list) {
       thumbs: MoodApi.photoUrls(entry, 160),  // small versions (on the sticky note)
       cards: MoodApi.photoUrls(entry, 600),   // medium versions (on the wall cards)
       photoIds: MoodApi.photoIds(entry),      // Drive ids (for the Share picture)
+      comments: Number(entry.comments) || 0,  // how many comments
     }))
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 }
@@ -226,6 +238,7 @@ async function loadEntries() {
     }
 
     showMode(data.mode);
+    state.commentsOff = Boolean(data.status && data.status.commentsOff);
     const entries = cleanEntries(data.entries);
     const signature = JSON.stringify(entries);
     state.hasLoaded = true;
@@ -443,7 +456,15 @@ function createWallCard(entry) {
   const time = document.createElement('time');
   time.dateTime = entry.timestamp;
   time.textContent = formatDay(date);
-  meta.append(who, time);
+  meta.append(who);
+  if (entry.comments) {
+    const count = document.createElement('span');
+    count.className = 'wall-card__comments';
+    count.textContent = `💬 ${entry.comments}`;
+    count.title = `${entry.comments} comment${entry.comments === 1 ? '' : 's'}`;
+    meta.append(count);
+  }
+  meta.append(time);
   bodyBox.append(meta);
   open.append(bodyBox);
 
@@ -628,6 +649,158 @@ els.shareSave.addEventListener('click', () => { if (share.blob) downloadBlob(sha
 els.shareCopy.addEventListener('click', copyShareLink);
 els.shareClose.addEventListener('click', () => els.shareDialog.close());
 els.shareDialog.addEventListener('click', (event) => { if (event.target === els.shareDialog) els.shareDialog.close(); });
+
+// =====================================================================
+// Comments (people signed in with Google + a username; account.js)
+// =====================================================================
+
+const comments = { noteId: null, list: [], token: 0 };
+
+function formatCommentTime(timestamp) {
+  const date = new Date(timestamp);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString(MoodI18n.locale(), { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+}
+
+/** Shows / hides the form, the sign-in button, or "comments are off". */
+function updateCommentForm() {
+  const user = window.MoodAccount && MoodAccount.user;
+  const off = state.commentsOff;
+  els.commentForm.hidden = off || !user;
+  els.commentSignIn.hidden = off || Boolean(user);
+  els.commentsOff.hidden = !off;
+  if (user) els.commentAs.textContent = MoodI18n.t(`as @${user.username}`);
+}
+
+function renderComments() {
+  const me = window.MoodAccount && MoodAccount.user;
+  els.commentsList.replaceChildren();
+  comments.list.forEach((comment) => {
+    const item = document.createElement('li');
+    item.className = 'comment';
+    const head = document.createElement('p');
+    head.className = 'comment__head';
+    const name = document.createElement('strong');
+    name.className = 'comment__name';
+    name.textContent = `@${comment.username}`;
+    const time = document.createElement('time');
+    time.className = 'comment__time';
+    time.dateTime = comment.timestamp;
+    time.textContent = formatCommentTime(comment.timestamp);
+    head.append(name, time);
+    // Delete: your own comments, or any comment for an admin
+    if ((me && me.username === comment.username) || state.isAdmin) {
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'comment__delete';
+      remove.textContent = '🗑';
+      remove.setAttribute('aria-label', 'Delete comment');
+      remove.title = 'Delete comment';
+      remove.addEventListener('click', () => deleteComment(comment));
+      head.append(remove);
+    }
+    const text = document.createElement('p');
+    text.className = 'comment__text';
+    fillText(text, comment.text);
+    item.append(head, text);
+    els.commentsList.append(item);
+  });
+  els.commentsEmpty.hidden = comments.list.length > 0;
+}
+
+/** The opened note: load its comments. */
+async function showComments(entry) {
+  if (!window.MoodAccount || !MoodAccount.enabled) { // no Google sign-in key yet: no comments section
+    els.comments.hidden = true;
+    return;
+  }
+  els.comments.hidden = false;
+  comments.noteId = entry.id;
+  comments.list = [];
+  const token = ++comments.token;
+  els.commentsList.replaceChildren();
+  els.commentsEmpty.hidden = false;
+  els.commentsEmpty.textContent = entry.comments ? 'Loading comments…' : 'No comments yet. Be the first!';
+  els.commentError.textContent = '';
+  els.commentInput.value = '';
+  els.commentCounter.textContent = '0 / 200';
+  updateCommentForm();
+  if (!entry.comments) return;
+  try {
+    const data = await MoodApi.scriptGet('comments', { note: entry.id });
+    if (token !== comments.token) return; // another note was opened meanwhile
+    comments.list = data.comments;
+    els.commentsEmpty.textContent = 'No comments yet. Be the first!';
+    renderComments();
+  } catch {
+    if (token === comments.token) els.commentsEmpty.textContent = "Couldn't load the comments.";
+  }
+}
+
+/** Keeps the comment count on the note (and its wall card) in step. */
+function setCommentCount(noteId, count) {
+  const entry = state.entries.find((item) => item.id === noteId);
+  if (entry) entry.comments = count;
+  state.signature = ''; // redraw the wall after the note closes
+  state.renderWhenClosed = true;
+}
+
+async function submitComment(event) {
+  event.preventDefault();
+  const text = els.commentInput.value.trim();
+  els.commentError.textContent = '';
+  if (!text) {
+    els.commentError.textContent = 'Write something first.';
+    els.commentInput.focus();
+    return;
+  }
+  const user = await MoodAccount.requireUsername();
+  els.commentSend.disabled = true;
+  try {
+    const data = await MoodApi.script('addComment', { userToken: user.token, noteId: comments.noteId, text });
+    comments.list.push(data.comment);
+    renderComments();
+    setCommentCount(comments.noteId, comments.list.length);
+    els.commentInput.value = '';
+    els.commentCounter.textContent = '0 / 200';
+  } catch (error) {
+    if (error.code === 401) {
+      MoodAccount.expired();
+      els.commentError.textContent = 'Your sign-in ran out. Please sign in again.';
+    } else {
+      els.commentError.textContent = error.message;
+    }
+  } finally {
+    els.commentSend.disabled = false;
+  }
+}
+
+async function deleteComment(comment) {
+  const me = MoodAccount.user;
+  try {
+    if (me && me.username === comment.username) {
+      await MoodApi.script('deleteMyComment', { userToken: me.token, commentId: comment.id });
+    } else {
+      const response = await MoodApi.fetch(`/api/admin/comments/${encodeURIComponent(comment.id)}`, { method: 'DELETE' });
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.error || 'Could not delete the comment.');
+    }
+    comments.list = comments.list.filter((item) => item.id !== comment.id);
+    renderComments();
+    setCommentCount(comments.noteId, comments.list.length);
+  } catch (error) {
+    els.commentError.textContent = error.message;
+  }
+}
+
+els.commentForm.addEventListener('submit', submitComment);
+els.commentInput.addEventListener('input', () => {
+  els.commentCounter.textContent = `${els.commentInput.value.length} / 200`;
+});
+els.commentSignIn.addEventListener('click', () => MoodAccount.requireUsername());
+document.addEventListener('moodaccountchange', () => {
+  updateCommentForm();
+  if (state.focused) renderComments();
+});
 
 /**
  * Works out where every note goes.
@@ -960,6 +1133,8 @@ function fillFocusCard(entry) {
   els.focusDate.textContent = formatFullDate(date);
   els.focusDate.dateTime = entry.timestamp;
 
+  showComments(entry);
+
   // Admin bar (only for a logged-in admin)
   els.focusAdmin.hidden = !state.isAdmin;
   els.focusHideButton.disabled = false;
@@ -1069,14 +1244,14 @@ function closeNote() {
 }
 
 function handleKeydown(event) {
-  if (!state.focused || els.shareDialog.open) return; // the share window handles its own keys
+  if (!state.focused || document.querySelector('dialog[open]')) return; // an open window (share, sign-in) handles its own keys
   if (event.key === 'Escape') {
     event.preventDefault();
     closeNote();
   } else if (event.key === 'Tab') {
     // Keep keyboard focus inside the open note: cycle through its visible buttons
     event.preventDefault();
-    const buttons = [...els.focusCard.querySelectorAll('button')].filter((button) => !button.closest('[hidden]'));
+    const buttons = [...els.focusCard.querySelectorAll('button, textarea, a[href]')].filter((button) => !button.closest('[hidden]'));
     const index = buttons.indexOf(document.activeElement);
     const next = (index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length;
     buttons[next].focus();

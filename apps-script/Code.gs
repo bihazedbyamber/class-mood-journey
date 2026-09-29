@@ -50,12 +50,20 @@ function doGet(e) {
     var action = (e && e.parameter && e.parameter.action) || 'entries';
     if (action === 'entries') {
       var admin = loadAdmin_();
-      return json_({ ok: true, mode: 'sheets', entries: publicEntries_(readEntries_(), admin), status: status_(admin) });
+      var counts = commentCounts_();
+      var entries = publicEntries_(readEntries_(), admin).map(function (entry) {
+        entry.comments = counts[entry.id] || 0;
+        return entry;
+      });
+      return json_({ ok: true, mode: 'sheets', entries: entries, status: status_(admin) });
+    }
+    if (action === 'comments') {
+      return json_({ ok: true, comments: listComments_(e.parameter.note) });
     }
     if (action === 'status') {
       var status = status_(loadAdmin_());
       return json_({ ok: true, mode: 'sheets', paused: status.paused, requireApproval: status.requireApproval,
-        approvePhotos: status.approvePhotos });
+        approvePhotos: status.approvePhotos, commentsOff: status.commentsOff });
     }
     throw error_(404, 'Unknown action.');
   } catch (err) {
@@ -74,6 +82,15 @@ function doPost(e) {
       if (typeof body.token === 'string') CacheService.getScriptCache().remove('session-' + body.token);
       return json_({ ok: true });
     }
+    // Accounts + comments (signed in with Google)
+    if (action === 'googleLogin') return json_(googleLogin_(body));
+    if (action === 'setUsername') return json_(setUsername_(body));
+    if (action === 'me') {
+      var user = readUsers_()[readUserToken_(body.userToken)];
+      return json_({ ok: true, username: user && user.username ? user.username : null });
+    }
+    if (action === 'addComment') return json_(addComment_(body));
+    if (action === 'deleteMyComment') return json_(deleteMyComment_(body));
 
     // Everything else is for admins only
     requireAdmin_(body.token);
@@ -313,6 +330,7 @@ function loadAdmin_() {
       paused: Boolean(settings.paused),
       requireApproval: Boolean(settings.requireApproval),
       approvePhotos: Boolean(settings.approvePhotos), // off unless an admin turns it on
+      commentsOff: Boolean(settings.commentsOff),     // comments are on unless an admin turns them off
       blockedWords: Array.isArray(settings.blockedWords) ? settings.blockedWords : []
     },
     piles: Array.isArray(raw.piles) ? raw.piles : [],
@@ -332,7 +350,7 @@ function saveAdmin_(admin) {
 
 function status_(admin) {
   return { paused: admin.settings.paused, requireApproval: admin.settings.requireApproval,
-    approvePhotos: admin.settings.approvePhotos };
+    approvePhotos: admin.settings.approvePhotos, commentsOff: admin.settings.commentsOff };
 }
 
 /** What everyone may see: no hidden, waiting or deleted notes. */
@@ -408,6 +426,12 @@ function requireAdmin_(token) {
 function adminAction_(action, body) {
   if (action === 'session') return { ok: true, admin: true };
 
+  if (action === 'deleteComment') { // admins can remove any comment
+    var commentId = checkId_(body.commentId);
+    removeComments_(function (comment) { return comment.id === commentId; });
+    return { ok: true };
+  }
+
   if (action === 'state') {
     var admin = loadAdmin_();
     return { ok: true, mode: 'sheets', entries: adminEntries_(readEntries_(), admin),
@@ -473,6 +497,7 @@ function deleteNote_(data, body) {
     trashPhotos_(sheet.getRange(row, 7).getValue());
     sheet.deleteRow(row);
   }
+  removeComments_(function (comment) { return comment.noteId === id; }); // its comments go too
   delete data.notes[id];
   return { ok: true };
 }
@@ -517,6 +542,7 @@ function changeSettings_(data, body) {
   if (typeof body.paused === 'boolean') data.settings.paused = body.paused;
   if (typeof body.requireApproval === 'boolean') data.settings.requireApproval = body.requireApproval;
   if (typeof body.approvePhotos === 'boolean') data.settings.approvePhotos = body.approvePhotos;
+  if (typeof body.commentsOff === 'boolean') data.settings.commentsOff = body.commentsOff;
   if ('blockedWords' in body) {
     var list = Array.isArray(body.blockedWords) ? body.blockedWords : String(body.blockedWords || '').split(/[\n,]+/);
     var seen = {};
@@ -530,6 +556,229 @@ function changeSettings_(data, body) {
     });
   }
   return { ok: true, settings: data.settings };
+}
+
+// =====================================================================
+// Accounts (Sign in with Google + a username) and comments
+// ---------------------------------------------------------------------
+// Only the Google account id and the chosen username are saved: no email,
+// no real name. Notes stay anonymous; comments show the username.
+// =====================================================================
+
+var GOOGLE_CLIENT_ID = '293875604698-dj997jlobkn9afi81tlbe9gt02nfkhis.apps.googleusercontent.com';        // the website's Google sign-in key (public), or Script property GOOGLE_CLIENT_ID
+var USERS_TAB = 'Users';          // GoogleId | Username | Joined
+var COMMENTS_TAB = 'Comments';    // Id | NoteId | GoogleId | Text | Timestamp
+var USER_TOKEN_DAYS = 30;         // how long someone stays signed in
+var MAX_COMMENT = 200;
+var MAX_COMMENTS_PER_MINUTE = 6;  // per person
+var RESERVED_NAMES = ['admin', 'administrator', 'moderator', 'mod', 'anonim', 'anonymous', 'rehza', 'moodboard'];
+
+function clientId_() {
+  return PropertiesService.getScriptProperties().getProperty('GOOGLE_CLIENT_ID') || GOOGLE_CLIENT_ID;
+}
+
+function getTab_(name, headers) {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var tab = spreadsheet.getSheetByName(name);
+  if (!tab) {
+    tab = spreadsheet.insertSheet(name);
+    tab.appendRow(headers);
+    tab.setFrozenRows(1);
+  }
+  return tab;
+}
+
+function usersTab_() { return getTab_(USERS_TAB, ['GoogleId', 'Username', 'Joined']); }
+function commentsTab_() { return getTab_(COMMENTS_TAB, ['Id', 'NoteId', 'GoogleId', 'Text', 'Timestamp']); }
+
+/** Asks Google if a sign-in ticket is real and for this website. Returns the Google account id. */
+function verifyGoogle_(credential) {
+  var clientId = clientId_();
+  if (!clientId) throw error_(503, 'Google sign-in is not set up yet.');
+  if (typeof credential !== 'string' || credential.length > 4096 || !/^[\w-]+\.[\w-]+\.[\w-]+$/.test(credential)) {
+    throw error_(400, 'Sign-in failed. Please try again.');
+  }
+  var response = UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(credential),
+    { muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) throw error_(401, 'Sign-in failed. Please try again.');
+  var info = JSON.parse(response.getContentText());
+  var issuerOk = info.iss === 'accounts.google.com' || info.iss === 'https://accounts.google.com';
+  if (info.aud !== clientId || !issuerOk || !info.sub || Number(info.exp) * 1000 < Date.now()) {
+    throw error_(401, 'Sign-in failed. Please try again.');
+  }
+  return String(info.sub);
+}
+
+// ----- The website's own sign-in key (lasts 30 days, signed with a secret) -----
+
+function userSecret_() {
+  var props = PropertiesService.getScriptProperties();
+  var secret = props.getProperty('USER_SECRET');
+  if (!secret) { // made once, automatically
+    secret = Utilities.getUuid() + Utilities.getUuid();
+    props.setProperty('USER_SECRET', secret);
+  }
+  return secret;
+}
+
+function b64_(value) {
+  return Utilities.base64EncodeWebSafe(value).replace(/=+$/, '');
+}
+
+function unb64_(text) {
+  while (text.length % 4) text += '=';
+  return Utilities.newBlob(Utilities.base64DecodeWebSafe(text)).getDataAsString();
+}
+
+function signPayload_(payload) {
+  return b64_(Utilities.computeHmacSha256Signature(payload, userSecret_()));
+}
+
+function makeUserToken_(googleId) {
+  var payload = googleId + '.' + (Date.now() + USER_TOKEN_DAYS * 24 * 60 * 60 * 1000);
+  return b64_(payload) + '.' + signPayload_(payload);
+}
+
+/** Returns the Google id inside a valid, unexpired sign-in key (or throws 401). */
+function readUserToken_(token) {
+  if (typeof token !== 'string' || !/^[\w-]+\.[\w-]+$/.test(token) || token.length > 400) {
+    throw error_(401, 'Please sign in with Google first.');
+  }
+  var parts = token.split('.');
+  var payload;
+  try { payload = unb64_(parts[0]); } catch (err) { throw error_(401, 'Please sign in with Google first.'); }
+  if (!sameText_(signPayload_(payload), parts[1])) throw error_(401, 'Please sign in with Google first.');
+  var pieces = payload.split('.');
+  if (Number(pieces[1]) < Date.now()) throw error_(401, 'Your sign-in ran out. Please sign in again.');
+  return pieces[0];
+}
+
+// ----- Users -----
+
+/** All users: { googleId: { row, username } } */
+function readUsers_() {
+  var tab = usersTab_();
+  var last = tab.getLastRow();
+  var users = {};
+  if (last < 2) return users;
+  tab.getRange(2, 1, last - 1, 2).getValues().forEach(function (row, index) {
+    if (row[0]) users[String(row[0])] = { row: index + 2, username: String(row[1] || '') };
+  });
+  return users;
+}
+
+function cleanUsername_(value) {
+  var name = String(value || '').trim();
+  if (!/^[A-Za-z0-9_.]{3,20}$/.test(name)) throw error_(400, 'A username has 3 to 20 letters, numbers, _ or .');
+  if (RESERVED_NAMES.indexOf(name.toLowerCase()) >= 0) throw error_(400, 'That username is not allowed. Please pick another one.');
+  var blocked = loadAdmin_().settings.blockedWords;
+  if (MoodCensor.hasBadWords(name) || (blocked.length && MoodCensor.createMatcher(blocked).hasMatch(name))) {
+    throw error_(400, 'Please pick a kinder username.');
+  }
+  return name;
+}
+
+function googleLogin_(body) {
+  var googleId = verifyGoogle_(body.credential);
+  var user = readUsers_()[googleId];
+  return { ok: true, token: makeUserToken_(googleId), username: user && user.username ? user.username : null };
+}
+
+function setUsername_(body) {
+  var googleId = readUserToken_(body.userToken);
+  var name = cleanUsername_(body.username);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var users = readUsers_();
+    var taken = Object.keys(users).some(function (id) {
+      return id !== googleId && users[id].username.toLowerCase() === name.toLowerCase();
+    });
+    if (taken) throw error_(409, 'That username is taken. Please pick another one.');
+    var tab = usersTab_();
+    if (users[googleId]) tab.getRange(users[googleId].row, 2).setValue("'" + name);
+    else tab.appendRow(["'" + googleId, "'" + name, new Date()]);
+    return { ok: true, username: name };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ----- Comments -----
+
+/** Every comment: [{ row, id, noteId, googleId, text, timestamp }] (oldest first) */
+function readComments_() {
+  var tab = commentsTab_();
+  var last = tab.getLastRow();
+  if (last < 2) return [];
+  return tab.getRange(2, 1, last - 1, 5).getValues().map(function (row, index) {
+    var time = row[4] instanceof Date ? row[4] : new Date(row[4]);
+    return { row: index + 2, id: String(row[0]), noteId: String(row[1]), googleId: String(row[2]),
+      text: String(row[3]), timestamp: isNaN(time.getTime()) ? '' : time.toISOString() };
+  }).filter(function (comment) { return comment.id && comment.noteId; });
+}
+
+/** { noteId: number of comments } */
+function commentCounts_() {
+  var counts = {};
+  readComments_().forEach(function (comment) { counts[comment.noteId] = (counts[comment.noteId] || 0) + 1; });
+  return counts;
+}
+
+/** The comments of one note, for everyone to read (usernames only, no Google ids). */
+function listComments_(noteId) {
+  checkId_(noteId);
+  var users = readUsers_();
+  return readComments_()
+    .filter(function (comment) { return comment.noteId === noteId; })
+    .map(function (comment) {
+      var user = users[comment.googleId];
+      return { id: comment.id, username: user && user.username ? user.username : 'deleted', text: comment.text, timestamp: comment.timestamp };
+    });
+}
+
+function addComment_(body) {
+  var googleId = readUserToken_(body.userToken);
+  var user = readUsers_()[googleId];
+  if (!user || !user.username) throw error_(400, 'Pick a username first.');
+  var noteId = checkId_(body.noteId);
+  var text = cleanText_(body.text).replace(/\s+/g, ' ');
+  if (!text) throw error_(400, 'Write something first.');
+  if (text.length > MAX_COMMENT) throw error_(400, 'A comment can be at most ' + MAX_COMMENT + ' characters.');
+
+  var cache = CacheService.getScriptCache();
+  var key = 'comments-' + googleId + '-' + Math.floor(Date.now() / 60000);
+  var count = Number(cache.get(key) || 0);
+  if (count >= MAX_COMMENTS_PER_MINUTE) throw error_(429, 'So many comments! Please wait a minute.');
+  cache.put(key, String(count + 1), 120);
+
+  var admin = loadAdmin_();
+  if (admin.settings.commentsOff) throw error_(423, 'Comments are turned off by the admin right now.');
+  if (admin.settings.blockedWords.length && MoodCensor.createMatcher(admin.settings.blockedWords).hasMatch(text)) {
+    throw error_(400, 'Please keep it kind: some words in your comment are not allowed here.');
+  }
+  var visible = publicEntries_(readEntries_(), admin).some(function (entry) { return entry.id === noteId; });
+  if (!visible) throw error_(404, 'That note is not on the map any more.');
+
+  var comment = { id: Utilities.getUuid(), username: user.username, text: text, timestamp: new Date().toISOString() };
+  commentsTab_().appendRow([comment.id, noteId, "'" + googleId, asPlainText_(text), new Date()]);
+  return { ok: true, comment: comment };
+}
+
+/** Deletes comment rows that match test (from the bottom, so row numbers stay right). */
+function removeComments_(test) {
+  var tab = commentsTab_();
+  readComments_().filter(test).reverse().forEach(function (comment) { tab.deleteRow(comment.row); });
+}
+
+/** Someone deletes their own comment. */
+function deleteMyComment_(body) {
+  var googleId = readUserToken_(body.userToken);
+  var id = checkId_(body.commentId);
+  var mine = readComments_().some(function (comment) { return comment.id === id && comment.googleId === googleId; });
+  if (!mine) throw error_(403, 'You can only delete your own comments.');
+  removeComments_(function (comment) { return comment.id === id; });
+  return { ok: true };
 }
 
 // =====================================================================

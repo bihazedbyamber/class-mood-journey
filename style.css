@@ -6608,3 +6608,261 @@ html.has-lightbox body {
 .share-swatch[data-share-color="sky"] { --swatch: #8fd0ff; }
 .share-swatch[data-share-color="lemon"] { --swatch: #ffe14a; }
 .share-swatch[data-share-color="lavender"] { --swatch: #c4b5ff; }
+
+
+/* ===== Accounts: the 👤 button in the top bar + windows ===== */
+.account-link {
+  gap: 6px;
+  max-width: 190px;
+}
+
+.account-link__icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.account-link__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-link.is-signed-in {
+  color: #151515;
+  background: var(--c-mint, #9ff0c8);
+}
+
+@media (max-width: 700px) {
+  .account-link__label {
+    display: none;
+  }
+
+  .account-link {
+    padding: 0.5em 0.65em;
+  }
+}
+
+.account-dialog {
+  width: min(430px, calc(100vw - 24px));
+}
+
+.gsi-slot {
+  display: flex;
+  justify-content: center;
+  min-height: 48px;
+  margin: 16px 0 6px;
+}
+
+.account-form {
+  display: grid;
+  gap: 6px;
+}
+
+.account-form .btn {
+  justify-self: start;
+  margin-top: 8px;
+}
+
+.account-who {
+  margin: 0 0 12px;
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ===== Comments in the opened note ===== */
+.focus-comments {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 2px solid var(--note-line);
+  border-radius: var(--radius-sm);
+}
+
+.focus-comments[hidden] {
+  display: none;
+}
+
+.focus-comments__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+}
+
+.focus-comments__list {
+  display: grid;
+  gap: 8px;
+  max-height: 240px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.comment {
+  padding: 8px 10px;
+  color: #151515;
+  background: #ffffff;
+  border: 1.5px solid rgba(21, 21, 21, 0.25);
+  border-radius: 10px;
+}
+
+.comment__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 3px;
+  font-size: 0.78rem;
+}
+
+.comment__name {
+  font-family: var(--font-label);
+}
+
+.comment__time {
+  opacity: 0.6;
+}
+
+.comment__delete {
+  margin-left: auto;
+  padding: 0 4px;
+  font-size: 0.85rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.comment__delete:hover,
+.comment__delete:focus-visible {
+  opacity: 1;
+}
+
+.comment__text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.focus-comments__empty,
+.focus-comments__off {
+  margin: 0;
+  font-size: 0.88rem;
+  opacity: 0.75;
+}
+
+.focus-comments__empty[hidden],
+.focus-comments__off[hidden],
+.focus-comments__form[hidden],
+.focus-comments__signin[hidden] {
+  display: none;
+}
+
+.focus-comments__form {
+  display: grid;
+  gap: 6px;
+}
+
+.focus-comments__form textarea {
+  resize: vertical;
+  min-height: 56px;
+}
+
+.focus-comments__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.focus-comments__as {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.focus-comments__row .counter {
+  margin-left: auto;
+}
+
+.focus-comments__signin {
+  justify-self: start;
+}
+
+.wall-card__comments {
+  white-space: nowrap;
+}
+
+:root[data-style="modern-2026"] .focus-comments,
+:root[data-style="modern-2026"] .comment,
+:root[data-style="modern-bold"] .focus-comments,
+:root[data-style="modern-bold"] .comment {
+  border-radius: 0;
+}
+
+
+/* ===== Privacy page ===== */
+.privacy {
+  max-width: 760px;
+  margin: 32px auto 64px;
+  padding: 28px 28px 32px;
+  line-height: 1.55;
+}
+
+.privacy__title {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  text-transform: var(--display-case);
+}
+
+.privacy__lead {
+  margin: 0 0 18px;
+  color: var(--text-soft);
+}
+
+.privacy h2 {
+  margin: 22px 0 6px;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+}
+
+.privacy ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.privacy li + li {
+  margin-top: 4px;
+}
+
+.privacy__back {
+  margin-top: 26px;
+}
+
+.site-footer {
+  padding: 18px 16px 40px;
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--text-soft);
+}
+
+.site-footer a {
+  color: inherit;
+}
+
+@media (max-width: 700px) {
+  .privacy {
+    margin: 20px 16px 48px;
+    padding: 20px 18px 24px;
+  }
+}

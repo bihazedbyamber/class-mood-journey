@@ -31,6 +31,8 @@ window.MOOD_CONFIG = {
   appsScriptUrl: '${valid ? url : ''}',
   // The public website address (printed on the Share / Save pictures)
   siteUrl: 'https://bihazedbyamber.github.io/class-mood-journey/',
+  // "Sign in with Google" key from Google Cloud (public; empty = no sign-in button)
+  googleClientId: '293875604698-dj997jlobkn9afi81tlbe9gt02nfkhis.apps.googleusercontent.com',
 };
 `;
 fs.writeFileSync(path.join(root, 'site-config.js'), text, 'utf8');

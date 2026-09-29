@@ -82,6 +82,7 @@ const PUBLIC_FILES = {
   '/checkin.html': 'checkin.html',
   '/journey.html': 'journey.html',
   '/admin.html': 'admin.html',
+  '/privacy.html': 'privacy.html',
   '/moods.js': 'moods.js',
   '/censor.js': 'censor.js',
   '/style.css': 'style.css',
@@ -93,6 +94,7 @@ const PUBLIC_FILES = {
   '/i18n.js': 'i18n.js',
   '/lightbox.js': 'lightbox.js',
   '/share-card.js': 'share-card.js',
+  '/account.js': 'account.js',
   '/site-config.js': 'site-config.js',
   '/api.js': 'api.js',
   '/sprite.svg': 'sprite.svg',
@@ -113,14 +115,16 @@ const SECURITY_HEADERS = {
   // Only allow our own scripts/styles plus the font services. Blocks injected scripts.
   'Content-Security-Policy': [
     "default-src 'self'",
-    "script-src 'self'",
-    "style-src 'self' https://fonts.googleapis.com https://api.fontshare.com",
+    // Google's "Sign in with Google" button (account.js)
+    "script-src 'self' https://accounts.google.com",
+    "frame-src https://accounts.google.com",
+    "style-src 'self' https://fonts.googleapis.com https://api.fontshare.com https://accounts.google.com",
     // Fontshare links its fonts without http/https, so allow the host on both
     'font-src https://fonts.gstatic.com cdn.fontshare.com https://cdn.fontshare.com',
     // Note photos live in Google Drive (drive.google.com redirects to googleusercontent.com)
     "img-src 'self' data: blob: https://drive.google.com https://*.googleusercontent.com",
     // Google too, for when site-config.js has an Apps Script URL (pages then talk to the Sheet directly)
-    "connect-src 'self' https://script.google.com https://script.googleusercontent.com",
+    "connect-src 'self' https://script.google.com https://script.googleusercontent.com https://accounts.google.com",
     "base-uri 'none'",
     "form-action 'self'",
     "frame-ancestors 'none'",
@@ -695,6 +699,7 @@ async function handleAdminSettings(req, res) {
     if (typeof body.paused === 'boolean') current.settings.paused = body.paused;
     if (typeof body.requireApproval === 'boolean') current.settings.requireApproval = body.requireApproval;
     if (typeof body.approvePhotos === 'boolean') current.settings.approvePhotos = body.approvePhotos;
+    if (typeof body.commentsOff === 'boolean') current.settings.commentsOff = body.commentsOff;
     if ('blockedWords' in body) current.settings.blockedWords = moderation.cleanWordList(body.blockedWords);
   });
   console.log('⚙ Admin changed settings');

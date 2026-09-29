@@ -91,6 +91,8 @@
     if (note && method === 'DELETE') return adminPost('deleteNote', { id: decodeURIComponent(note[1]) });
     if (pile && method === 'PATCH') return adminPost('updatePile', { ...body, id: decodeURIComponent(pile[1]) });
     if (pile && method === 'DELETE') return adminPost('deletePile', { id: decodeURIComponent(pile[1]) });
+    const comment = path.match(/^\/api\/admin\/comments\/([^/]+)$/);
+    if (comment && method === 'DELETE') return adminPost('deleteComment', { commentId: decodeURIComponent(comment[1]) });
     return { ok: false, code: 404, error: 'Unknown API address.' };
   }
 
@@ -141,8 +143,29 @@
     return ids.map((id) => photoUrl(id, width)).filter(Boolean).slice(0, 5);
   }
 
+  /**
+   * Accounts + comments talk to the Apps Script directly (GitHub Pages
+   * version only). Returns the answer; throws an Error with .code on failure.
+   */
+  async function script(action, body = {}) {
+    if (!SCRIPT_URL) throw Object.assign(new Error('Sign-in only works on the online version of the site.'), { code: 503 });
+    const data = await postScript({ ...body, action });
+    if (!data || !data.ok) throw Object.assign(new Error((data && data.error) || 'Something went wrong.'), { code: data && data.code });
+    return data;
+  }
+
+  async function scriptGet(action, params = {}) {
+    if (!SCRIPT_URL) throw Object.assign(new Error('Only works on the online version of the site.'), { code: 503 });
+    const query = new URLSearchParams({ ...params, action }).toString();
+    const data = await (await fetch(`${SCRIPT_URL}?${query}`, { cache: 'no-store' })).json();
+    if (!data || !data.ok) throw Object.assign(new Error((data && data.error) || 'Something went wrong.'), { code: data && data.code });
+    return data;
+  }
+
   root.MoodApi = {
     fetch: apiFetch,
+    script,
+    scriptGet,
     photoUrl,
     photoUrls,
     photoIds,

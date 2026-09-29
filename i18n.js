@@ -86,6 +86,81 @@ window.MoodI18n = (function createI18n() {
     'Save image': 'Simpan gambar',
     'to put it in your gallery.': 'untuk menyimpannya ke galeri.',
     'Copy link': 'Salin link',
+    // accounts + comments
+    'Sign in': 'Masuk',
+    'Your account': 'Akunmu',
+    'Sign in with Google to comment': 'Masuk dengan Google untuk berkomentar',
+    'Sign in to comment': 'Masuk untuk berkomentar',
+    'Sign in with your Google account, then pick a username. Only your username is shown on the site. Your email and name are never saved or shown.':
+      'Masuk dengan akun Google-mu, lalu pilih username. Hanya username yang tampil di website. Email dan namamu tidak pernah disimpan atau ditampilkan.',
+    'Signing in…': 'Sedang masuk…',
+    'Pick a username': 'Pilih username',
+    'Username': 'Username',
+    'e.g. rani_07': 'mis. rani_07',
+    '3 to 20 letters, numbers, _ or . Everyone can see it next to your comments.':
+      '3 sampai 20 huruf, angka, _ atau . Semua orang bisa melihatnya di samping komentarmu.',
+    'Save username': 'Simpan username',
+    'Change username': 'Ganti username',
+    'Sign out': 'Keluar',
+    'Comments': 'Komentar',
+    'No comments yet. Be the first!': 'Belum ada komentar. Jadilah yang pertama!',
+    'Loading comments…': 'Memuat komentar…',
+    "Couldn't load the comments.": 'Komentar tidak bisa dimuat.',
+    'Write a comment': 'Tulis komentar',
+    'Write a kind comment…': 'Tulis komentar yang baik…',
+    'Send': 'Kirim',
+    'Delete comment': 'Hapus komentar',
+    'Could not delete the comment.': 'Komentar tidak bisa dihapus.',
+    'Comments are turned off right now.': 'Komentar sedang dimatikan.',
+    'Write something first.': 'Tulis sesuatu dulu ya.',
+    'Your sign-in ran out. Please sign in again.': 'Waktu masukmu habis. Silakan masuk lagi.',
+    'Allow comments': 'Izinkan komentar',
+    'People signed in with Google can comment on notes. You can delete any comment from the opened note on the Class moods page.':
+      'Orang yang masuk dengan Google bisa berkomentar di catatan. Kamu bisa menghapus komentar apa pun dari catatan yang dibuka di halaman Mood kelas.',
+    'Comments are turned off.': 'Komentar dimatikan.',
+    'Comments are on again.': 'Komentar dinyalakan lagi.',
+    'Pick a username first.': 'Pilih username dulu ya.',
+    'A comment can be at most 200 characters.': 'Komentar maksimal 200 karakter.',
+    'So many comments! Please wait a minute.': 'Banyak banget komentar! Tunggu semenit ya.',
+    'Comments are turned off by the admin right now.': 'Komentar sedang dimatikan oleh admin.',
+    'Please keep it kind: some words in your comment are not allowed here.': 'Tetap sopan ya: beberapa kata di komentarmu tidak diizinkan di sini.',
+    'That note is not on the map any more.': 'Catatan itu sudah tidak ada di peta.',
+    'You can only delete your own comments.': 'Kamu hanya bisa menghapus komentarmu sendiri.',
+    'Please sign in with Google first.': 'Masuk dengan Google dulu ya.',
+    'Sign-in failed. Please try again.': 'Gagal masuk. Coba lagi ya.',
+    'Google sign-in is not set up yet.': 'Masuk dengan Google belum disiapkan.',
+    'A username has 3 to 20 letters, numbers, _ or .': 'Username harus 3 sampai 20 huruf, angka, _ atau .',
+    'That username is not allowed. Please pick another one.': 'Username itu tidak diizinkan. Pilih yang lain ya.',
+    'Please pick a kinder username.': 'Pilih username yang lebih sopan ya.',
+    'That username is taken. Please pick another one.': 'Username itu sudah dipakai. Pilih yang lain ya.',
+    'Google sign-in could not load. Check your internet and try again.': 'Tombol Google tidak bisa dimuat. Cek internetmu lalu coba lagi.',
+    // privacy page
+    'Privacy': 'Privasi',
+    'Privacy · MoodBoard': 'Privasi · MoodBoard',
+    'MoodBoard is a small class project made by a student. This page says exactly what it saves.':
+      'MoodBoard adalah proyek kelas kecil buatan siswa. Halaman ini menjelaskan apa saja yang disimpan.',
+    'Mood notes': 'Catatan mood',
+    'A note saves your mood, what happened, your comment, the time, and photos if you add them.':
+      'Catatan menyimpan mood-mu, apa yang terjadi, komentarmu, waktunya, dan foto kalau kamu menambahkannya.',
+    'Notes are anonymous. A name is only saved if you choose to add one.': 'Catatan itu anonim. Nama hanya disimpan kalau kamu memilih untuk menambahkannya.',
+    'No IP address and no location are saved. Photos are shrunk on your device first, which also removes their hidden location data.':
+      'Alamat IP dan lokasi tidak disimpan. Foto dikecilkan dulu di perangkatmu, sekaligus menghapus data lokasi tersembunyinya.',
+    'Signing in with Google (only for comments)': 'Masuk dengan Google (hanya untuk komentar)',
+    'Google only tells MoodBoard "this is the same person as last time" (a Google account number).':
+      'Google hanya memberi tahu MoodBoard "ini orang yang sama seperti sebelumnya" (nomor akun Google).',
+    'MoodBoard saves that number and the username you pick. Your email address, real name and profile photo are never saved or shown.':
+      'MoodBoard menyimpan nomor itu dan username yang kamu pilih. Email, nama asli, dan foto profilmu tidak pernah disimpan atau ditampilkan.',
+    'Your comments show your username. You can delete your own comments at any time.':
+      'Komentarmu menampilkan username-mu. Kamu bisa menghapus komentarmu sendiri kapan saja.',
+    'Where it is kept': 'Di mana disimpan',
+    "Everything is kept in a Google Sheet and Google Drive folder owned by the site's maker, and is only used for this class mood board.":
+      'Semuanya disimpan di Google Sheet dan folder Google Drive milik pembuat website, dan hanya dipakai untuk mood board kelas ini.',
+    'Student admins (moderators) can hide or delete notes and comments.': 'Admin siswa (moderator) bisa menyembunyikan atau menghapus catatan dan komentar.',
+    'Nothing is sold or shared with anyone else. There are no ads and no trackers.': 'Tidak ada yang dijual atau dibagikan ke pihak lain. Tidak ada iklan dan pelacak.',
+    'Questions or delete my data': 'Pertanyaan atau hapus dataku',
+    "Ask the site's maker or a student admin in class, and your notes, comments or username will be removed.":
+      'Tanya pembuat website atau admin siswa di kelas, dan catatan, komentar, atau username-mu akan dihapus.',
+    '← Back to MoodBoard': '← Kembali ke MoodBoard',
     'Colour': 'Warna',
     'Mood colour': 'Warna mood',
     'Lime': 'Hijau limau',
@@ -444,6 +519,8 @@ window.MoodI18n = (function createI18n() {
     [/^You can have at most (\d+) piles\.$/, (n) => `Maksimal ${n} tumpukan.`],
     [/^(\d+) to review$/, (n) => `${n} perlu dicek`],
     [/^(\d+) \/ 5 photos$/, (n) => `${n} / 5 foto`],
+    [/^as @(.+)$/, (n) => `sebagai @${n}`],
+    [/^(\d+) comments?$/, (n) => `${n} komentar`],
     [/^📷 (\d+) photos$/, (n) => `📷 ${n} foto`],
     [/^Photo (\d+)$/, (n) => `Foto ${n}`],
     [/^Photo (\d+) of (\d+)$/, (a, b) => `Foto ${a} dari ${b}`],
@@ -501,7 +578,7 @@ window.MoodI18n = (function createI18n() {
   // Students' own words: never translated (the *censored* stickers inside still are)
   const USER_TEXT = '.note__text, .note__name, #focus-what, #focus-comment:not(.is-empty), '
     + '.admin-note__what, .admin-note__comment:not(.is-empty), .pile__sheet, '
-    + '.wall-card__what, .wall-card__comment, [data-no-translate]';
+    + '.wall-card__what, .wall-card__comment, .comment__name, .comment__text, .account-who, [data-no-translate]';
 
   const originalText = new WeakMap(); // text node -> its English text
   const ourText = new WeakMap();      // text node -> the text we last put in

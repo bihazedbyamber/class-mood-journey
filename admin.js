@@ -52,6 +52,7 @@ const els = {
   togglePaused: document.getElementById('toggle-paused'),
   toggleApproval: document.getElementById('toggle-approval'),
   togglePhotos: document.getElementById('toggle-photos'),
+  toggleComments: document.getElementById('toggle-comments'),
   blockedWords: document.getElementById('blocked-words'),
   saveWordsButton: document.getElementById('save-words-btn'),
   exportButton: document.getElementById('export-csv-btn'),
@@ -541,6 +542,7 @@ function renderControls() {
   els.togglePaused.checked = Boolean(state.settings.paused);
   els.toggleApproval.checked = Boolean(state.settings.requireApproval);
   els.togglePhotos.checked = Boolean(state.settings.approvePhotos);
+  els.toggleComments.checked = !state.settings.commentsOff;
   if (!state.wordsEdited && document.activeElement !== els.blockedWords) {
     els.blockedWords.value = (state.settings.blockedWords || []).join('\n');
   }
@@ -692,6 +694,11 @@ els.toggleApproval.addEventListener('change', () => {
   saveSettings({ requireApproval }, requireApproval
     ? 'New notes will wait for your review.'
     : 'New notes appear on the map straight away.');
+});
+
+els.toggleComments.addEventListener('change', () => {
+  const commentsOff = !els.toggleComments.checked;
+  saveSettings({ commentsOff }, commentsOff ? 'Comments are turned off.' : 'Comments are on again.');
 });
 
 els.togglePhotos.addEventListener('change', () => {
