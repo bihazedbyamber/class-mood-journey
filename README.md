@@ -8,7 +8,10 @@ An **anonymous** class mood and feedback website.
 
 The top bar always shows **Home · Check in · Journey map**; the page you are on is highlighted.
 
-Built with plain HTML, CSS and JavaScript, plus a tiny Node.js server that uses **only built-in modules** (no `npm install`).
+Built with plain HTML, CSS and JavaScript. Two ways to run it:
+
+- **Online for free on GitHub Pages**: the pages talk straight to a Google Apps Script that saves everything in your Google Sheet (see **5. Publish it for free**).
+- **On your own computer**: a tiny Node.js server that uses **only built-in modules** (no `npm install`).
 
 ---
 
@@ -30,13 +33,16 @@ Built with plain HTML, CSS and JavaScript, plus a tiny Node.js server that uses 
 | `lib/moderation.js` | Server: piles, hidden/pinned/waiting notes, blocked words (`data/admin.json`) |
 | `input.js` | Form logic: mood picking, counters, checking, sending |
 | `journey.js` | Map logic: loading, placing notes, arrows, big-note view, auto-refresh |
-| `server.js` | Node server: serves the pages + `GET/POST /api/entries` |
+| `site-config.js` | Your Apps Script Web app URL (for GitHub Pages). Empty = use the local server |
+| `api.js` | Talks to the Apps Script (GitHub Pages) or to `server.js` (local) |
+| `tools/` | `make-site-config.js` (writes `site-config.js`), `build-code-gs.js` (copies `censor.js` into `Code.gs`) |
+| `server.js` | Node server for running on your own computer: serves the pages + the `/api/...` addresses |
 | `config.json` | Your private settings: `port`, `appsScriptUrl`, `adminPasswordHash`, `sheetSecret` (never uploaded, see `.gitignore`) |
 | `config.example.json` | An empty copy of `config.json` that is safe to share |
 | `render.yaml` / `package.json` | Tell Render how to run the site (no packages to install) |
 | `.gitignore` | Keeps `config.json` and `data/` off GitHub |
 | `data/entries.json` | Saved entries in local mode (starts with demo entries) |
-| `apps-script/Code.gs` | Google Apps Script code for Google Sheets mode |
+| `apps-script/Code.gs` | Google Apps Script: the whole backend for GitHub Pages (notes, admin login, moderation) |
 
 ---
 
@@ -239,65 +245,52 @@ The journey page picks up the change on its next refresh (at most 30 seconds). N
 
 ---
 
-## 5. Publish it for free (GitHub + Render)
+## 5. Publish it for free (GitHub Pages, no credit card)
 
-> ❌ **GitHub Pages alone won't work.** It only serves static files and can't run `server.js`, so saving notes, the admin login and moderation wouldn't work. Instead: **GitHub** stores the code, **Render** runs it.
+On GitHub Pages the website talks **straight to your Google Apps Script**, with no Node server in between. Everything the server did (checking notes, admin login, hide/pin/delete, piles, blocked words, pause, review) now happens inside `apps-script/Code.gs`.
 
-### Step A. Keep the admin data in your Google Sheet (do this first)
+Your link will look like: **`https://<your-github-name>.github.io/class-mood-journey/`**
 
-Free hosts wipe the server's files on every restart. Notes are already safe in the Sheet; this step makes the **admin data** (piles, hidden/pinned notes, blocked words, the switches) safe too. It goes into a new **Admin** tab.
+### Step A. Update the script in your Google Sheet
 
 1. Open your Sheet → **Extensions → Apps Script**.
-2. Replace all code in `Code.gs` with the new `apps-script/Code.gs` from this project → **Save**.
-3. Click the ⚙ **Project Settings** (left side) → scroll to **Script properties** → **Add script property**:
-   - Property: `ADMIN_SECRET`
-   - Value: the `"sheetSecret"` value from your `config.json` (copy it without the quotes)
-   → **Save script properties**.
-4. **Deploy → Manage deployments → ✏ Edit → Version: New version → Deploy.** (Same URL, nothing to change.)
-5. Restart the server. It prints `✔ Admin data is now kept in the Google Sheet ("Admin" tab).` the first time the admin data is used. An **Admin** tab appears in your Sheet. Don't edit it by hand.
+2. Click in `Code.gs` → **Ctrl + A** → **Delete**. Open `apps-script/Code.gs` from this project, copy **everything** (it is long: the censor is at the bottom), paste it in → **Save** 💾.
+3. Click ⚙ **Project Settings** (left side) → scroll to **Script properties** → **Add script property**:
+   - Property: `ADMIN_PASSWORD`
+   - Value: the admin password you want (type it yourself)
 
-### Step B. Put the code on GitHub
+   → **Save script properties**. Only you (the Sheet owner) can see this. (You can delete an old `ADMIN_SECRET` property; it's not used any more.)
+4. **Deploy → Manage deployments → ✏ Edit → Version: New version → Deploy.** The URL stays the same.
 
-`.gitignore` keeps `config.json` (your URL, password hash and secret) and `data/` **off** GitHub. Use a tool that respects it:
+   ✅ Quick check: open the Web app URL. You should see `{"ok":true,"mode":"sheets","entries":[...],...}`.
 
-1. Make a free account on [github.com](https://github.com).
-2. Install [GitHub Desktop](https://desktop.github.com) and sign in.
-3. **File → Add local repository…** → choose the `class-mood-journey` folder. It says "not a Git repository" → click **create a repository** → **Create repository**.
-4. Check the list of files on the left: `config.json` and `data/` must **not** be in it.
-5. Click **Publish repository**. You can leave "Keep this code private" ticked (Render works with private repos too).
+### Step B. Point the website at the script
 
-> ⚠ Don't drag the folder onto the github.com website: that ignores `.gitignore` and would upload `config.json`.
+`site-config.js` holds the Web app URL (it's already filled in from your `config.json`). To change it:
 
-### Step C. Run it on Render
+```bash
+node tools/make-site-config.js https://script.google.com/macros/s/AKfy.../exec
+```
 
-1. Make a free account on [render.com](https://render.com) → **sign in with GitHub**.
-2. **New + → Blueprint** → pick your `class-mood-journey` repo. Render reads `render.yaml` from the project.
-3. Render asks for three secret values. Copy them from your `config.json`:
+This URL isn't a secret: visitors' browsers need it to save notes. Your password and the Sheet stay private.
 
-   | Render asks for | Copy from `config.json` |
-   |---|---|
-   | `APPS_SCRIPT_URL` | `appsScriptUrl` |
-   | `ADMIN_PASSWORD_HASH` | `adminPasswordHash` (the long `scrypt:...` text) |
-   | `SHEET_SECRET` | `sheetSecret` |
+### Step C. Upload and switch on GitHub Pages
 
-4. Click **Apply**. After a minute or two your site is live at something like `https://class-mood-journey.onrender.com`. HTTPS is included.
-5. Open it, send a test check-in, and check the journey map badge says **Connected to Google Sheets**.
+1. In **GitHub Desktop**: write a summary (e.g. `GitHub Pages version`) → **Commit to main** → **Push origin**.
+2. On github.com open your repo → **Settings** → **General** → scroll down to **Danger Zone** → **Change visibility** → **Make public**. (Free GitHub Pages only works for public repos. `config.json` and `data/` are never uploaded.)
+3. Repo **Settings → Pages** → *Source*: **Deploy from a branch** → Branch: **main**, folder **/ (root)** → **Save**.
+4. Wait 1–2 minutes and refresh that page. It shows **"Your site is live at …"**. That's your link! 🎉
 
-Good to know about the free plan:
-- It **sleeps** after ~15 minutes without visitors; the first visit after that takes ~30–60 seconds.
-- **Updating the site**: change the files (or ask for changes), then in GitHub Desktop click **Commit to main** → **Push origin**. Render updates the live site by itself.
+**Updating later:** change the files (or ask for changes) → GitHub Desktop → **Commit to main** → **Push origin**. The site updates within a minute or two. If you change `Code.gs`, also do Step A.4 again (New version).
 
-### Step D (optional). Your own domain + Cloudflare
+> Still works on your own computer: `node server.js` uses the local server when `site-config.js` has an empty URL (`appsScriptUrl: ''`).
 
-Cloudflare protects a site that uses **your own domain name**, so this needs a domain (roughly $1–10 a year, e.g. `classmood.my.id`, `.site`, `.com`).
+### Good to know
 
-1. Buy a domain (from Cloudflare Registrar or any shop).
-2. Make a free [Cloudflare](https://dash.cloudflare.com) account → **Add a site** → type your domain → **Free** plan. Follow the steps to change the domain's nameservers to Cloudflare's.
-3. In Render: your service → **Settings → Custom Domains → Add** → your domain (e.g. `mood.yourdomain.com`). Render shows a **CNAME** target.
-4. In Cloudflare: **DNS → Add record** → type **CNAME**, name `mood`, target = what Render showed, **Proxy status: Proxied (orange cloud)**.
-5. In Cloudflare: **SSL/TLS → Overview → Full (strict)**. Optionally turn on **Security → Bots → Bot Fight Mode**.
-
-Now visitors go through Cloudflare (attack protection, caching) before they reach Render.
+- Admin logins last 6 hours. After 10 wrong passwords, admin login is locked for everyone for 10 minutes.
+- The spam brake is for the whole class: at most 40 notes per minute in total.
+- Admin **Delete** removes the note's row from the Sheet for good.
+- If you changed `censor.js`, run `node tools/build-code-gs.js` so `Code.gs` gets the new copy, then redo Step A.
 
 ---
 

@@ -15,6 +15,8 @@
   <link rel="stylesheet" href="style.css">
 
   <script src="settings.js"></script>
+  <script src="site-config.js"></script>
+  <script src="api.js"></script>
   <script src="moods.js" defer></script>
   <script src="censor.js" defer></script>
   <script type="module" src="admin.js"></script>
@@ -144,7 +146,7 @@
 
           <div class="controls__export">
             <span class="settings__label">Export</span>
-            <a class="btn" href="/api/admin/export.csv" download>Download all notes (CSV)</a>
+            <button type="button" class="btn" id="export-csv-btn">Download all notes (CSV)</button>
             <p class="settings__hint" id="storage-hint"></p>
           </div>
         </div>

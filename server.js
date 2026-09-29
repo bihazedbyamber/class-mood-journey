@@ -90,6 +90,8 @@ const PUBLIC_FILES = {
   '/admin.js': 'admin.js',
   '/admin-login.js': 'admin-login.js',
   '/settings.js': 'settings.js',
+  '/site-config.js': 'site-config.js',
+  '/api.js': 'api.js',
   '/sprite.svg': 'sprite.svg',
 };
 
@@ -113,7 +115,8 @@ const SECURITY_HEADERS = {
     // Fontshare links its fonts without http/https, so allow the host on both
     'font-src https://fonts.gstatic.com cdn.fontshare.com https://cdn.fontshare.com',
     "img-src 'self' data:",
-    "connect-src 'self'",
+    // Google too, for when site-config.js has an Apps Script URL (pages then talk to the Sheet directly)
+    "connect-src 'self' https://script.google.com https://script.googleusercontent.com",
     "base-uri 'none'",
     "form-action 'self'",
     "frame-ancestors 'none'",

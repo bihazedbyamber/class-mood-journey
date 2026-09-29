@@ -203,7 +203,7 @@ async function loadEntries() {
   state.isLoading = true;
 
   try {
-    const response = await fetch('/api/entries', { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    const response = await MoodApi.fetch('/api/entries', { headers: { Accept: 'application/json' }, cache: 'no-store' });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ok) {
       throw new Error(data.error || `The server answered with code ${response.status}.`);
@@ -599,7 +599,7 @@ function fillFocusCard(entry) {
 /** Asks the server if this browser is logged in as admin. */
 async function checkAdmin() {
   try {
-    const data = await fetch('/api/admin/session', { cache: 'no-store' }).then((response) => response.json());
+    const data = await MoodApi.fetch('/api/admin/session', { cache: 'no-store' }).then((response) => response.json());
     state.isAdmin = Boolean(data.admin);
   } catch {
     state.isAdmin = false;
@@ -612,7 +612,7 @@ async function hideFocusedNote() {
   if (!focused) return;
   els.focusHideButton.disabled = true;
   try {
-    const response = await fetch(`/api/admin/notes/${encodeURIComponent(focused.entryId)}`, {
+    const response = await MoodApi.fetch(`/api/admin/notes/${encodeURIComponent(focused.entryId)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ hidden: true }),

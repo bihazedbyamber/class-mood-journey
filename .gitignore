@@ -6,6 +6,7 @@ data/
 
 # Editor / system clutter
 node_modules/
+.claude/
 .DS_Store
 Thumbs.db
 *.log

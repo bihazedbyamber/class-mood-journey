@@ -239,7 +239,7 @@ function validateForm() {
 
 /** Sends one entry to our server. Throws an error with .status when it fails. */
 async function sendEntry(entry) {
-  const response = await fetch('/api/entries', {
+  const response = await MoodApi.fetch('/api/entries', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(entry),
@@ -362,7 +362,7 @@ document.addEventListener('moodsettingschange', showIdentity);
 /** If the admin paused check-ins, say so right away (the server refuses notes anyway). */
 async function showPausedMessage() {
   try {
-    const status = await fetch('/api/status', { cache: 'no-store' }).then((response) => response.json());
+    const status = await MoodApi.fetch('/api/status', { cache: 'no-store' }).then((response) => response.json());
     if (status.paused) {
       showStatus('Check-ins are paused by the admin right now. Please come back a bit later! ⏸', 'error');
     }

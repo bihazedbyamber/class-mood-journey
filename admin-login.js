@@ -24,7 +24,7 @@
   /** Asks the server whether this browser is already logged in. */
   async function checkSession() {
     try {
-      const response = await fetch('/api/admin/session', { cache: 'no-store' });
+      const response = await MoodApi.fetch('/api/admin/session', { cache: 'no-store' });
       const data = await response.json();
       isAdmin = Boolean(data.admin);
     } catch {
@@ -53,7 +53,7 @@
     submitButton.disabled = true;
     errorText.textContent = '';
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await MoodApi.fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),

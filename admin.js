@@ -53,6 +53,7 @@ const els = {
   toggleApproval: document.getElementById('toggle-approval'),
   blockedWords: document.getElementById('blocked-words'),
   saveWordsButton: document.getElementById('save-words-btn'),
+  exportButton: document.getElementById('export-csv-btn'),
   storageHint: document.getElementById('storage-hint'),
   toast: document.getElementById('toast'),
 };
@@ -77,7 +78,7 @@ const state = {
 
 /** Calls our server. Throws an Error with a friendly message on failure. */
 async function api(path, { method = 'GET', body } = {}) {
-  const response = await fetch(path, {
+  const response = await MoodApi.fetch(path, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : {},
     body: body ? JSON.stringify(body) : undefined,
@@ -506,9 +507,13 @@ function renderControls() {
   if (!state.wordsEdited && document.activeElement !== els.blockedWords) {
     els.blockedWords.value = (state.settings.blockedWords || []).join('\n');
   }
-  els.storageHint.textContent = state.mode === 'sheets'
-    ? 'Notes are in Google Sheets. "Delete" removes a note from this website; delete its row in the Sheet too if you want it gone there.'
-    : 'Notes are saved in data/entries.json. "Delete" removes a note for good.';
+  if (window.MoodApi.usesSheet) {
+    els.storageHint.textContent = 'Notes are in your Google Sheet. "Delete" removes the note and its row for good.';
+  } else {
+    els.storageHint.textContent = state.mode === 'sheets'
+      ? 'Notes are in Google Sheets. "Delete" removes a note from this website; delete its row in the Sheet too if you want it gone there.'
+      : 'Notes are saved in data/entries.json. "Delete" removes a note for good.';
+  }
 
   // The colour menu for new piles (filled once)
   if (!els.newPileColor.options.length) {
@@ -551,7 +556,9 @@ async function deleteNote(entry) {
     await api(`/api/admin/notes/${encodeURIComponent(entry.id)}`, { method: 'DELETE' });
     state.entries = state.entries.filter((item) => item.id !== entry.id);
     renderAll();
-    showToast(state.mode === 'sheets' ? 'Removed from the website (the row is still in the Sheet).' : 'Note deleted.');
+    showToast(state.mode === 'sheets' && !window.MoodApi.usesSheet
+      ? 'Removed from the website (the row is still in the Sheet).'
+      : 'Note deleted.');
   } catch (error) {
     reportError(error);
   }
@@ -657,6 +664,35 @@ els.saveWordsButton.addEventListener('click', async () => {
   els.blockedWords.value = (state.settings.blockedWords || []).join('\n');
 });
 
+/** One CSV cell. A leading = + - @ is made harmless so spreadsheets don't run it as a formula. */
+function csvCell(value) {
+  let text = String(value ?? '');
+  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+/** Builds the CSV right here in the browser from the notes on the desk. */
+function exportCsv() {
+  const rows = [['Timestamp', 'Mood', 'Feeling', 'WhatHappened', 'Comment', 'Name', 'Pile', 'Hidden', 'Pinned', 'Waiting']];
+  const entries = [...state.entries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  for (const entry of entries) {
+    const feeling = Moods.isBlend(entry.mood) ? `${Moods.name(entry.mood)} (${Moods.baseLabel(entry.mood)})` : Moods.name(entry.mood);
+    rows.push([
+      entry.timestamp, entry.mood, feeling, entry.whatHappened, entry.comment, entry.name,
+      pileName(pileOf(entry)), entry.hidden ? 'yes' : '', entry.pinned ? 'yes' : '', entry.pending ? 'yes' : '',
+    ]);
+  }
+  const csv = '﻿' + rows.map((row) => row.map(csvCell).join(',')).join('\r\n') + '\r\n';
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  link.download = `class-mood-notes-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+els.exportButton.addEventListener('click', exportCsv);
+
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && !els.adminView.hidden) loadState();
 });
@@ -664,7 +700,7 @@ document.addEventListener('visibilitychange', () => {
 /** Start: already logged in? Then show the desk, otherwise the password box. */
 (async function start() {
   try {
-    const response = await fetch('/api/admin/session', { cache: 'no-store' });
+    const response = await MoodApi.fetch('/api/admin/session', { cache: 'no-store' });
     const data = await response.json();
     if (data.admin) {
       await showDesk();
