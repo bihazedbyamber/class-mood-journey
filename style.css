@@ -5703,3 +5703,19 @@ body.is-dragging-note .pile {
 :root[data-style="modern-bold"] .camera-view {
   border-radius: 0;
 }
+
+/* Mirror: flips the live preview (the snapped photo is flipped the same way) */
+.camera-view video.is-mirrored {
+  transform: scaleX(-1);
+}
+
+/* The Mirror button looks "switched on" while mirroring */
+.camera-mirror[aria-pressed="true"] {
+  color: #151515;
+  background: var(--highlight);
+}
+
+.camera-actions .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

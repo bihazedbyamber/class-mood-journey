@@ -72,7 +72,10 @@ window.MoodI18n = (function createI18n() {
     'Remove photo': 'Hapus foto',
     'Close camera': 'Tutup kamera',
     'Starting the camera…': 'Menyalakan kamera…',
-    'Switch camera': 'Ganti kamera',
+    'Front camera': 'Kamera depan',
+    'Back camera': 'Kamera belakang',
+    'Mirror': 'Cermin',
+    'This device has only one camera': 'Perangkat ini cuma punya satu kamera',
     'Snap': 'Jepret',
     'The camera is blocked. Allow the camera for this website (the icon next to the address bar), or choose a photo instead.':
       'Kamera diblokir. Izinkan kamera untuk website ini (ikon di sebelah alamat website), atau pilih foto saja.',

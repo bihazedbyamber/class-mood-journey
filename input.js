@@ -182,8 +182,11 @@ async function shrinkPhoto(file) {
   return toSmallJpeg(img, img.naturalWidth, img.naturalHeight);
 }
 
-/** Draws a picture (image or camera frame) small, as a JPEG "data:" text. */
-function toSmallJpeg(source, width, height) {
+/**
+ * Draws a picture (image or camera frame) small, as a JPEG "data:" text.
+ * mirror: flip it left-right (the camera's Mirror button).
+ */
+function toSmallJpeg(source, width, height, mirror = false) {
   const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(width, height));
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.round(width * scale));
@@ -191,6 +194,10 @@ function toSmallJpeg(source, width, height) {
   const context = canvas.getContext('2d');
   context.fillStyle = '#ffffff'; // see-through PNGs get a white background
   context.fillRect(0, 0, canvas.width, canvas.height);
+  if (mirror) {
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
+  }
   context.drawImage(source, 0, 0, canvas.width, canvas.height);
   let quality = 0.82;
   let data = canvas.toDataURL('image/jpeg', quality);
@@ -243,10 +250,31 @@ const camera = {
   status: document.getElementById('camera-status'),
   snap: document.getElementById('camera-snap'),
   switchButton: document.getElementById('camera-switch'),
+  switchLabel: document.getElementById('camera-switch-label'),
+  mirrorButton: document.getElementById('camera-mirror'),
   close: document.getElementById('camera-close'),
   stream: null,
   facing: 'environment', // back camera on phones; laptops just use their webcam
+  mirror: loadCameraMirror(), // flip the picture left-right (remembered on this device)
 };
+
+function loadCameraMirror() {
+  try { return localStorage.getItem('class-mood-camera-mirror') === 'on'; } catch { return false; }
+}
+
+/** Shows the Mirror and Front/Back buttons in their current state. */
+function showCameraButtons() {
+  camera.video.classList.toggle('is-mirrored', camera.mirror);
+  camera.mirrorButton.setAttribute('aria-pressed', String(camera.mirror));
+  // The button says which camera you switch TO
+  camera.switchLabel.textContent = camera.facing === 'environment' ? 'Front camera' : 'Back camera';
+}
+
+function toggleMirror() {
+  camera.mirror = !camera.mirror;
+  try { localStorage.setItem('class-mood-camera-mirror', camera.mirror ? 'on' : 'off'); } catch { /* not saved */ }
+  showCameraButtons();
+}
 
 function stopCamera() {
   if (camera.stream) camera.stream.getTracks().forEach((track) => track.stop());
@@ -266,9 +294,11 @@ async function startCamera() {
     });
     camera.video.srcObject = camera.stream;
     camera.video.play().catch(() => {}); // don't wait: "loadeddata" below says when it's ready
-    // Only offer "Switch camera" when there is more than one
+    // Front/Back only works with more than one camera (most laptops have just one)
     const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
-    camera.switchButton.hidden = devices.filter((device) => device.kind === 'videoinput').length < 2;
+    const onlyOne = devices.filter((device) => device.kind === 'videoinput').length < 2;
+    camera.switchButton.disabled = onlyOne;
+    camera.switchButton.title = onlyOne ? 'This device has only one camera' : '';
   } catch (error) {
     stopCamera();
     camera.status.textContent = error && error.name === 'NotAllowedError'
@@ -284,6 +314,7 @@ function openCamera() {
     document.getElementById('photo-camera').click();
     return;
   }
+  showCameraButtons();
   camera.dialog.showModal();
   startCamera();
 }
@@ -291,7 +322,7 @@ function openCamera() {
 function snapPhoto() {
   const { videoWidth: width, videoHeight: height } = camera.video;
   if (!width || !height) return;
-  photoData = toSmallJpeg(camera.video, width, height);
+  photoData = toSmallJpeg(camera.video, width, height, camera.mirror); // saved exactly as the preview looks
   showPhoto();
   closeCamera();
 }
@@ -307,8 +338,10 @@ if (camera.dialog) {
   camera.close.addEventListener('click', closeCamera);
   camera.switchButton.addEventListener('click', () => {
     camera.facing = camera.facing === 'environment' ? 'user' : 'environment';
+    showCameraButtons();
     startCamera();
   });
+  camera.mirrorButton.addEventListener('click', toggleMirror);
   // However the window closes (Snap, ✕, Esc), turn the camera off
   camera.dialog.addEventListener('close', stopCamera);
   // The first picture from the camera has arrived: ready to snap
