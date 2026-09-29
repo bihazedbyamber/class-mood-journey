@@ -67,6 +67,17 @@ const els = {
   focusWhat: document.getElementById('focus-what'),
   focusComment: document.getElementById('focus-comment'),
   focusPhotos: document.getElementById('focus-photos'),
+  focusShareButton: document.getElementById('focus-share-btn'),
+  focusSaveButton: document.getElementById('focus-save-btn'),
+  wallGrid: document.getElementById('wall-grid'),
+  shareDialog: document.getElementById('share-dialog'),
+  shareImg: document.getElementById('share-img'),
+  shareStatus: document.getElementById('share-status'),
+  shareSend: document.getElementById('share-send'),
+  shareSave: document.getElementById('share-save'),
+  shareCopy: document.getElementById('share-copy'),
+  shareWhatsApp: document.getElementById('share-whatsapp'),
+  shareClose: document.getElementById('share-close'),
   focusDate: document.getElementById('focus-date'),
   focusAuthor: document.getElementById('focus-author'),
   focusAdmin: document.getElementById('focus-admin'),
@@ -196,6 +207,8 @@ function cleanEntries(list) {
       demo: entry.demo === true,
       photos: MoodApi.photoUrls(entry, 1000), // big versions (opened note); [] = no photos
       thumbs: MoodApi.photoUrls(entry, 160),  // small versions (on the sticky note)
+      cards: MoodApi.photoUrls(entry, 600),   // medium versions (on the wall cards)
+      photoIds: MoodApi.photoIds(entry),      // Drive ids (for the Share picture)
     }))
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 }
@@ -314,7 +327,307 @@ function render() {
   const pins = placePins(trackWidth, metrics);
   drawNotes(layout.positions);
   drawConnectors(layout.positions, pins, metrics, trackWidth);
+  drawWall(visible);
 }
+
+// =====================================================================
+// The wall: every note as a card, Pinterest-style
+// =====================================================================
+
+/** How many columns fit (cards are about 240px wide). */
+function wallColumnCount() {
+  const width = els.wallGrid.clientWidth || window.innerWidth;
+  return Math.max(2, Math.min(5, Math.floor(width / 240)));
+}
+
+/**
+ * A rough guess of how tall a card will be, so each new card can go into the
+ * column that is shortest so far. (Guessing is fine: it only decides the column.)
+ */
+function guessCardHeight(entry, columnWidth) {
+  let height = 150 + Math.ceil(entry.whatHappened.length / 22) * 22;
+  if (entry.comment) height += 30 + Math.min(4, Math.ceil(entry.comment.length / 30)) * 20;
+  if (entry.cards.length) height += columnWidth * (entry.cards.length > 1 ? 0.95 : 0.78);
+  return height;
+}
+
+function drawWall(entries) {
+  const columns = wallColumnCount();
+  const columnWidth = (els.wallGrid.clientWidth || 960) / columns;
+  const lists = Array.from({ length: columns }, () => ({ height: 0, element: document.createElement('div') }));
+  lists.forEach((list) => { list.element.className = 'wall__col'; });
+
+  // Newest first, each card into the shortest column: row by row, but with no gaps
+  entries.forEach((entry) => {
+    const shortest = lists.reduce((best, list) => (list.height < best.height ? list : best), lists[0]);
+    shortest.element.append(createWallCard(entry));
+    shortest.height += guessCardHeight(entry, columnWidth);
+  });
+  els.wallGrid.replaceChildren(...lists.map((list) => list.element));
+  els.wallGrid.style.setProperty('--wall-cols', String(columns));
+  els.wallGrid.closest('.wall').hidden = entries.length === 0;
+}
+
+function createWallCard(entry) {
+  const date = new Date(entry.timestamp);
+  const card = document.createElement('article');
+  card.className = `wall-card ${Moods.cssClass(entry.mood)}`;
+  card.classList.toggle('is-blend', Moods.isBlend(entry.mood));
+  card.classList.toggle('is-pinned', entry.pinned);
+
+  // The big clickable part opens the note, like the sticky notes on the map
+  const open = document.createElement('button');
+  open.type = 'button';
+  open.className = 'wall-card__open';
+  open.dataset.id = entry.id;
+  const author = entry.name ? `by ${plainText(entry.name)}` : 'anonymous';
+  open.setAttribute('aria-label', `${Moods.baseLabel(entry.mood)}, ${author}: ${plainText(entry.whatHappened)}. Open note.`);
+  open.addEventListener('click', () => openNote({ entry, tilt: 0 }, open));
+
+  if (entry.cards.length) {
+    const photo = document.createElement('span');
+    photo.className = 'wall-card__photo';
+    const img = document.createElement('img');
+    img.src = entry.cards[0];
+    img.alt = '';
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    photo.append(img);
+    if (entry.cards.length > 1) {
+      const more = document.createElement('span');
+      more.className = 'wall-card__more';
+      more.textContent = `📷 ${entry.cards.length}`;
+      photo.append(more);
+    }
+    open.append(photo);
+  }
+
+  const bodyBox = document.createElement('span');
+  bodyBox.className = 'wall-card__body';
+
+  const mood = document.createElement('span');
+  mood.className = 'wall-card__mood';
+  const faces = document.createElement('span');
+  faces.className = 'face-pair';
+  for (const part of Moods.parts(entry.mood)) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'face');
+    svg.setAttribute('aria-hidden', 'true');
+    const use = document.createElementNS(SVG_NS, 'use');
+    setFace(use, part);
+    svg.append(use);
+    faces.append(svg);
+  }
+  const moodName = document.createElement('span');
+  moodName.textContent = Moods.baseLabel(entry.mood);
+  mood.append(faces, moodName);
+
+  const what = document.createElement('span');
+  what.className = 'wall-card__what';
+  fillText(what, entry.whatHappened);
+  bodyBox.append(mood, what);
+
+  if (entry.comment) {
+    const comment = document.createElement('span');
+    comment.className = 'wall-card__comment';
+    fillText(comment, entry.comment);
+    bodyBox.append(comment);
+  }
+
+  const meta = document.createElement('span');
+  meta.className = 'wall-card__meta';
+  const who = document.createElement('span');
+  who.className = 'wall-card__who';
+  if (entry.name) fillText(who, `by ${entry.name}`);
+  else who.textContent = 'anonymous';
+  const time = document.createElement('time');
+  time.dateTime = entry.timestamp;
+  time.textContent = formatDay(date);
+  meta.append(who, time);
+  bodyBox.append(meta);
+  open.append(bodyBox);
+
+  // Share / Save
+  const actions = document.createElement('div');
+  actions.className = 'share-buttons wall-card__actions';
+  actions.append(
+    makeShareButton('📤', 'Share', () => openShare(entry)),
+    makeShareButton('⬇', 'Save', (event) => saveNoteImage(entry, event.currentTarget)),
+  );
+
+  card.append(open, actions);
+  return card;
+}
+
+function makeShareButton(icon, label, onClick) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'mini-btn share-btn';
+  const iconSpan = document.createElement('span');
+  iconSpan.setAttribute('aria-hidden', 'true');
+  iconSpan.textContent = icon;
+  button.append(iconSpan, document.createTextNode(` ${label}`));
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+// =====================================================================
+// Share / Save a note as a pretty picture (share-card.js)
+// =====================================================================
+
+const share = { entry: null, blob: null, file: null, token: 0, options: loadShareOptions() };
+
+/** The picture look (style + colour), remembered on this device. Starts with the site's style. */
+function loadShareOptions() {
+  const fallback = { style: document.documentElement.dataset.style || 'modern-2026', color: 'mood' };
+  try {
+    const saved = JSON.parse(localStorage.getItem('class-mood-share') || 'null');
+    return {
+      style: saved && MoodShareCard.STYLES.includes(saved.style) ? saved.style : fallback.style,
+      color: saved && saved.color in MoodShareCard.COLORS ? saved.color : 'mood',
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveShareOptions() {
+  try { localStorage.setItem('class-mood-share', JSON.stringify(share.options)); } catch { /* not saved */ }
+}
+
+function showShareOptions() {
+  document.querySelectorAll('[data-share-style]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.shareStyle === share.options.style));
+  });
+  document.querySelectorAll('[data-share-color]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.shareColor === share.options.color));
+  });
+}
+
+function shareFileName(entry) {
+  return `moodboard-${new Date(entry.timestamp).toISOString().slice(0, 10)}.png`;
+}
+
+function shareText(entry) {
+  const what = plainText(entry.whatHappened);
+  const mood = Moods.parts(entry.mood).map((part) => MoodI18n.t(Moods.name(part))).join(' + ');
+  return `${mood}: “${what}” ✿ ${MoodI18n.t('How was class today?')} ${MoodShareCard.siteUrl()}`;
+}
+
+/** Saves a picture file (on phones it goes to Downloads / Files). */
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+/** The Save button on a card: make the picture and save it straight away. */
+async function saveNoteImage(entry, button) {
+  const label = button.lastChild;
+  const original = label.nodeValue;
+  button.disabled = true;
+  label.nodeValue = ' …';
+  try {
+    downloadBlob(await MoodShareCard.render(entry, share.options), shareFileName(entry));
+    label.nodeValue = ' ✓';
+  } catch (error) {
+    console.error(error);
+    label.nodeValue = ' ✕';
+  }
+  setTimeout(() => { label.nodeValue = original; button.disabled = false; }, 1600);
+}
+
+/** The Share button: show the picture first, then Share / Save / Copy link. */
+async function openShare(entry) {
+  share.entry = entry;
+  share.blob = null;
+  share.file = null;
+  const token = ++share.token;
+  showShareOptions();
+  els.shareWhatsApp.href = `https://wa.me/?text=${encodeURIComponent(shareText(entry))}`;
+  els.shareStatus.hidden = false;
+  els.shareStatus.textContent = 'Making the picture…';
+  els.shareSend.disabled = true;
+  els.shareSave.disabled = true;
+  if (!els.shareDialog.open) {
+    els.shareImg.hidden = true; // (when only the look changes, keep the old picture until the new one is ready)
+    els.shareDialog.showModal();
+  }
+  try {
+    const blob = await MoodShareCard.render(entry, share.options);
+    if (token !== share.token) return; // another note was chosen meanwhile
+    share.blob = blob;
+    share.file = new File([blob], shareFileName(entry), { type: 'image/png' });
+    if (els.shareImg.src) URL.revokeObjectURL(els.shareImg.src);
+    els.shareImg.src = URL.createObjectURL(blob);
+    els.shareImg.hidden = false;
+    els.shareStatus.hidden = true;
+    els.shareSend.disabled = false;
+    els.shareSave.disabled = false;
+  } catch (error) {
+    console.error(error);
+    els.shareStatus.textContent = "Couldn't make the picture. You can still copy the link.";
+  }
+}
+
+async function sendShare() {
+  if (!share.file) return;
+  const text = shareText(share.entry);
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [share.file] })) {
+      await navigator.share({ files: [share.file], title: 'moodBOARD', text });
+    } else if (navigator.share) {
+      await navigator.share({ title: 'moodBOARD', text, url: MoodShareCard.siteUrl() });
+    } else {
+      // Computers without a share menu: save the picture and copy the text
+      downloadBlob(share.blob, share.file.name);
+      await navigator.clipboard.writeText(text);
+      els.shareStatus.hidden = false;
+      els.shareStatus.textContent = 'Picture saved and the text is copied. Paste it anywhere!';
+    }
+  } catch (error) {
+    if (error && error.name === 'AbortError') return; // the student closed the share menu
+    console.error(error);
+  }
+}
+
+async function copyShareLink() {
+  try {
+    await navigator.clipboard.writeText(MoodShareCard.siteUrl());
+    els.shareStatus.hidden = false;
+    els.shareStatus.textContent = 'Link copied!';
+  } catch {
+    els.shareStatus.hidden = false;
+    els.shareStatus.textContent = MoodShareCard.siteUrl();
+  }
+}
+
+// Style / colour buttons: redraw the picture with the new look
+document.querySelectorAll('[data-share-style]').forEach((button) => {
+  button.addEventListener('click', () => {
+    share.options.style = button.dataset.shareStyle;
+    saveShareOptions();
+    if (share.entry) openShare(share.entry);
+  });
+});
+document.querySelectorAll('[data-share-color]').forEach((button) => {
+  button.addEventListener('click', () => {
+    share.options.color = button.dataset.shareColor;
+    saveShareOptions();
+    if (share.entry) openShare(share.entry);
+  });
+});
+
+els.shareSend.addEventListener('click', sendShare);
+els.shareSave.addEventListener('click', () => { if (share.blob) downloadBlob(share.blob, share.file.name); });
+els.shareCopy.addEventListener('click', copyShareLink);
+els.shareClose.addEventListener('click', () => els.shareDialog.close());
+els.shareDialog.addEventListener('click', (event) => { if (event.target === els.shareDialog) els.shareDialog.close(); });
 
 /**
  * Works out where every note goes.
@@ -734,7 +1047,10 @@ function closeNote() {
       render();
     }
     // Put keyboard focus back on the note that was opened
-    const note = [...els.notes.querySelectorAll('.note')].find((n) => n.dataset.id === focused.entryId);
+    // (the same note on the map, or the wall card it was opened from)
+    const note = focused.noteButton.isConnected
+      ? focused.noteButton
+      : [...els.notes.querySelectorAll('.note')].find((n) => n.dataset.id === focused.entryId);
     if (note) note.focus({ preventScroll: true });
   };
 
@@ -753,7 +1069,7 @@ function closeNote() {
 }
 
 function handleKeydown(event) {
-  if (!state.focused) return;
+  if (!state.focused || els.shareDialog.open) return; // the share window handles its own keys
   if (event.key === 'Escape') {
     event.preventDefault();
     closeNote();
@@ -796,6 +1112,9 @@ els.filterButtons.forEach((button) => {
 els.focusBackdrop.addEventListener('click', closeNote);
 els.focusClose.addEventListener('click', closeNote);
 els.focusHideButton.addEventListener('click', hideFocusedNote);
+const focusedEntry = () => state.focused && state.entries.find((entry) => entry.id === state.focused.entryId);
+els.focusShareButton.addEventListener('click', () => { if (focusedEntry()) openShare(focusedEntry()); });
+els.focusSaveButton.addEventListener('click', (event) => { if (focusedEntry()) saveNoteImage(focusedEntry(), event.currentTarget); });
 els.retryButton.addEventListener('click', () => {
   showBoardState('loading');
   loadEntries();

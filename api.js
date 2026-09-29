@@ -120,6 +120,21 @@
     return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${width}`;
   }
 
+  /**
+   * The same photo from Google's image server, which allows drawing it into a
+   * picture (the Share / Save image). drive.google.com/thumbnail doesn't.
+   */
+  function photoCorsUrl(fileId, width = 1200) {
+    if (typeof fileId !== 'string' || !/^[\w-]{20,100}$/.test(fileId)) return '';
+    return `https://lh3.googleusercontent.com/d/${fileId}=w${width}`;
+  }
+
+  /** A note's Drive photo ids (up to 5). */
+  function photoIds(entry) {
+    const ids = Array.isArray(entry && entry.photos) ? entry.photos : [entry && entry.photo];
+    return ids.filter((id) => typeof id === 'string' && /^[\w-]{20,100}$/.test(id)).slice(0, 5);
+  }
+
   /** A note's photo addresses (notes can have up to 5; older notes have one "photo"). */
   function photoUrls(entry, width) {
     const ids = Array.isArray(entry && entry.photos) ? entry.photos : [entry && entry.photo];
@@ -130,6 +145,8 @@
     fetch: apiFetch,
     photoUrl,
     photoUrls,
+    photoIds,
+    photoCorsUrl,
     usesSheet: Boolean(SCRIPT_URL),
   };
 })(typeof self !== 'undefined' ? self : this);

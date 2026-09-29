@@ -6145,3 +6145,466 @@ html.has-lightbox body {
     translate: none;
   }
 }
+
+
+/* ===== Title: "moodBOARD : By Rehza" ===== */
+.brand strong {
+  font-weight: 800;
+}
+
+.brand__by {
+  margin-left: 0.1em;
+  font-weight: 400;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+/* ===== The wall: every note as a card, Pinterest-style ===== */
+.wall {
+  margin-top: 56px;
+}
+
+.wall[hidden] {
+  display: none;
+}
+
+.wall__head {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.wall__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+  font-weight: var(--display-weight);
+  line-height: 1;
+  letter-spacing: var(--display-tracking);
+  text-transform: var(--display-case);
+}
+
+.wall__subtitle {
+  margin: 10px 0 0;
+  color: var(--text-soft);
+}
+
+/* Columns side by side; each column is a stack of cards (so heights can differ) */
+.wall__grid {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.wall__col {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.wall-card {
+  overflow: hidden;
+  color: var(--on-color);
+  background: var(--mood);
+  border: var(--bw) solid var(--note-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-m);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.wall-card.is-blend {
+  background: linear-gradient(135deg, var(--mood-hi) 0 50%, var(--mood-lo) 50% 100%);
+}
+
+.wall-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-m-hover);
+}
+
+.wall-card__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.wall-card__open:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.wall-card__photo {
+  position: relative;
+  display: block;
+  border-bottom: var(--bw) solid var(--note-line);
+}
+
+.wall-card__photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 90px;
+  max-height: 420px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.wall-card__more {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 9px;
+  font-family: var(--font-label);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: rgba(21, 21, 21, 0.78);
+  border-radius: 999px;
+}
+
+.wall-card__body {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px 12px;
+}
+
+.wall-card__mood {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  font-weight: var(--label-weight);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wall-card__mood .face {
+  width: 26px;
+  height: 26px;
+}
+
+.wall-card__what {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.wall-card__comment {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  opacity: 0.85;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}
+
+.wall-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  font-weight: var(--label-weight);
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+
+.wall-card__actions {
+  padding: 0 14px 12px;
+}
+
+/* Share / Save buttons (cards + opened note) */
+.share-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.share-btn {
+  color: #151515;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.share-btn:hover {
+  background: #ffffff;
+}
+
+.focus-share {
+  margin: 4px 0 12px;
+}
+
+/* Share window: the picture preview + buttons */
+.share-dialog {
+  width: min(520px, calc(100vw - 24px));
+}
+
+.share-preview {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+  padding: 10px;
+  background: var(--surface-2);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.share-preview img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 55vh;
+  max-height: 55dvh;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.share-preview img[hidden],
+.share-status[hidden] {
+  display: none;
+}
+
+.share-status {
+  margin: 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+.share-hint {
+  margin: 10px 0 0;
+}
+
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+:root[data-style="modern-2026"] .wall-card,
+:root[data-style="modern-bold"] .wall-card,
+:root[data-style="modern-2026"] .share-preview,
+:root[data-style="modern-bold"] .share-preview {
+  border-radius: 0;
+}
+
+:root[data-style="modern-bold"] .wall-card {
+  box-shadow: none;
+}
+
+@media (max-width: 520px) {
+  .wall__grid,
+  .wall__col {
+    gap: 10px;
+  }
+
+  .wall-card__body {
+    padding: 10px 10px;
+  }
+
+  .wall-card__what {
+    font-size: 0.95rem;
+  }
+
+  .wall-card__actions {
+    padding: 0 10px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wall-card,
+  .wall-card:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Keep the exact casing "moodBOARD : By Rehza" in every style */
+:root[data-style] .brand {
+  text-transform: none;
+}
+
+:root[data-style] .brand strong {
+  text-transform: none;
+}
+
+/* Narrow phone cards: Share and Save as two tidy full-width buttons */
+.share-btn {
+  justify-content: center;
+}
+
+@media (max-width: 520px) {
+  .wall-card__actions .share-btn {
+    flex: 1 1 100%;
+  }
+}
+
+
+/* ===== Share window: style + colour choices ===== */
+.share-options {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.share-options__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.share-options__row .settings__label {
+  min-width: 56px;
+  margin: 0;
+}
+
+.share-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.share-choice {
+  padding: 0.45em 0.85em;
+  font-family: var(--font-label);
+  font-size: 0.82rem;
+  font-weight: var(--label-weight);
+  color: var(--text);
+  background: var(--surface);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.share-choice[aria-pressed="true"] {
+  color: #151515;
+  background: var(--highlight);
+}
+
+.share-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.share-swatch {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: var(--swatch);
+  border: var(--bw) solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* "Mood" = the note's own colour: shown as a rainbow of the mood colours */
+.share-swatch--mood {
+  background: conic-gradient(var(--mood-5), var(--mood-4), var(--mood-3), var(--mood-2), var(--mood-1), var(--mood-5));
+}
+
+.share-swatch[aria-pressed="true"] {
+  outline: 3px solid var(--text);
+  outline-offset: 3px;
+}
+
+.share-choice:focus-visible,
+.share-swatch:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.share-main {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.share-actions .btn {
+  flex: 1 1 0;
+  min-width: 120px;
+}
+
+.share-whatsapp {
+  color: #ffffff;
+  background: #1faa53;
+  border-color: #0f6b33;
+}
+
+:root[data-style="modern-2026"] .share-choice {
+  border-radius: 0;
+}
+
+/* ===== Tape on the wall cards (like the sticky notes on the map) ===== */
+.wall-card {
+  position: relative;
+  overflow: visible;
+}
+
+.wall-card::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  z-index: 2;
+  width: 62px;
+  height: 20px;
+  background: rgba(61, 90, 254, 0.42);
+  transform: translateX(-50%) rotate(-4deg);
+  pointer-events: none;
+}
+
+.wall__col:nth-child(even) .wall-card:nth-child(odd)::before,
+.wall__col:nth-child(odd) .wall-card:nth-child(even)::before {
+  background: rgba(255, 200, 60, 0.72);
+  transform: translateX(-50%) rotate(5deg);
+}
+
+.wall__col .wall-card:nth-child(3n)::before {
+  left: 22%;
+  background: rgba(255, 95, 162, 0.5);
+  transform: translateX(-50%) rotate(-12deg);
+}
+
+/* The photo keeps the card's rounded top corners now that the tape can stick out */
+.wall-card__photo {
+  overflow: hidden;
+  border-radius: calc(var(--radius-md) - var(--bw)) calc(var(--radius-md) - var(--bw)) 0 0;
+}
+
+:root[data-style="modern-2026"] .wall-card__photo,
+:root[data-style="modern-bold"] .wall-card__photo {
+  border-radius: 0;
+}
+
+:root[data-style="scribblish"] .wall-card::before {
+  border: 1px dashed rgba(59, 52, 70, 0.25);
+}
+
+:root[data-style="modern-bold"] .wall-card::before {
+  background: rgba(170, 170, 170, 0.7);
+}
+
+.share-swatch[data-share-color="lime"] { --swatch: #c8f25a; }
+.share-swatch[data-share-color="pink"] { --swatch: #ff9ecb; }
+.share-swatch[data-share-color="sky"] { --swatch: #8fd0ff; }
+.share-swatch[data-share-color="lemon"] { --swatch: #ffe14a; }
+.share-swatch[data-share-color="lavender"] { --swatch: #c4b5ff; }

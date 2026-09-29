@@ -72,6 +72,34 @@ window.MoodI18n = (function createI18n() {
     'Up to 5 photos': 'Maksimal 5 foto',
     'Remove this photo': 'Hapus foto ini',
     'Photo': 'Foto',
+    // wall + share
+    'All the notes': 'Semua catatan',
+    'Newest first. Tap a card to open it, or share it with your friends.':
+      'Terbaru duluan. Ketuk kartu untuk membukanya, atau bagikan ke teman-temanmu.',
+    'Share': 'Bagikan',
+    'Save': 'Simpan',
+    'Share this note': 'Bagikan catatan ini',
+    'Picture of the note to share': 'Gambar catatan untuk dibagikan',
+    'Making the picture…': 'Membuat gambar…',
+    'On a phone: tap': 'Di HP: ketuk',
+    ', then': ', lalu',
+    'Save image': 'Simpan gambar',
+    'to put it in your gallery.': 'untuk menyimpannya ke galeri.',
+    'Copy link': 'Salin link',
+    'Colour': 'Warna',
+    'Mood colour': 'Warna mood',
+    'Lime': 'Hijau limau',
+    'Sky blue': 'Biru langit',
+    'Lemon': 'Kuning lemon',
+    'Lavender': 'Lavender',
+    'Share to WhatsApp, Instagram…': 'Bagikan ke WhatsApp, Instagram…',
+    'WhatsApp': 'WhatsApp',
+    "On a phone, the big button opens your phone's share menu: pick WhatsApp, Instagram, or":
+      'Di HP, tombol besar membuka menu berbagi HP-mu: pilih WhatsApp, Instagram, atau',
+    'for your gallery.': 'untuk galerimu.',
+    'Link copied!': 'Link disalin!',
+    "Couldn't make the picture. You can still copy the link.": 'Gambar tidak bisa dibuat. Kamu tetap bisa salin link-nya.',
+    'Picture saved and the text is copied. Paste it anywhere!': 'Gambar tersimpan dan teksnya sudah disalin. Tempel di mana saja!',
     'Close photo': 'Tutup foto',
     'Previous photo': 'Foto sebelumnya',
     'Next photo': 'Foto berikutnya',
@@ -472,7 +500,8 @@ window.MoodI18n = (function createI18n() {
   const ATTRIBUTES = ['placeholder', 'aria-label', 'title', 'alt', 'data-name', 'data-tab', 'data-tab-2'];
   // Students' own words: never translated (the *censored* stickers inside still are)
   const USER_TEXT = '.note__text, .note__name, #focus-what, #focus-comment:not(.is-empty), '
-    + '.admin-note__what, .admin-note__comment:not(.is-empty), .pile__sheet, [data-no-translate]';
+    + '.admin-note__what, .admin-note__comment:not(.is-empty), .pile__sheet, '
+    + '.wall-card__what, .wall-card__comment, [data-no-translate]';
 
   const originalText = new WeakMap(); // text node -> its English text
   const ourText = new WeakMap();      // text node -> the text we last put in

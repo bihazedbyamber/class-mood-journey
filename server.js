@@ -92,6 +92,7 @@ const PUBLIC_FILES = {
   '/settings.js': 'settings.js',
   '/i18n.js': 'i18n.js',
   '/lightbox.js': 'lightbox.js',
+  '/share-card.js': 'share-card.js',
   '/site-config.js': 'site-config.js',
   '/api.js': 'api.js',
   '/sprite.svg': 'sprite.svg',

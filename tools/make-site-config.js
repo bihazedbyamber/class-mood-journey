@@ -29,6 +29,8 @@ const text = `/* ===============================================================
 
 window.MOOD_CONFIG = {
   appsScriptUrl: '${valid ? url : ''}',
+  // The public website address (printed on the Share / Save pictures)
+  siteUrl: 'https://bihazedbyamber.github.io/class-mood-journey/',
 };
 `;
 fs.writeFileSync(path.join(root, 'site-config.js'), text, 'utf8');
