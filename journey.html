@@ -12,19 +12,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;family=Nunito:wght@400;600;700&amp;family=Patrick+Hand&amp;family=Jersey+10&amp;family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;family=Gochi+Hand&amp;family=Anton&amp;family=Archivo:wght@400;500;600;800;900&amp;family=Permanent+Marker&amp;display=swap">
-  <link rel="stylesheet" href="style.css?v=20260929p">
+  <link rel="stylesheet" href="style.css?v=20260929q">
 
-  <script src="settings.js?v=20260929p"></script>
-  <script src="i18n.js?v=20260929p"></script>
-  <script src="site-config.js?v=20260929p"></script>
-  <script src="api.js?v=20260929p"></script>
-  <script src="account.js?v=20260929p" defer></script>
-  <script src="moods.js?v=20260929p" defer></script>
-  <script src="censor.js?v=20260929p" defer></script>
-  <script src="lightbox.js?v=20260929p" defer></script>
-  <script src="share-card.js?v=20260929p" defer></script>
-  <script src="admin-login.js?v=20260929p" defer></script>
-  <script type="module" src="journey.js?v=20260929p"></script>
+  <script src="settings.js?v=20260929q"></script>
+  <script src="i18n.js?v=20260929q"></script>
+  <script src="site-config.js?v=20260929q"></script>
+  <script src="api.js?v=20260929q"></script>
+  <script src="account.js?v=20260929q" defer></script>
+  <script src="moods.js?v=20260929q" defer></script>
+  <script src="censor.js?v=20260929q" defer></script>
+  <script src="lightbox.js?v=20260929q" defer></script>
+  <script src="share-card.js?v=20260929q" defer></script>
+  <script src="admin-login.js?v=20260929q" defer></script>
+  <script type="module" src="journey.js?v=20260929q"></script>
 </head>
 <body class="page-journey">
 
@@ -254,6 +254,11 @@
         <p class="share-status" id="share-status" aria-live="polite">Making the picture…</p>
       </div>
       <div class="share-options">
+        <!-- Only for notes with photos: all of them as a collage, just one, or none -->
+        <div class="share-options__row" id="share-photos-row" hidden>
+          <span class="settings__label" id="share-photos-label">Photos</span>
+          <div class="share-choices share-photo-choices" id="share-photo-choices" role="group" aria-labelledby="share-photos-label"></div>
+        </div>
         <div class="share-options__row">
           <span class="settings__label" id="share-style-label">Style</span>
           <div class="share-choices" role="group" aria-labelledby="share-style-label">

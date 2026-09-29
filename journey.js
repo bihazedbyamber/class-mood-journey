@@ -77,6 +77,8 @@ const els = {
   shareSave: document.getElementById('share-save'),
   shareCopy: document.getElementById('share-copy'),
   shareWhatsApp: document.getElementById('share-whatsapp'),
+  sharePhotosRow: document.getElementById('share-photos-row'),
+  sharePhotoChoices: document.getElementById('share-photo-choices'),
   comments: document.getElementById('focus-comments'),
   commentsList: document.getElementById('focus-comments-list'),
   commentsEmpty: document.getElementById('focus-comments-empty'),
@@ -606,6 +608,41 @@ function saveShareOptions() {
   try { localStorage.setItem('class-mood-share', JSON.stringify(share.options)); } catch { /* not saved */ }
 }
 
+/**
+ * The Photos row: "All" (collage, only with 2+ photos), each photo as a
+ * small picture to pick just that one, and "No photo".
+ */
+function showPhotoChoices(entry) {
+  const count = entry.thumbs.length;
+  els.sharePhotosRow.hidden = count === 0;
+  els.sharePhotoChoices.replaceChildren();
+  if (!count) return;
+  const add = (value, build) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'share-choice';
+    button.setAttribute('aria-pressed', String(share.photos === value));
+    build(button);
+    button.addEventListener('click', () => {
+      share.photos = value;
+      openShare(share.entry, true);
+    });
+    els.sharePhotoChoices.append(button);
+  };
+  if (count > 1) add('all', (button) => { button.textContent = `All ${count} (collage)`; });
+  entry.thumbs.forEach((src, index) => add(index, (button) => {
+    button.classList.add('share-photo-choice');
+    button.setAttribute('aria-label', `Only photo ${index + 1}`);
+    button.title = `Only photo ${index + 1}`;
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+    button.append(img);
+  }));
+  add('none', (button) => { button.textContent = 'No photo'; });
+}
+
 function showShareOptions() {
   document.querySelectorAll('[data-share-style]').forEach((button) => {
     button.setAttribute('aria-pressed', String(button.dataset.shareStyle === share.options.style));
@@ -654,12 +691,14 @@ async function saveNoteImage(entry, button) {
 }
 
 /** The Share button: show the picture first, then Share / Save / Copy link. */
-async function openShare(entry) {
+async function openShare(entry, keepChoices = false) {
+  if (!keepChoices || share.entry !== entry) share.photos = 'all'; // a new note starts with all its photos
   share.entry = entry;
   share.blob = null;
   share.file = null;
   const token = ++share.token;
   showShareOptions();
+  showPhotoChoices(entry);
   els.shareWhatsApp.href = `https://wa.me/?text=${encodeURIComponent(shareText(entry))}`;
   els.shareStatus.hidden = false;
   els.shareStatus.textContent = 'Making the picture…';
@@ -670,7 +709,7 @@ async function openShare(entry) {
     els.shareDialog.showModal();
   }
   try {
-    const blob = await MoodShareCard.render(entry, share.options);
+    const blob = await MoodShareCard.render(entry, { ...share.options, photos: share.photos });
     if (token !== share.token) return; // another note was chosen meanwhile
     share.blob = blob;
     share.file = new File([blob], shareFileName(entry), { type: 'image/png' });
@@ -723,14 +762,14 @@ document.querySelectorAll('[data-share-style]').forEach((button) => {
   button.addEventListener('click', () => {
     share.options.style = button.dataset.shareStyle;
     saveShareOptions();
-    if (share.entry) openShare(share.entry);
+    if (share.entry) openShare(share.entry, true);
   });
 });
 document.querySelectorAll('[data-share-color]').forEach((button) => {
   button.addEventListener('click', () => {
     share.options.color = button.dataset.shareColor;
     saveShareOptions();
-    if (share.entry) openShare(share.entry);
+    if (share.entry) openShare(share.entry, true);
   });
 });
 

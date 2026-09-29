@@ -199,6 +199,8 @@ window.MoodI18n = (function createI18n() {
     "Ask the site's maker or a student admin in class, and your notes, comments or username will be removed.":
       'Tanya pembuat website atau admin siswa di kelas, dan catatan, komentar, atau username-mu akan dihapus.',
     '← Back to MoodBoard': '← Kembali ke MoodBoard',
+    'Photos': 'Foto',
+    'No photo': 'Tanpa foto',
     'Colour': 'Warna',
     'Mood colour': 'Warna mood',
     'Lime': 'Hijau limau',
@@ -573,6 +575,8 @@ window.MoodI18n = (function createI18n() {
     [/^Photo (\d+)$/, (n) => `Foto ${n}`],
     [/^Photo (\d+) of (\d+)$/, (a, b) => `Foto ${a} dari ${b}`],
     [/^Open photo (\d+) of (\d+)$/, (a, b) => `Buka foto ${a} dari ${b}`],
+    [/^All (\d+) \(collage\)$/, (n) => `Semua ${n} (kolase)`],
+    [/^Only photo (\d+)$/, (n) => `Hanya foto ${n}`],
     [/^You can add up to 5 photos, so only the first (\d+) were added\.$/, (n) => `Maksimal 5 foto, jadi hanya ${n} foto pertama yang ditambahkan.`],
     [/^(.+), (\d+) notes\. Open pile\.$/, (p, n) => `${T(p)}, ${n} catatan. Buka tumpukan.`],
     [/^In: (.+)$/, (p) => `Di: ${T(p)}`],

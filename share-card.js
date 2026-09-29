@@ -133,6 +133,35 @@ window.MoodShareCard = (function createShareCard() {
     return lines;
   }
 
+  /**
+   * Where each photo goes in a collage of n photos (1-5), inside x/y/w/h:
+   *   1: one big   2: side by side   3: one big left + two stacked right
+   *   4: a 2x2 grid   5: two on top + three below
+   */
+  function collageCells(n, x, y, w, h, gap) {
+    const half = (size) => (size - gap) / 2;
+    const third = (w - gap * 2) / 3;
+    if (n <= 1) return [{ x, y, w, h }];
+    if (n === 2) return [{ x, y, w: half(w), h }, { x: x + half(w) + gap, y, w: half(w), h }];
+    if (n === 3) {
+      const bigW = (w - gap) * 0.6;
+      const smallW = w - gap - bigW;
+      return [
+        { x, y, w: bigW, h },
+        { x: x + bigW + gap, y, w: smallW, h: half(h) },
+        { x: x + bigW + gap, y: y + half(h) + gap, w: smallW, h: half(h) },
+      ];
+    }
+    if (n === 4) {
+      return [0, 1, 2, 3].map((i) => ({ x: x + (i % 2) * (half(w) + gap), y: y + Math.floor(i / 2) * (half(h) + gap), w: half(w), h: half(h) }));
+    }
+    return [
+      { x, y, w: half(w), h: half(h) },
+      { x: x + half(w) + gap, y, w: half(w), h: half(h) },
+      ...[0, 1, 2].map((i) => ({ x: x + i * (third + gap), y: y + half(h) + gap, w: third, h: half(h) })),
+    ];
+  }
+
   /** Draws an image like CSS object-fit: cover. */
   function drawCover(ctx, img, x, y, w, h) {
     const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
@@ -222,11 +251,18 @@ window.MoodShareCard = (function createShareCard() {
 
     const [colorA, colorB] = COLORS[options.color] ? [COLORS[options.color], COLORS[options.color]] : moodColors(entry.mood);
     const parts = window.Moods.parts(entry.mood);
-    const [faceA, faceB, photo] = await Promise.all([
+    // Which photos: 'all' (collage, the default), one photo (its number), or 'none'
+    const ids = (entry.photoIds || []).slice(0, 5);
+    let chosen = ids;
+    if (options.photos === 'none') chosen = [];
+    else if (Number.isInteger(options.photos) && ids[options.photos]) chosen = [ids[options.photos]];
+    const [faceA, faceB, ...loaded] = await Promise.all([
       loadFace(parts[0], style),
       parts[1] ? loadFace(parts[1], style) : null,
-      entry.photoIds && entry.photoIds[0] ? loadImage(MoodApi.photoCorsUrl(entry.photoIds[0], 1200), true) : null,
+      ...chosen.map((id) => loadImage(MoodApi.photoCorsUrl(id, chosen.length > 1 ? 800 : 1200), true)),
     ]);
+    const photos = loaded.filter(Boolean);
+    const photo = photos[0] || null;
 
     drawBackground(ctx, style, colorA, colorB);
 
@@ -358,30 +394,21 @@ window.MoodShareCard = (function createShareCard() {
       y += 20;
     }
 
-    // Photo: fills the rest of the note (above the author line)
-    if (photo) {
+    // Photo(s): fill the rest of the note (above the author line)
+    if (photos.length) {
       const photoH = Math.max(160, footerY - 44 - y);
       const photoR = style === 'scribblish' ? 26 : style === 'modern-bold' ? 0 : 6;
-      ctx.save();
-      roundRect(ctx, innerX, y, innerW, photoH, photoR);
-      ctx.clip();
-      drawCover(ctx, photo, innerX, y, innerW, photoH);
-      ctx.restore();
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = INK;
-      roundRect(ctx, innerX, y, innerW, photoH, photoR);
-      ctx.stroke();
-      const more = (entry.photoIds || []).length - 1;
-      if (more > 0) {
-        ctx.font = `800 32px ${look.label}`;
-        const tag = `+${more} 📷`;
-        const tagW = ctx.measureText(tag).width + 36;
-        ctx.fillStyle = INK;
-        roundRect(ctx, innerX + innerW - tagW - 18, y + 18, tagW, 54, 27);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(tag, innerX + innerW - tagW, y + 57);
-      }
+      collageCells(photos.length, innerX, y, innerW, photoH, 12).forEach((cell, index) => {
+        ctx.save();
+        roundRect(ctx, cell.x, cell.y, cell.w, cell.h, photoR);
+        ctx.clip();
+        drawCover(ctx, photos[index], cell.x, cell.y, cell.w, cell.h);
+        ctx.restore();
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = INK;
+        roundRect(ctx, cell.x, cell.y, cell.w, cell.h, photoR);
+        ctx.stroke();
+      });
     }
 
     // Author
