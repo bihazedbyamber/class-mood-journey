@@ -6866,3 +6866,277 @@ html.has-lightbox body {
     padding: 20px 18px 24px;
   }
 }
+
+
+/* ===== Verified badge (signed in with Google) ===== */
+.verified {
+  display: inline-grid;
+  place-items: center;
+  width: 1.15em;
+  height: 1.15em;
+  margin-left: 0.3em;
+  font-family: system-ui, sans-serif;
+  font-size: 0.8em;
+  font-weight: 900;
+  line-height: 1;
+  color: #ffffff;
+  vertical-align: -0.12em;
+  background: #1d9bf0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9);
+}
+
+/* ===== Like button ===== */
+.like-btn {
+  gap: 0.35em;
+  color: #151515;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.like-btn[hidden] {
+  display: none;
+}
+
+.like-btn__heart {
+  font-size: 1.1em;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+
+.like-btn[aria-pressed="true"] .like-btn__heart {
+  color: #e0245e;
+  transform: scale(1.15);
+}
+
+.like-btn:active .like-btn__heart {
+  transform: scale(1.35);
+}
+
+.focus-edited {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+/* ===== Profile page ===== */
+.profile {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 20px 64px;
+}
+
+.profile-signin {
+  max-width: 520px;
+  margin: 40px auto;
+  padding: 28px;
+  text-align: center;
+}
+
+.profile__title {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  text-transform: var(--display-case);
+}
+
+.profile-status {
+  text-align: center;
+  color: var(--text-soft);
+}
+
+.profile-status[hidden] {
+  display: none;
+}
+
+.profile-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 24px;
+  padding: 22px 24px;
+}
+
+.profile-head__face {
+  width: 86px;
+  height: 86px;
+  flex: none;
+}
+
+.profile-head__main {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.profile-head__name {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 5vw, 2.3rem);
+  overflow-wrap: anywhere;
+}
+
+.profile-head__hint {
+  margin: 6px 0 12px;
+  font-size: 0.88rem;
+  color: var(--text-soft);
+}
+
+.profile-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-stats li {
+  display: grid;
+  justify-items: center;
+  min-width: 64px;
+}
+
+.profile-stats strong {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.profile-stats span {
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.profile-notes {
+  margin-top: 36px;
+}
+
+.profile-notes .wall__title {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.profile-card__photo {
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-bottom: var(--bw) solid var(--note-line);
+  cursor: zoom-in;
+}
+
+.profile-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.profile-badge {
+  padding: 2px 8px;
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #151515;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 999px;
+}
+
+.profile-badge--warn {
+  color: #ffffff;
+  background: #c2410c;
+}
+
+/* Edit window: the 9 moods as buttons */
+.edit-dialog {
+  width: min(560px, calc(100vw - 24px));
+}
+
+.edit-moods {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.edit-mood {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #151515;
+  background: var(--mood);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.edit-mood.is-blend {
+  background: linear-gradient(135deg, var(--mood-hi) 0 50%, var(--mood-lo) 50% 100%);
+}
+
+.edit-mood .face {
+  width: 28px;
+  height: 28px;
+}
+
+.edit-mood[aria-pressed="true"] {
+  border-color: var(--line);
+  opacity: 1;
+  box-shadow: var(--shadow-s);
+}
+
+.edit-mood:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .profile {
+    padding: 20px 16px 48px;
+  }
+
+  .profile-stats {
+    width: 100%;
+    justify-content: space-around;
+  }
+}
+
+:root[data-style="modern-2026"] .edit-mood,
+:root[data-style="modern-bold"] .edit-mood {
+  border-radius: 0;
+}
+
+
+/* Home page footer: "MoodBoard By.Rehza" */
+.site-footer {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin-top: 40px;
+  padding: 26px 16px 44px;
+  border-top: var(--bw) dashed var(--line);
+}
+
+.site-footer__brand {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+.site-footer__brand strong {
+  font-weight: 800;
+}
+
+.site-footer__brand .brand__by {
+  font-size: 0.85em;
+}

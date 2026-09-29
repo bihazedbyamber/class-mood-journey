@@ -83,6 +83,8 @@ const PUBLIC_FILES = {
   '/journey.html': 'journey.html',
   '/admin.html': 'admin.html',
   '/privacy.html': 'privacy.html',
+  '/profile.html': 'profile.html',
+  '/profile.js': 'profile.js',
   '/moods.js': 'moods.js',
   '/censor.js': 'censor.js',
   '/style.css': 'style.css',

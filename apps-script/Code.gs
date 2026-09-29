@@ -30,7 +30,8 @@
  * browser "CORS" problems with Apps Script.
  * ===================================================================== */
 
-var HEADERS = ['Timestamp', 'Mood', 'WhatHappened', 'Comment', 'Name', 'Id', 'Photo'];
+// Owner = the Google account that posted it (private), ShowUser = posted under their username, Edited = last edit
+var HEADERS = ['Timestamp', 'Mood', 'WhatHappened', 'Comment', 'Name', 'Id', 'Photo', 'Owner', 'ShowUser', 'Edited'];
 var LIMITS = { whatHappened: 80, comment: 300, name: 24, pileName: 30, maxPiles: 20, word: 30, maxWords: 300 };
 var MAX_PHOTO_CHARS = 1500000;       // a photo (as text) may be at most ~1.1 MB; the website shrinks it first
 var MAX_PHOTOS_PER_MINUTE = 20;      // photos are heavier, so a smaller brake
@@ -50,11 +51,8 @@ function doGet(e) {
     var action = (e && e.parameter && e.parameter.action) || 'entries';
     if (action === 'entries') {
       var admin = loadAdmin_();
-      var counts = commentCounts_();
-      var entries = publicEntries_(readEntries_(), admin).map(function (entry) {
-        entry.comments = counts[entry.id] || 0;
-        return entry;
-      });
+      var extras = noteExtras_();
+      var entries = publicEntries_(readEntries_(), admin).map(function (entry) { return publicNote_(entry, extras); });
       return json_({ ok: true, mode: 'sheets', entries: entries, status: status_(admin) });
     }
     if (action === 'comments') {
@@ -91,6 +89,11 @@ function doPost(e) {
     }
     if (action === 'addComment') return json_(addComment_(body));
     if (action === 'deleteMyComment') return json_(deleteMyComment_(body));
+    if (action === 'toggleLike') return json_(toggleLike_(body));
+    if (action === 'myLikes') return json_(myLikes_(body));
+    if (action === 'myNotes') return json_(myNotes_(body));
+    if (action === 'editNote') return json_(editMyNote_(body));
+    if (action === 'deleteMyNote') return json_(deleteMyNote_(body));
 
     // Everything else is for admins only
     requireAdmin_(body.token);
@@ -110,8 +113,12 @@ function getSheet_() {
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
     sheet.setFrozenRows(1);
-  } else if (sheet.getRange(1, 7).getValue() === '') {
-    sheet.getRange(1, 7).setValue('Photo'); // older Sheets: add the new Photo column header
+  } else {
+    // Older Sheets: add the newer column headers (Photo, Owner, ShowUser, Edited)
+    var header = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0];
+    for (var c = 6; c < HEADERS.length; c++) {
+      if (header[c] === '') sheet.getRange(1, c + 1).setValue(HEADERS[c]);
+    }
   }
   return sheet;
 }
@@ -135,7 +142,10 @@ function readEntries_() {
       comment: String(row[3]),
       name: String(row[4] || ''),
       photos: photoIdsOf_(row[6]), // Google Drive file ids ([] = no photos)
-      photo: photoIdsOf_(row[6])[0] || '' // the first one (for older pages)
+      photo: photoIdsOf_(row[6])[0] || '', // the first one (for older pages)
+      owner: String(row[7] || ''),         // private: never sent to the website (see publicNote_)
+      showUser: String(row[8] || '') === 'yes',
+      edited: row[9] instanceof Date ? row[9].toISOString() : ''
     });
   });
   entries.sort(function (a, b) { return a.timestamp < b.timestamp ? -1 : 1; });
@@ -157,6 +167,16 @@ function submit_(body) {
   cache.put(minuteKey, String(posts + 1), 120);
 
   var entry = validateEntry_(body);
+  // Signed in? Then the note is linked to the account (so they can edit it on their profile).
+  // "Post as my username": the name shown is their username, with a verified badge.
+  var owner = body.userToken ? readUserToken_(body.userToken) : '';
+  var username = '';
+  if (owner && body.asUser) {
+    var account = readUsers_()[owner];
+    if (!account || !account.username) throw error_(400, 'Pick a username first.');
+    username = account.username;
+    entry.name = '';
+  }
   // Up to 5 photos ("photos": [...]); older pages send a single "photo"
   var sent = Array.isArray(body.photos) ? body.photos : (body.photo ? [body.photo] : []);
   if (sent.length > MAX_PHOTOS_PER_NOTE) throw error_(400, 'You can add up to ' + MAX_PHOTOS_PER_NOTE + ' photos.');
@@ -185,7 +205,7 @@ function submit_(body) {
   lock.waitLock(10000);
   try {
     getSheet_().appendRow([now, entry.mood, asPlainText_(entry.whatHappened), asPlainText_(entry.comment),
-      asPlainText_(entry.name), id, photoIds.join(',')]);
+      asPlainText_(entry.name), id, photoIds.join(','), owner ? "'" + owner : '', username ? 'yes' : '', '']);
     // "Check photos first" (admin switch, off by default): photo notes wait for approval,
     // because the censor can't look at pictures
     var pending = Boolean(admin.settings.requireApproval) || (photoIds.length > 0 && admin.settings.approvePhotos);
@@ -197,7 +217,8 @@ function submit_(body) {
     return {
       ok: true,
       entry: { id: id, timestamp: now.toISOString(), mood: entry.mood, whatHappened: entry.whatHappened,
-        comment: entry.comment, name: entry.name, photos: photoIds, photo: photoIds[0] || '', pending: pending }
+        comment: entry.comment, name: username || entry.name, verified: Boolean(username),
+        photos: photoIds, photo: photoIds[0] || '', pending: pending }
     };
   } finally {
     lock.releaseLock();
@@ -434,7 +455,9 @@ function adminAction_(action, body) {
 
   if (action === 'state') {
     var admin = loadAdmin_();
-    return { ok: true, mode: 'sheets', entries: adminEntries_(readEntries_(), admin),
+    var extras = noteExtras_();
+    return { ok: true, mode: 'sheets',
+      entries: adminEntries_(readEntries_(), admin).map(function (entry) { return publicNote_(entry, extras); }),
       piles: admin.piles, settings: admin.settings, pileColors: PILE_COLORS };
   }
 
@@ -498,6 +521,7 @@ function deleteNote_(data, body) {
     sheet.deleteRow(row);
   }
   removeComments_(function (comment) { return comment.noteId === id; }); // its comments go too
+  removeLikes_(function (like) { return like.noteId === id; });           // and its likes
   delete data.notes[id];
   return { ok: true };
 }
@@ -733,7 +757,8 @@ function listComments_(noteId) {
     .filter(function (comment) { return comment.noteId === noteId; })
     .map(function (comment) {
       var user = users[comment.googleId];
-      return { id: comment.id, username: user && user.username ? user.username : 'deleted', text: comment.text, timestamp: comment.timestamp };
+      return { id: comment.id, username: user && user.username ? user.username : 'deleted', verified: Boolean(user && user.username),
+        text: comment.text, timestamp: comment.timestamp };
     });
 }
 
@@ -760,7 +785,7 @@ function addComment_(body) {
   var visible = publicEntries_(readEntries_(), admin).some(function (entry) { return entry.id === noteId; });
   if (!visible) throw error_(404, 'That note is not on the map any more.');
 
-  var comment = { id: Utilities.getUuid(), username: user.username, text: text, timestamp: new Date().toISOString() };
+  var comment = { id: Utilities.getUuid(), username: user.username, verified: true, text: text, timestamp: new Date().toISOString() };
   commentsTab_().appendRow([comment.id, noteId, "'" + googleId, asPlainText_(text), new Date()]);
   return { ok: true, comment: comment };
 }
@@ -779,6 +804,190 @@ function deleteMyComment_(body) {
   if (!mine) throw error_(403, 'You can only delete your own comments.');
   removeComments_(function (comment) { return comment.id === id; });
   return { ok: true };
+}
+
+// ----- What the website may see of a note -----
+
+/** Things added to every note: usernames, comment counts, like counts. */
+function noteExtras_() {
+  return { users: readUsers_(), comments: commentCounts_(), likes: likeCounts_() };
+}
+
+/**
+ * A note for the website: never the owner's Google id. Notes posted "as my
+ * username" show the CURRENT username (so a rename shows up) with verified: true.
+ */
+function publicNote_(entry, extras) {
+  var account = entry.owner ? extras.users[entry.owner] : null;
+  if (entry.showUser) {
+    entry.name = account && account.username ? account.username : '';
+    entry.verified = Boolean(account && account.username);
+  } else {
+    entry.verified = false;
+  }
+  entry.comments = extras.comments[entry.id] || 0;
+  entry.likes = extras.likes[entry.id] || 0;
+  delete entry.owner;
+  delete entry.showUser;
+  return entry;
+}
+
+// ----- Likes (one per signed-in person per note) -----
+
+var LIKES_TAB = 'Likes'; // NoteId | GoogleId | Timestamp
+var MAX_LIKES_PER_MINUTE = 40;
+
+function likesTab_() { return getTab_(LIKES_TAB, ['NoteId', 'GoogleId', 'Timestamp']); }
+
+function readLikes_() {
+  var tab = likesTab_();
+  var last = tab.getLastRow();
+  if (last < 2) return [];
+  return tab.getRange(2, 1, last - 1, 2).getValues().map(function (row, index) {
+    return { row: index + 2, noteId: String(row[0]), googleId: String(row[1]) };
+  }).filter(function (like) { return like.noteId && like.googleId; });
+}
+
+function likeCounts_() {
+  var counts = {};
+  readLikes_().forEach(function (like) { counts[like.noteId] = (counts[like.noteId] || 0) + 1; });
+  return counts;
+}
+
+function removeLikes_(test) {
+  var tab = likesTab_();
+  readLikes_().filter(test).reverse().forEach(function (like) { tab.deleteRow(like.row); });
+}
+
+/** Like / unlike a note. Returns { liked, count }. */
+function toggleLike_(body) {
+  var googleId = readUserToken_(body.userToken);
+  var noteId = checkId_(body.noteId);
+  var cache = CacheService.getScriptCache();
+  var key = 'likes-' + googleId + '-' + Math.floor(Date.now() / 60000);
+  var count = Number(cache.get(key) || 0);
+  if (count >= MAX_LIKES_PER_MINUTE) throw error_(429, 'So many likes! Please wait a minute.');
+  cache.put(key, String(count + 1), 120);
+
+  var visible = publicEntries_(readEntries_(), loadAdmin_()).some(function (entry) { return entry.id === noteId; });
+  if (!visible) throw error_(404, 'That note is not on the map any more.');
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var likes = readLikes_();
+    var mine = likes.filter(function (like) { return like.noteId === noteId && like.googleId === googleId; });
+    var liked;
+    if (mine.length) {
+      removeLikes_(function (like) { return like.noteId === noteId && like.googleId === googleId; });
+      liked = false;
+    } else {
+      likesTab_().appendRow([noteId, "'" + googleId, new Date()]);
+      liked = true;
+    }
+    var total = likes.filter(function (like) { return like.noteId === noteId; }).length + (liked ? 1 : -mine.length);
+    return { ok: true, liked: liked, count: Math.max(0, total) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** The notes this person liked (so the website can show ♥ instead of ♡). */
+function myLikes_(body) {
+  var googleId = readUserToken_(body.userToken);
+  var ids = readLikes_().filter(function (like) { return like.googleId === googleId; }).map(function (like) { return like.noteId; });
+  return { ok: true, likes: ids };
+}
+
+// ----- My notes (profile page): see, edit and delete your own notes -----
+
+/** The Sheet row of a note (or -1). */
+function findNoteRow_(id) {
+  var sheet = getSheet_();
+  var lastRow = sheet.getLastRow();
+  if (/^row-\d+$/.test(id)) return Number(id.slice(4));
+  if (lastRow < 2) return -1;
+  var ids = sheet.getRange(2, 6, lastRow - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === id) return i + 2;
+  }
+  return -1;
+}
+
+/** Your own note, or a friendly error. */
+function ownNote_(googleId, id) {
+  var entry = readEntries_().filter(function (item) { return item.id === id; })[0];
+  if (!entry || (loadAdmin_().notes[id] || {}).deleted) throw error_(404, 'That note does not exist any more.');
+  if (entry.owner !== googleId) throw error_(403, 'You can only change your own notes.');
+  return entry;
+}
+
+function myNotes_(body) {
+  var googleId = readUserToken_(body.userToken);
+  var admin = loadAdmin_();
+  var extras = noteExtras_();
+  var user = extras.users[googleId];
+  var notes = readEntries_()
+    .filter(function (entry) { return entry.owner === googleId && !(admin.notes[entry.id] || {}).deleted; })
+    .map(function (entry) {
+      var flags = admin.notes[entry.id] || {};
+      var note = publicNote_(entry, extras);
+      note.hidden = Boolean(flags.hidden);
+      note.pending = Boolean(flags.pending);
+      return note;
+    });
+  return { ok: true, username: user && user.username ? user.username : null, notes: notes };
+}
+
+/** { userToken, noteId, mood, whatHappened, comment } */
+function editMyNote_(body) {
+  var googleId = readUserToken_(body.userToken);
+  var id = checkId_(body.noteId);
+  var clean = validateEntry_({ mood: body.mood, whatHappened: body.whatHappened, comment: body.comment, name: '' });
+  var admin = loadAdmin_();
+  if (admin.settings.blockedWords.length) {
+    var matcher = MoodCensor.createMatcher(admin.settings.blockedWords);
+    if (matcher.hasMatch(clean.whatHappened) || matcher.hasMatch(clean.comment)) {
+      throw error_(400, 'Please keep it kind: some words in your note are not allowed here.');
+    }
+  }
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    ownNote_(googleId, id);
+    var row = findNoteRow_(id);
+    if (row < 2) throw error_(404, 'That note does not exist any more.');
+    var sheet = getSheet_();
+    sheet.getRange(row, 2, 1, 3).setValues([[clean.mood, asPlainText_(clean.whatHappened), asPlainText_(clean.comment)]]);
+    sheet.getRange(row, 10).setValue(new Date());
+    // "Check new notes first" is on: an edited note is checked again
+    if (admin.settings.requireApproval) {
+      var fresh = loadAdmin_();
+      fresh.notes[id] = fresh.notes[id] || {};
+      fresh.notes[id].pending = true;
+      saveAdmin_(fresh);
+    }
+    return { ok: true, pending: Boolean(admin.settings.requireApproval),
+      note: { id: id, mood: clean.mood, whatHappened: clean.whatHappened, comment: clean.comment, edited: new Date().toISOString() } };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteMyNote_(body) {
+  var googleId = readUserToken_(body.userToken);
+  var id = checkId_(body.noteId);
+  ownNote_(googleId, id);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var data = loadAdmin_();
+    deleteNote_(data, { id: id });
+    saveAdmin_(data);
+    return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // =====================================================================

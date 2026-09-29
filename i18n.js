@@ -96,7 +96,6 @@ window.MoodI18n = (function createI18n() {
     'Signing in…': 'Sedang masuk…',
     'Pick a username': 'Pilih username',
     'Username': 'Username',
-    'e.g. rani_07': 'mis. rani_07',
     '3 to 20 letters, numbers, _ or . Everyone can see it next to your comments.':
       '3 sampai 20 huruf, angka, _ atau . Semua orang bisa melihatnya di samping komentarmu.',
     'Save username': 'Simpan username',
@@ -134,6 +133,42 @@ window.MoodI18n = (function createI18n() {
     'Please pick a kinder username.': 'Pilih username yang lebih sopan ya.',
     'That username is taken. Please pick another one.': 'Username itu sudah dipakai. Pilih yang lain ya.',
     'Google sign-in could not load. Check your internet and try again.': 'Tombol Google tidak bisa dimuat. Cek internetmu lalu coba lagi.',
+    // verified, likes, profile
+    'Verified: signed in with Google': 'Terverifikasi: masuk dengan Google',
+    'Verified': 'Terverifikasi',
+    'Edited': 'Diedit',
+    '(edited)': '(diedit)',
+    'So many likes! Please wait a minute.': 'Banyak banget like! Tunggu semenit ya.',
+    'My profile': 'Profilku',
+    'Sign in with Google to see your profile and edit your own sticky notes.': 'Masuk dengan Google untuk melihat profilmu dan mengedit sticky note-mu sendiri.',
+    'Sign in with Google': 'Masuk dengan Google',
+    'Loading your profile…': 'Memuat profilmu…',
+    'Only you can see this page. Your notes stay anonymous unless you posted them as your username.':
+      'Hanya kamu yang bisa melihat halaman ini. Catatanmu tetap anonim kecuali kamu mengirimnya dengan username-mu.',
+    '✍️ New note': '✍️ Catatan baru',
+    'likes': 'like',
+    'comments': 'komentar',
+    'My notes': 'Catatanku',
+    "You haven't posted a note while signed in yet.": 'Kamu belum mengirim catatan saat sedang masuk.',
+    'Edit my note': 'Edit catatanku',
+    'Mood': 'Mood',
+    "Photos can't be changed here.": 'Foto tidak bisa diganti di sini.',
+    'Save changes': 'Simpan perubahan',
+    'Open photo': 'Buka foto',
+    'Shown as anonymous': 'Tampil sebagai anonim',
+    'Waiting for the admin': 'Menunggu admin',
+    'Hidden by the admin': 'Disembunyikan admin',
+    '✏️ Edit': '✏️ Edit',
+    '🗑 Delete': '🗑 Hapus',
+    'Write a few words about what happened.': 'Tulis beberapa kata tentang apa yang terjadi.',
+    'Saved!': 'Tersimpan!',
+    'Saved. The admin checks it again before it shows.': 'Tersimpan. Admin akan mengeceknya lagi sebelum muncul.',
+    'Profiles only work on the online version of the site.': 'Profil hanya berfungsi di versi online website.',
+    'That note does not exist any more.': 'Catatan itu sudah tidak ada.',
+    'You can only change your own notes.': 'Kamu hanya bisa mengubah catatanmu sendiri.',
+    "Nobody can see it's you. It's linked to your account, so you can edit it on your profile.":
+      'Tidak ada yang tahu itu kamu. Catatan ini terhubung ke akunmu, jadi bisa kamu edit di profilmu.',
+    'Your sign-in ran out. Please sign in again, or send it anonymously.': 'Waktu masukmu habis. Silakan masuk lagi, atau kirim secara anonim.',
     // privacy page
     'Privacy': 'Privasi',
     'Privacy · MoodBoard': 'Privasi · MoodBoard',
@@ -212,6 +247,10 @@ window.MoodI18n = (function createI18n() {
     'Lots of photos at once! Please wait a minute and try again.': 'Banyak foto sekaligus! Tunggu semenit lalu coba lagi.',
     '✦ MY MOOD': '✦ MOOD-KU',
     '✦ 30 SECONDS': '✦ 30 DETIK',
+    '✦ PROFILE': '✦ PROFIL',
+    '✦ ONLY YOU': '✦ HANYA KAMU',
+    '✦ SIGN IN': '✦ MASUK',
+    '✦ PRIVACY': '✦ PRIVASI',
     'Science experiment!': 'Eksperimen sains!',
     'Surprise quiz': 'Kuis dadakan',
     'See how the whole class feels': 'Lihat perasaan seluruh kelas',
@@ -520,6 +559,12 @@ window.MoodI18n = (function createI18n() {
     [/^(\d+) to review$/, (n) => `${n} perlu dicek`],
     [/^(\d+) \/ 5 photos$/, (n) => `${n} / 5 foto`],
     [/^as @(.+)$/, (n) => `sebagai @${n}`],
+    [/^e\.g\. ([\w.]+)$/, (n) => `mis. ${n}`],
+    [/^Shown as @(.+)$/, (n) => `Tampil sebagai @${n}`],
+    [/^Shown as "(.+)"$/, (n) => `Tampil sebagai "${n}"`],
+    [/^Your note will show @(.+) with a verified badge\.$/, (n) => `Catatanmu akan menampilkan @${n} dengan lencana terverifikasi.`],
+    [/^(Like|Unlike) \((\d+)\)$/, (a, n) => `${a === 'Like' ? 'Suka' : 'Batal suka'} (${n})`],
+    [/^Couldn't load your profile\. (.*)$/, (m) => `Profilmu tidak bisa dimuat. ${T(m)}`],
     [/^(\d+) comments?$/, (n) => `${n} komentar`],
     [/^📷 (\d+) photos$/, (n) => `📷 ${n} foto`],
     [/^Photo (\d+)$/, (n) => `Foto ${n}`],
@@ -578,7 +623,8 @@ window.MoodI18n = (function createI18n() {
   // Students' own words: never translated (the *censored* stickers inside still are)
   const USER_TEXT = '.note__text, .note__name, #focus-what, #focus-comment:not(.is-empty), '
     + '.admin-note__what, .admin-note__comment:not(.is-empty), .pile__sheet, '
-    + '.wall-card__what, .wall-card__comment, .comment__name, .comment__text, .account-who, [data-no-translate]';
+    + '.wall-card__what, .wall-card__comment, .comment__name, .comment__text, .account-who, .profile-head__name, '
+    + '[data-no-translate]';
 
   const originalText = new WeakMap(); // text node -> its English text
   const ourText = new WeakMap();      // text node -> the text we last put in

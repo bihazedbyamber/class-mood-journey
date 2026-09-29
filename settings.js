@@ -19,6 +19,23 @@
 
 'use strict';
 
+/**
+ * Example names for placeholders and hints ("e.g. akbar"): a different one
+ * each time instead of always the same. "rehza" is kept for the site maker,
+ * so it's never suggested as a username.
+ */
+window.MoodNames = (function createNames() {
+  const NAMES = ['re.vill.ver', 'rehza', 'akbar', 'zidan', 'kiki', 'joan', 'mazaya', 'anin', 'nurul', 'falenta', 'asyafa'];
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+  return {
+    NAMES,
+    /** Any example name. */
+    any: () => pick(NAMES),
+    /** An example username someone could really take. */
+    username: () => pick(NAMES.filter((name) => name !== 'rehza')),
+  };
+})();
+
 window.MoodSettings = (function createSettings() {
   const KEYS = {
     theme: 'class-mood-theme',

@@ -221,6 +221,9 @@ function cleanEntries(list) {
       cards: MoodApi.photoUrls(entry, 600),   // medium versions (on the wall cards)
       photoIds: MoodApi.photoIds(entry),      // Drive ids (for the Share picture)
       comments: Number(entry.comments) || 0,  // how many comments
+      likes: Number(entry.likes) || 0,        // how many likes
+      verified: entry.verified === true,      // posted by a signed-in person under their username
+      edited: typeof entry.edited === 'string' ? entry.edited : '',
     }))
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 }
@@ -250,6 +253,7 @@ async function loadEntries() {
       render();
     }
     els.updatedAt.textContent = `Updated ${formatTime(new Date())} · refreshes every 30 s`;
+    loadMyLikes(); // (only asks the Sheet once per signed-in person)
   } catch (error) {
     console.error('Could not load entries:', error);
     if (state.hasLoaded) {
@@ -453,9 +457,11 @@ function createWallCard(entry) {
   who.className = 'wall-card__who';
   if (entry.name) fillText(who, `by ${entry.name}`);
   else who.textContent = 'anonymous';
+  if (entry.verified && window.MoodAccount) who.append(MoodAccount.badge());
   const time = document.createElement('time');
   time.dateTime = entry.timestamp;
   time.textContent = formatDay(date);
+  if (entry.edited) time.title = 'Edited';
   meta.append(who);
   if (entry.comments) {
     const count = document.createElement('span');
@@ -472,6 +478,7 @@ function createWallCard(entry) {
   const actions = document.createElement('div');
   actions.className = 'share-buttons wall-card__actions';
   actions.append(
+    makeLikeButton(entry),
     makeShareButton('📤', 'Share', () => openShare(entry)),
     makeShareButton('⬇', 'Save', (event) => saveNoteImage(entry, event.currentTarget)),
   );
@@ -479,6 +486,88 @@ function createWallCard(entry) {
   card.append(open, actions);
   return card;
 }
+
+// ---------- Likes (signed-in people; one like per person per note) ----------
+
+const likes = { mine: new Set(), loadedFor: null };
+
+/** Shows ♥ (liked) or ♡ and the count on every like button of this note. */
+function updateLikeButtons(noteId) {
+  const entry = state.entries.find((item) => item.id === noteId);
+  const count = entry ? entry.likes : 0;
+  const liked = likes.mine.has(noteId);
+  document.querySelectorAll(`.like-btn[data-note="${CSS.escape(noteId)}"]`).forEach((button) => {
+    button.setAttribute('aria-pressed', String(liked));
+    button.querySelector('.like-btn__heart').textContent = liked ? '♥' : '♡';
+    button.querySelector('.like-btn__count').textContent = String(count);
+    button.setAttribute('aria-label', `${liked ? 'Unlike' : 'Like'} (${count})`);
+  });
+}
+
+function makeLikeButton(entry) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'mini-btn like-btn';
+  button.dataset.note = entry.id;
+  const heart = document.createElement('span');
+  heart.className = 'like-btn__heart';
+  heart.setAttribute('aria-hidden', 'true');
+  const count = document.createElement('span');
+  count.className = 'like-btn__count';
+  button.append(heart, count);
+  button.addEventListener('click', () => toggleLike(entry.id));
+  if (!window.MoodAccount || !MoodAccount.enabled) button.hidden = true;
+  // (filled in by updateLikeButtons once the button is on the page)
+  queueMicrotask(() => updateLikeButtons(entry.id));
+  return button;
+}
+
+async function toggleLike(noteId) {
+  const user = await MoodAccount.requireUsername();
+  const entry = state.entries.find((item) => item.id === noteId);
+  // Show it straight away; fix it if the Sheet says otherwise
+  const wasLiked = likes.mine.has(noteId);
+  if (wasLiked) likes.mine.delete(noteId); else likes.mine.add(noteId);
+  if (entry) entry.likes = Math.max(0, entry.likes + (wasLiked ? -1 : 1));
+  updateLikeButtons(noteId);
+  try {
+    const data = await MoodApi.script('toggleLike', { userToken: user.token, noteId });
+    if (data.liked) likes.mine.add(noteId); else likes.mine.delete(noteId);
+    if (entry) entry.likes = data.count;
+  } catch (error) {
+    if (wasLiked) likes.mine.add(noteId); else likes.mine.delete(noteId);
+    if (entry) entry.likes = Math.max(0, entry.likes + (wasLiked ? 1 : -1));
+    if (error.code === 401) MoodAccount.expired();
+  }
+  updateLikeButtons(noteId);
+}
+
+/** Which notes this person liked (after signing in / on page load). */
+async function loadMyLikes() {
+  const user = window.MoodAccount && MoodAccount.enabled ? MoodAccount.user : null;
+  if (!user) {
+    likes.mine = new Set();
+    likes.loadedFor = null;
+    state.entries.forEach((entry) => updateLikeButtons(entry.id));
+    return;
+  }
+  if (likes.loadedFor === user.username) return;
+  likes.loadedFor = user.username;
+  try {
+    const data = await MoodApi.script('myLikes', { userToken: user.token });
+    likes.mine = new Set(data.likes);
+    state.entries.forEach((entry) => updateLikeButtons(entry.id));
+  } catch (error) {
+    if (error.code === 401) MoodAccount.expired();
+  }
+}
+
+document.addEventListener('moodaccountchange', () => {
+  loadMyLikes();
+  document.querySelectorAll('.like-btn').forEach((button) => {
+    button.hidden = !(window.MoodAccount && MoodAccount.enabled);
+  });
+});
 
 function makeShareButton(icon, label, onClick) {
   const button = document.createElement('button');
@@ -682,6 +771,7 @@ function renderComments() {
     const name = document.createElement('strong');
     name.className = 'comment__name';
     name.textContent = `@${comment.username}`;
+    if (comment.verified !== false) name.append(MoodAccount.badge()); // commenters are always signed in
     const time = document.createElement('time');
     time.className = 'comment__time';
     time.dateTime = comment.timestamp;
@@ -981,6 +1071,7 @@ function drawNotes(positions) {
       const nameTag = document.createElement('span');
       nameTag.className = 'note__name';
       fillText(nameTag, entry.name);
+      if (entry.verified && window.MoodAccount) nameTag.append(MoodAccount.badge());
       meta.append(nameTag);
     } else if (entry.demo) {
       const demoTag = document.createElement('span');
@@ -1106,6 +1197,17 @@ function fillFocusCard(entry) {
 
   if (entry.name) fillText(els.focusAuthor, `by ${entry.name}`);
   else els.focusAuthor.textContent = 'anonymous';
+  if (entry.verified && window.MoodAccount) els.focusAuthor.append(MoodAccount.badge());
+  if (entry.edited) {
+    const editedTag = document.createElement('span');
+    editedTag.className = 'focus-edited';
+    editedTag.textContent = '(edited)';
+    els.focusAuthor.append(' ', editedTag);
+  }
+  // Like button (first in the Share / Save row)
+  const shareRow = els.focusShareButton.parentElement;
+  shareRow.querySelectorAll('.like-btn').forEach((old) => old.remove());
+  shareRow.prepend(makeLikeButton(entry));
   els.focusAuthor.classList.toggle('is-anonymous', !entry.name);
   fillText(els.focusWhat, entry.whatHappened);
   if (entry.comment) fillText(els.focusComment, entry.comment);

@@ -128,10 +128,22 @@ function highlightSelectedMood() {
 function showIdentity() {
   const { identity: choice, name } = window.MoodSettings.getNameSettings();
   const wantsName = choice === 'named';
+  const user = signedInUser();
 
   identityButtons.forEach((button) => {
     button.setAttribute('aria-pressed', String(button.dataset.identity === choice));
   });
+  // Signed in with Google: "My name" = your username, with a verified badge (no typing needed)
+  const namedLabel = document.getElementById('named-label');
+  if (namedLabel) namedLabel.textContent = user ? `@${user.username} ✓` : 'My name';
+  if (user) {
+    nameField.hidden = true;
+    postingHint.classList.remove('is-error');
+    postingHint.textContent = wantsName
+      ? `Your note will show @${user.username} with a verified badge.`
+      : "Nobody can see it's you. It's linked to your account, so you can edit it on your profile.";
+    return;
+  }
   nameField.hidden = !wantsName;
   // Don't overwrite the box while the student is typing in it
   if (document.activeElement !== nameInput) nameInput.value = name;
@@ -155,10 +167,15 @@ function showIdentity() {
   }
 }
 
+/** The signed-in Google account (with a username), or null. */
+function signedInUser() {
+  return window.MoodAccount && MoodAccount.enabled ? MoodAccount.user : null;
+}
+
 /** Anonymous / My name button clicked. */
 function chooseIdentity(choice) {
   window.MoodSettings.setIdentity(choice);
-  if (choice === 'named') nameInput.focus();
+  if (choice === 'named' && !signedInUser()) nameInput.focus();
 }
 
 // ---------- Photo ----------
@@ -457,8 +474,10 @@ function validateForm() {
   }
 
   // Picked "My name" but left the box empty? Ask, instead of silently posting anonymously.
+  // (Signed in: "My name" is the username, nothing to type.)
   const nameChoice = window.MoodSettings.getNameSettings();
-  if (nameChoice.identity === 'named' && !nameChoice.name) {
+  const user = signedInUser();
+  if (nameChoice.identity === 'named' && !nameChoice.name && !user) {
     postingHint.textContent = 'Type your name, or switch to Anonymous.';
     postingHint.classList.add('is-error');
     firstProblem = firstProblem || nameInput;
@@ -470,8 +489,14 @@ function validateForm() {
   }
 
   const entry = { mood, whatHappened, comment };
-  const identity = window.MoodSettings.getIdentity();
-  if (!identity.anonymous) entry.name = identity.name; // only sent if the student chose it
+  if (user) {
+    // Linked to the account (for the profile page); shown as the username only if chosen
+    entry.userToken = user.token;
+    if (nameChoice.identity === 'named') entry.asUser = true;
+  } else {
+    const identity = window.MoodSettings.getIdentity();
+    if (!identity.anonymous) entry.name = identity.name; // only sent if the student chose it
+  }
   if (photos.length) entry.photos = [...photos];
   return entry;
 }
@@ -502,6 +527,10 @@ function friendlyErrorMessage(error) {
     return "We couldn't reach the server. Check your internet (or that the server is running) and try again. 🌧";
   }
   if (error.status === 400 || error.status === 423) return error.message;
+  if (error.status === 401) {
+    if (window.MoodAccount) MoodAccount.expired();
+    return 'Your sign-in ran out. Please sign in again, or send it anonymously.';
+  }
   if (error.status === 429) return 'Whoa, so many notes! Please wait a minute and try again. ⏳';
   return `Oops, our paper airplane crashed. ${error.message} Please try again in a moment.`;
 }
@@ -607,6 +636,7 @@ if (photoField && window.MoodApi.usesSheet) {
 form.addEventListener('submit', handleSubmit);
 againButton.addEventListener('click', showFormAgain);
 document.addEventListener('moodsettingschange', showIdentity);
+document.addEventListener('moodaccountchange', showIdentity);
 
 /** If the admin paused check-ins, say so right away (the server refuses notes anyway). */
 async function showPausedMessage() {

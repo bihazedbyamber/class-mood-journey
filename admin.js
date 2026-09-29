@@ -744,6 +744,15 @@ function exportCsv() {
 }
 els.exportButton.addEventListener('click', exportCsv);
 
+// The blocked-words hint uses a different example name each time ("@akbar" / "a k b a r")
+(function showExampleName() {
+  const name = window.MoodNames ? MoodNames.any().replace(/[^a-z]/gi, '') : 'asyafa';
+  const at = document.getElementById('trick-at');
+  const spaced = document.getElementById('trick-spaced');
+  if (at) at.textContent = `@${name}`;
+  if (spaced) spaced.textContent = name.split('').join(' ');
+})();
+
 // EN / ID switched: redraw so dates use the new language
 document.addEventListener('moodlangchange', () => {
   if (!els.adminView.hidden) renderAll();

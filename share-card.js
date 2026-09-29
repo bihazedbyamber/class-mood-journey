@@ -230,16 +230,11 @@ window.MoodShareCard = (function createShareCard() {
 
     drawBackground(ctx, style, colorA, colorB);
 
-    // Top: "MoodBoard By.Rehza"
+    // Top: "MoodBoard"
     ctx.fillStyle = INK;
     ctx.textBaseline = 'alphabetic';
     ctx.font = `800 42px ${look.label}`;
     ctx.fillText('MoodBoard', 70, 108);
-    const brandW = ctx.measureText('MoodBoard').width;
-    ctx.font = `400 32px ${look.label}`;
-    ctx.globalAlpha = 0.65;
-    ctx.fillText('By.Rehza', 70 + brandW + 16, 108);
-    ctx.globalAlpha = 1;
 
     // ----- The paper note -----
     const card = { x: 90, y: 170, w: W - 180, h: 930 };

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id" data-style="modern-2026">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My profile</title>
+  <meta name="description" content="Your MoodBoard profile: your username and your own sticky notes.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23C8F25A' stroke='%23111' stroke-width='4'/%3E%3Cpath d='M20 38q12 12 24 0' fill='none' stroke='%23111' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='26' r='3.5' fill='%23111'/%3E%3Ccircle cx='41' cy='26' r='3.5' fill='%23111'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;family=Nunito:wght@400;600;700&amp;family=Patrick+Hand&amp;family=Jersey+10&amp;family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;family=Gochi+Hand&amp;family=Anton&amp;family=Archivo:wght@400;500;600;800;900&amp;family=Permanent+Marker&amp;display=swap">
+  <link rel="stylesheet" href="style.css?v=20260929o">
+
+  <script src="settings.js?v=20260929o"></script>
+  <script src="i18n.js?v=20260929o"></script>
+  <script src="site-config.js?v=20260929o"></script>
+  <script src="api.js?v=20260929o"></script>
+  <script src="account.js?v=20260929o" defer></script>
+  <script src="moods.js?v=20260929o" defer></script>
+  <script src="lightbox.js?v=20260929o" defer></script>
+  <script type="module" src="profile.js?v=20260929o"></script>
+</head>
+<body class="page-profile">
+
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Mood board home">
+      <svg class="brand__mark" aria-hidden="true"><use data-face="4" href="sprite.svg#face-modern-2026-4"/></svg>
+      <span><strong class="brand__name">MoodBoard</strong></span>
+    </a>
+    <nav class="page-nav" aria-label="Pages">
+      <a class="page-nav__link" href="index.html"><span class="page-nav__icon" aria-hidden="true">🏠</span>Home</a>
+      <a class="page-nav__link" href="checkin.html"><span class="page-nav__icon" aria-hidden="true">✍️</span>Share my mood</a>
+      <a class="page-nav__link" href="journey.html"><span class="page-nav__icon" aria-hidden="true">🗒️</span>Class moods</a>
+    </nav>
+    <div class="topbar__tools">
+      <button type="button" class="icon-button theme-toggle" data-theme-toggle aria-label="Switch colour theme">
+        <svg class="theme-toggle__sun" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 1.5v2.5M12 20v2.5M1.5 12H4M20 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <svg class="theme-toggle__moon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20.5 14.8A8.5 8.5 0 1 1 9.2 3.5a7 7 0 0 0 11.3 11.3z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="profile">
+    <!-- Not signed in -->
+    <section class="card profile-signin" id="profile-signin" data-tab="✦ PROFILE" data-tab-2="✦ SIGN IN" hidden>
+      <h1 class="profile__title">My profile</h1>
+      <p>Sign in with Google to see your profile and edit your own sticky notes.</p>
+      <button type="button" class="btn btn--primary" id="profile-signin-btn"><span aria-hidden="true">👤</span> Sign in with Google</button>
+    </section>
+
+    <p class="profile-status" id="profile-status" aria-live="polite">Loading your profile…</p>
+
+    <!-- Signed in -->
+    <div id="profile-view" hidden>
+      <section class="card profile-head" data-tab="✦ PROFILE" data-tab-2="✦ ONLY YOU">
+        <svg class="profile-head__face" aria-hidden="true"><use id="profile-face" data-face="4" href="sprite.svg#face-modern-2026-4"/></svg>
+        <div class="profile-head__main">
+          <h1 class="profile-head__name" id="profile-name"></h1>
+          <p class="profile-head__hint">Only you can see this page. Your notes stay anonymous unless you posted them as your username.</p>
+          <div class="profile-head__actions">
+            <button type="button" class="btn btn--small" id="change-username-btn">Change username</button>
+            <a class="btn btn--small btn--primary" href="checkin.html">✍️ New note</a>
+          </div>
+        </div>
+        <ul class="profile-stats">
+          <li><strong id="stat-notes">0</strong><span>notes</span></li>
+          <li><strong id="stat-likes">0</strong><span>likes</span></li>
+          <li><strong id="stat-comments">0</strong><span>comments</span></li>
+        </ul>
+      </section>
+
+      <section class="profile-notes" aria-labelledby="my-notes-title">
+        <h2 class="wall__title" id="my-notes-title">My notes</h2>
+        <p class="wall__subtitle" id="my-notes-empty" hidden>You haven't posted a note while signed in yet.</p>
+        <div class="wall__grid" id="my-notes-grid"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Edit a note -->
+  <dialog class="settings edit-dialog" id="edit-dialog" aria-labelledby="edit-title">
+    <form class="settings__form" id="edit-form" novalidate>
+      <div class="settings__head">
+        <h2 class="settings__title" id="edit-title">Edit my note</h2>
+        <button type="button" class="settings__close" id="edit-close" aria-label="Close">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <span class="settings__label" id="edit-mood-label">Mood</span>
+      <div class="edit-moods" id="edit-moods" role="group" aria-labelledby="edit-mood-label"></div>
+      <label class="settings__label" for="edit-what">What happened in class?</label>
+      <input class="input" id="edit-what" maxlength="80" autocomplete="off">
+      <label class="settings__label" for="edit-comment">Anything you want to say?</label>
+      <textarea class="input input--area" id="edit-comment" rows="3" maxlength="300"></textarea>
+      <p class="settings__hint">Photos can't be changed here.</p>
+      <p class="settings__hint is-warning" id="edit-error" aria-live="polite"></p>
+      <div class="settings__foot">
+        <button type="submit" class="btn btn--primary" id="edit-save">Save changes</button>
+      </div>
+    </form>
+  </dialog>
+
+  <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+</body>
+</html>

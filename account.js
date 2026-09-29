@@ -126,7 +126,7 @@ window.MoodAccount = (function createAccount() {
     input.id = 'username-input';
     input.maxLength = 20;
     input.autocomplete = 'nickname';
-    input.placeholder = 'e.g. rani_07';
+    input.placeholder = `e.g. ${window.MoodNames ? MoodNames.username() : 'akbar'}`;
     input.setAttribute('aria-describedby', 'username-hint username-error');
     const hint = el('p', 'settings__hint', '3 to 20 letters, numbers, _ or . Everyone can see it next to your comments.');
     hint.id = 'username-hint';
@@ -157,6 +157,8 @@ window.MoodAccount = (function createAccount() {
     // 3. Account menu (signed in)
     const menu = makeDialog('account-dialog', 'Your account');
     const who = el('p', 'account-who');
+    const profile = el('a', 'btn btn--primary', 'My profile');
+    profile.href = 'profile.html';
     const change = el('button', 'btn', 'Change username');
     change.type = 'button';
     change.addEventListener('click', () => { menu.dialog.close(); openUsername(); });
@@ -168,7 +170,7 @@ window.MoodAccount = (function createAccount() {
       menu.dialog.close();
     });
     const actions = el('div', 'settings__foot account-actions');
-    actions.append(change, out);
+    actions.append(profile, change, out);
     menu.box.append(who, actions);
 
     dialogs = { signIn, gsiSlot, signInError, name, input, nameError, menu, who };
@@ -230,6 +232,7 @@ window.MoodAccount = (function createAccount() {
 
   function openUsername() {
     const d = buildDialogs();
+    if (window.MoodNames) d.input.placeholder = `e.g. ${MoodNames.username()}`; // a new example each time
     d.input.value = account && account.username ? account.username : '';
     d.nameError.textContent = '';
     if (!d.name.dialog.open) d.name.dialog.showModal();
@@ -290,11 +293,22 @@ window.MoodAccount = (function createAccount() {
 
   document.addEventListener('DOMContentLoaded', addButton);
 
+  /** The small "verified" badge shown next to signed-in people's usernames. */
+  function badge() {
+    const mark = el('span', 'verified', '✓');
+    mark.title = 'Verified: signed in with Google';
+    mark.setAttribute('aria-label', 'Verified');
+    mark.setAttribute('role', 'img');
+    return mark;
+  }
+
   return {
     get user() { return getUser(); },
     get enabled() { return enabled(); },
     requireUsername,
     openSignIn,
+    openUsername,
     expired,
+    badge,
   };
 })();
