@@ -16,8 +16,8 @@
  *
  * First tab, header row:  Timestamp | Mood | WhatHappened | Comment | Name | Id | Photo
  * Photos are saved in a Google Drive folder "Class Mood Journey photos";
- * the Photo column holds the Drive file id. Notes with a photo always wait
- * for an admin to approve them.
+ * the Photo column holds the Drive file ids (up to 5, separated by commas). Photo notes appear straight away,
+ * unless an admin turns on "Check photos first" (then they wait for approval).
  *
  * How the website calls it:
  *   GET  ?action=entries                     -> visible notes + status
@@ -33,7 +33,8 @@
 var HEADERS = ['Timestamp', 'Mood', 'WhatHappened', 'Comment', 'Name', 'Id', 'Photo'];
 var LIMITS = { whatHappened: 80, comment: 300, name: 24, pileName: 30, maxPiles: 20, word: 30, maxWords: 300 };
 var MAX_PHOTO_CHARS = 1500000;       // a photo (as text) may be at most ~1.1 MB; the website shrinks it first
-var MAX_PHOTOS_PER_MINUTE = 10;      // photos are heavier, so a smaller brake
+var MAX_PHOTOS_PER_MINUTE = 20;      // photos are heavier, so a smaller brake
+var MAX_PHOTOS_PER_NOTE = 5;
 var PHOTO_FOLDER_NAME = 'Class Mood Journey photos';
 var PILE_COLORS = ['yellow', 'pink', 'blue', 'green', 'orange', 'purple'];
 var SESSION_SECONDS = 6 * 60 * 60;   // admin stays logged in for 6 hours (the most Apps Script allows)
@@ -53,7 +54,8 @@ function doGet(e) {
     }
     if (action === 'status') {
       var status = status_(loadAdmin_());
-      return json_({ ok: true, mode: 'sheets', paused: status.paused, requireApproval: status.requireApproval });
+      return json_({ ok: true, mode: 'sheets', paused: status.paused, requireApproval: status.requireApproval,
+        approvePhotos: status.approvePhotos });
     }
     throw error_(404, 'Unknown action.');
   } catch (err) {
@@ -115,7 +117,8 @@ function readEntries_() {
       whatHappened: String(row[2]),
       comment: String(row[3]),
       name: String(row[4] || ''),
-      photo: String(row[6] || '') // Google Drive file id ('' = no photo)
+      photos: photoIdsOf_(row[6]), // Google Drive file ids ([] = no photos)
+      photo: photoIdsOf_(row[6])[0] || '' // the first one (for older pages)
     });
   });
   entries.sort(function (a, b) { return a.timestamp < b.timestamp ? -1 : 1; });
@@ -137,12 +140,15 @@ function submit_(body) {
   cache.put(minuteKey, String(posts + 1), 120);
 
   var entry = validateEntry_(body);
-  var photoBytes = body.photo ? checkPhoto_(body.photo) : null;
-  if (photoBytes) {
+  // Up to 5 photos ("photos": [...]); older pages send a single "photo"
+  var sent = Array.isArray(body.photos) ? body.photos : (body.photo ? [body.photo] : []);
+  if (sent.length > MAX_PHOTOS_PER_NOTE) throw error_(400, 'You can add up to ' + MAX_PHOTOS_PER_NOTE + ' photos.');
+  var photoBytes = sent.map(checkPhoto_);
+  if (photoBytes.length) {
     var photoKey = 'photos-' + Math.floor(Date.now() / 60000);
     var photoCount = Number(cache.get(photoKey) || 0);
-    if (photoCount >= MAX_PHOTOS_PER_MINUTE) throw error_(429, 'Lots of photos at once! Please wait a minute and try again.');
-    cache.put(photoKey, String(photoCount + 1), 120);
+    if (photoCount + photoBytes.length > MAX_PHOTOS_PER_MINUTE) throw error_(429, 'Lots of photos at once! Please wait a minute and try again.');
+    cache.put(photoKey, String(photoCount + photoBytes.length), 120);
   }
   var admin = loadAdmin_();
   if (admin.settings.paused) throw error_(423, 'Check-ins are paused by the admin right now. Please try again later.');
@@ -155,16 +161,17 @@ function submit_(body) {
 
   var now = new Date();
   var id = Utilities.getUuid();
-  // Save the photo in Google Drive first (outside the lock, it can take a moment)
-  var photoId = photoBytes ? savePhoto_(photoBytes, id) : '';
+  // Save the photos in Google Drive first (outside the lock, it can take a moment)
+  var photoIds = photoBytes.map(function (bytes, index) { return savePhoto_(bytes, id + '-' + (index + 1)); });
 
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
     getSheet_().appendRow([now, entry.mood, asPlainText_(entry.whatHappened), asPlainText_(entry.comment),
-      asPlainText_(entry.name), id, photoId]);
-    // Photos are always checked by an admin first: the censor can't look at pictures
-    var pending = Boolean(admin.settings.requireApproval) || Boolean(photoId);
+      asPlainText_(entry.name), id, photoIds.join(',')]);
+    // "Check photos first" (admin switch, off by default): photo notes wait for approval,
+    // because the censor can't look at pictures
+    var pending = Boolean(admin.settings.requireApproval) || (photoIds.length > 0 && admin.settings.approvePhotos);
     if (pending) {
       var fresh = loadAdmin_();
       fresh.notes[id] = { pending: true };
@@ -173,7 +180,7 @@ function submit_(body) {
     return {
       ok: true,
       entry: { id: id, timestamp: now.toISOString(), mood: entry.mood, whatHappened: entry.whatHappened,
-        comment: entry.comment, name: entry.name, photo: photoId, pending: pending }
+        comment: entry.comment, name: entry.name, photos: photoIds, photo: photoIds[0] || '', pending: pending }
     };
   } finally {
     lock.releaseLock();
@@ -244,12 +251,19 @@ function savePhoto_(bytes, noteId) {
   return file.getId();
 }
 
-/** Moves a note's photo to the Drive trash (if it has one). */
-function trashPhoto_(fileId) {
-  if (!fileId) return;
-  try {
-    DriveApp.getFileById(fileId).setTrashed(true);
-  } catch (err) { /* already gone */ }
+/** The Photo cell holds the Drive ids separated by commas: "id1,id2" -> ['id1', 'id2'] */
+function photoIdsOf_(cell) {
+  return String(cell || '').split(',').map(function (part) { return part.trim(); })
+    .filter(function (part) { return /^[\w-]{10,}$/.test(part); });
+}
+
+/** Moves a note's photos to the Drive trash (if it has any). */
+function trashPhotos_(cell) {
+  photoIdsOf_(cell).forEach(function (fileId) {
+    try {
+      DriveApp.getFileById(fileId).setTrashed(true);
+    } catch (err) { /* already gone */ }
+  });
 }
 
 /** Trims text and removes invisible control characters. */
@@ -298,6 +312,7 @@ function loadAdmin_() {
     settings: {
       paused: Boolean(settings.paused),
       requireApproval: Boolean(settings.requireApproval),
+      approvePhotos: Boolean(settings.approvePhotos), // off unless an admin turns it on
       blockedWords: Array.isArray(settings.blockedWords) ? settings.blockedWords : []
     },
     piles: Array.isArray(raw.piles) ? raw.piles : [],
@@ -316,7 +331,8 @@ function saveAdmin_(admin) {
 }
 
 function status_(admin) {
-  return { paused: admin.settings.paused, requireApproval: admin.settings.requireApproval };
+  return { paused: admin.settings.paused, requireApproval: admin.settings.requireApproval,
+    approvePhotos: admin.settings.approvePhotos };
 }
 
 /** What everyone may see: no hidden, waiting or deleted notes. */
@@ -454,7 +470,7 @@ function deleteNote_(data, body) {
     }
   }
   if (row >= 2 && row <= lastRow) {
-    trashPhoto_(String(sheet.getRange(row, 7).getValue() || ''));
+    trashPhotos_(sheet.getRange(row, 7).getValue());
     sheet.deleteRow(row);
   }
   delete data.notes[id];
@@ -496,10 +512,11 @@ function deletePile_(data, body) {
   return { ok: true };
 }
 
-/** { paused?, requireApproval?, blockedWords? } */
+/** { paused?, requireApproval?, approvePhotos?, blockedWords? } */
 function changeSettings_(data, body) {
   if (typeof body.paused === 'boolean') data.settings.paused = body.paused;
   if (typeof body.requireApproval === 'boolean') data.settings.requireApproval = body.requireApproval;
+  if (typeof body.approvePhotos === 'boolean') data.settings.approvePhotos = body.approvePhotos;
   if ('blockedWords' in body) {
     var list = Array.isArray(body.blockedWords) ? body.blockedWords : String(body.blockedWords || '').split(/[\n,]+/);
     var seen = {};

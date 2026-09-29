@@ -120,9 +120,16 @@
     return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${width}`;
   }
 
+  /** A note's photo addresses (notes can have up to 5; older notes have one "photo"). */
+  function photoUrls(entry, width) {
+    const ids = Array.isArray(entry && entry.photos) ? entry.photos : [entry && entry.photo];
+    return ids.map((id) => photoUrl(id, width)).filter(Boolean).slice(0, 5);
+  }
+
   root.MoodApi = {
     fetch: apiFetch,
     photoUrl,
+    photoUrls,
     usesSheet: Boolean(SCRIPT_URL),
   };
 })(typeof self !== 'undefined' ? self : this);

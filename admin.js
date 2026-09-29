@@ -51,6 +51,7 @@ const els = {
   spreadEmpty: document.getElementById('spread-empty'),
   togglePaused: document.getElementById('toggle-paused'),
   toggleApproval: document.getElementById('toggle-approval'),
+  togglePhotos: document.getElementById('toggle-photos'),
   blockedWords: document.getElementById('blocked-words'),
   saveWordsButton: document.getElementById('save-words-btn'),
   exportButton: document.getElementById('export-csv-btn'),
@@ -62,7 +63,7 @@ const els = {
 const state = {
   entries: [],
   piles: [],
-  settings: { paused: false, requireApproval: false, blockedWords: [] },
+  settings: { paused: false, requireApproval: false, approvePhotos: false, blockedWords: [] },
   pileColors: Object.keys(COLOR_NAMES),
   mode: 'local',
   currentPile: INBOX,  // which pile is spread out below
@@ -419,12 +420,16 @@ function createNoteCard(entry) {
   }
   head.append(mood);
   const hasSwearWords = MoodCensor.hasBadWords(`${entry.whatHappened} ${entry.comment} ${entry.name}`);
+  const photoSmall = MoodApi.photoUrls(entry, 400);
+  const photoBig = MoodApi.photoUrls(entry, 1600);
+  const photoCount = photoSmall.length;
   const badges = [
     [entry.pending, 'Needs review', 'badge--pending'],
     [hasSwearWords, 'Swear words', 'badge--flag'],
     [entry.hidden, 'Hidden', 'badge--hidden'],
     [entry.pinned, 'Pinned', 'badge--pinned'],
-    [Boolean(entry.photo), '📷 Photo', 'badge--photo'],
+    [photoCount === 1, '📷 Photo', 'badge--photo'],
+    [photoCount > 1, `📷 ${photoCount} photos`, 'badge--photo'],
   ];
   for (const [show, text, extraClass] of badges) {
     if (!show) continue;
@@ -443,23 +448,28 @@ function createNoteCard(entry) {
   comment.textContent = entry.comment || 'No comment.';
   comment.classList.toggle('is-empty', !entry.comment);
 
-  // The photo, so the admin can check it before approving (click = open it big)
-  const photoSrc = MoodApi.photoUrl(entry.photo, 600);
+  // All the photos, so the admin can check them before approving (click = open big)
   let photo = null;
-  if (photoSrc) {
-    photo = document.createElement('a');
-    photo.className = 'admin-note__photo';
-    photo.href = MoodApi.photoUrl(entry.photo, 1600);
-    photo.target = '_blank';
-    photo.rel = 'noopener noreferrer';
-    photo.draggable = false;
-    const img = document.createElement('img');
-    img.src = photoSrc;
-    img.alt = 'Photo sent with this note';
-    img.loading = 'lazy';
-    img.referrerPolicy = 'no-referrer';
-    img.draggable = false;
-    photo.append(img);
+  if (photoCount) {
+    photo = document.createElement('div');
+    photo.className = 'admin-note__photos';
+    photo.dataset.count = String(photoCount);
+    photoSmall.forEach((src, index) => {
+      const link = document.createElement('a');
+      link.className = 'admin-note__photo';
+      link.href = photoBig[index];
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.draggable = false;
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Photo sent with this note';
+      img.loading = 'lazy';
+      img.referrerPolicy = 'no-referrer';
+      img.draggable = false;
+      link.append(img);
+      photo.append(link);
+    });
   }
 
   const meta = document.createElement('p');
@@ -524,6 +534,7 @@ function createMoveSelect(entry) {
 function renderControls() {
   els.togglePaused.checked = Boolean(state.settings.paused);
   els.toggleApproval.checked = Boolean(state.settings.requireApproval);
+  els.togglePhotos.checked = Boolean(state.settings.approvePhotos);
   if (!state.wordsEdited && document.activeElement !== els.blockedWords) {
     els.blockedWords.value = (state.settings.blockedWords || []).join('\n');
   }
@@ -675,6 +686,13 @@ els.toggleApproval.addEventListener('change', () => {
   saveSettings({ requireApproval }, requireApproval
     ? 'New notes will wait for your review.'
     : 'New notes appear on the map straight away.');
+});
+
+els.togglePhotos.addEventListener('change', () => {
+  const approvePhotos = els.togglePhotos.checked;
+  saveSettings({ approvePhotos }, approvePhotos
+    ? 'Notes with a photo will wait for your review.'
+    : 'Notes with a photo appear straight away.');
 });
 
 els.blockedWords.addEventListener('input', () => { state.wordsEdited = true; });

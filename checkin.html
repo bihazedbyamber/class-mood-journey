@@ -13,16 +13,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;family=Nunito:wght@400;600;700&amp;family=Patrick+Hand&amp;family=Jersey+10&amp;family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;family=Gochi+Hand&amp;family=Anton&amp;family=Archivo:wght@400;500;600;800;900&amp;family=Permanent+Marker&amp;display=swap">
-  <link rel="stylesheet" href="style.css?v=20260929d">
+  <link rel="stylesheet" href="style.css?v=20260929f">
 
   <!-- settings.js has no "defer": it must pick theme + style before the page is drawn -->
-  <script src="settings.js?v=20260929d"></script>
-  <script src="i18n.js?v=20260929d"></script>
-  <script src="site-config.js?v=20260929d"></script>
-  <script src="api.js?v=20260929d"></script>
-  <script src="moods.js?v=20260929d" defer></script>
-  <script src="admin-login.js?v=20260929d" defer></script>
-  <script type="module" src="input.js?v=20260929d"></script>
+  <script src="settings.js?v=20260929f"></script>
+  <script src="i18n.js?v=20260929f"></script>
+  <script src="site-config.js?v=20260929f"></script>
+  <script src="api.js?v=20260929f"></script>
+  <script src="moods.js?v=20260929f" defer></script>
+  <script src="admin-login.js?v=20260929f" defer></script>
+  <script type="module" src="input.js?v=20260929f"></script>
 </head>
 <body class="page-input">
 
@@ -195,15 +195,14 @@ just honest vibes</span>
             </button>
             <input type="file" class="visually-hidden" id="photo-camera" accept="image/*" capture="environment" tabindex="-1" aria-hidden="true">
             <label class="btn photo-btn">
-              <input type="file" class="visually-hidden" id="photo-file" accept="image/*">
-              <span aria-hidden="true">🖼</span> Choose a photo
+              <input type="file" class="visually-hidden" id="photo-file" accept="image/*" multiple>
+              <span aria-hidden="true">🖼</span> Choose photos
             </label>
+            <span class="photo-count" id="photo-count" aria-live="polite">Up to 5 photos</span>
           </div>
-          <div class="photo-preview" id="photo-preview" hidden>
-            <img id="photo-preview-img" alt="Your photo">
-            <button type="button" class="mini-btn mini-btn--danger" id="photo-remove">Remove photo</button>
-          </div>
-          <p class="photo-hint">Photos are checked by an admin before they appear. Please don't post photos of classmates without asking them first.</p>
+          <!-- The chosen photos, each with its own ✕ (filled by input.js) -->
+          <ul class="photo-previews" id="photo-previews" hidden></ul>
+          <p class="photo-hint" id="photo-hint">Everyone can see your photo on the Class moods page. Please don't post photos of classmates without asking them first.</p>
           <p class="field-error" id="photo-error" aria-live="polite"></p>
         </div>
 

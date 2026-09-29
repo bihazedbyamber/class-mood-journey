@@ -692,6 +692,7 @@ async function handleAdminSettings(req, res) {
   const data = await moderation.update((current) => {
     if (typeof body.paused === 'boolean') current.settings.paused = body.paused;
     if (typeof body.requireApproval === 'boolean') current.settings.requireApproval = body.requireApproval;
+    if (typeof body.approvePhotos === 'boolean') current.settings.approvePhotos = body.approvePhotos;
     if ('blockedWords' in body) current.settings.blockedWords = moderation.cleanWordList(body.blockedWords);
   });
   console.log('⚙ Admin changed settings');

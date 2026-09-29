@@ -67,16 +67,17 @@ const thankYouMessage = document.getElementById('thank-you-message');
 const againButton = document.getElementById('again-btn');
 const photoField = document.getElementById('photo-field');         // only on checkin.html
 const photoInputs = [document.getElementById('photo-camera'), document.getElementById('photo-file')].filter(Boolean);
-const photoPreview = document.getElementById('photo-preview');
-const photoPreviewImg = document.getElementById('photo-preview-img');
-const photoRemove = document.getElementById('photo-remove');
+const photoPreviews = document.getElementById('photo-previews');
+const photoCount = document.getElementById('photo-count');
+const photoPicker = document.getElementById('photo-picker');
 const photoError = document.getElementById('photo-error');
 
 /** Photos are shrunk to this many pixels on the longest side before sending. */
 const PHOTO_MAX_SIDE = 1280;
+const MAX_PHOTOS = 5;
 
 let isSending = false;
-let photoData = ''; // the chosen photo as a small JPEG ("data:image/jpeg;base64,..."), '' = none
+let photos = []; // the chosen photos as small JPEGs ("data:image/jpeg;base64,..."), at most 5
 
 // ---------- Mood faces ----------
 
@@ -208,36 +209,74 @@ function toSmallJpeg(source, width, height, mirror = false) {
   return data;
 }
 
-function showPhoto() {
+/** Draws the chosen photos (each with a ✕) and the "2 / 5" counter. */
+function showPhotos() {
   if (!photoField) return;
-  photoPreview.hidden = !photoData;
-  if (photoData) photoPreviewImg.src = photoData;
-  else photoPreviewImg.removeAttribute('src');
+  photoPreviews.replaceChildren();
+  photos.forEach((data, index) => {
+    const item = document.createElement('li');
+    item.className = 'photo-previews__item';
+    const img = document.createElement('img');
+    img.src = data;
+    img.alt = `Photo ${index + 1}`;
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'photo-previews__remove';
+    remove.textContent = '✕';
+    remove.setAttribute('aria-label', 'Remove this photo');
+    remove.title = 'Remove this photo';
+    remove.addEventListener('click', () => {
+      photos.splice(index, 1);
+      setFieldError(photoError, '');
+      showPhotos();
+    });
+    item.append(img, remove);
+    photoPreviews.append(item);
+  });
+  photoPreviews.hidden = photos.length === 0;
+  photoCount.textContent = photos.length ? `${photos.length} / ${MAX_PHOTOS} photos` : 'Up to 5 photos';
+  // Full? Then the add buttons rest until a photo is removed
+  const full = photos.length >= MAX_PHOTOS;
+  photoPicker.classList.toggle('is-full', full);
+  document.getElementById('photo-camera-btn').disabled = full;
+  document.getElementById('photo-file').disabled = full;
+}
+
+/** Adds a photo (if there is room). Returns false when it was full. */
+function addPhoto(data) {
+  if (photos.length >= MAX_PHOTOS) return false;
+  photos.push(data);
+  showPhotos();
+  return true;
 }
 
 async function handlePhotoChosen(event) {
   const input = event.target;
-  const file = input.files && input.files[0];
+  const files = [...(input.files || [])];
   input.value = ''; // so choosing the same photo again still works
-  if (!file) return;
+  if (!files.length) return;
   setFieldError(photoError, '');
-  if (!file.type.startsWith('image/')) {
-    setFieldError(photoError, 'That file is not a photo. Please pick a picture.');
-    return;
+  const room = MAX_PHOTOS - photos.length;
+  if (files.length > room) {
+    setFieldError(photoError, `You can add up to ${MAX_PHOTOS} photos, so only the first ${room} were added.`);
   }
-  try {
-    photoData = await shrinkPhoto(file);
-  } catch {
-    photoData = '';
-    setFieldError(photoError, "That photo can't be opened here. Please try a JPG or PNG.");
+  for (const file of files.slice(0, room)) {
+    if (!file.type.startsWith('image/')) {
+      setFieldError(photoError, 'That file is not a photo. Please pick a picture.');
+      continue;
+    }
+    try {
+      addPhoto(await shrinkPhoto(file));
+    } catch {
+      setFieldError(photoError, "That photo can't be opened here. Please try a JPG or PNG.");
+    }
   }
-  showPhoto();
 }
 
-function removePhoto() {
-  photoData = '';
+function removeAllPhotos() {
+  photos = [];
   if (photoError) setFieldError(photoError, '');
-  showPhoto();
+  showPhotos();
 }
 
 // ---------- Live camera ("Take a photo") ----------
@@ -322,8 +361,7 @@ function openCamera() {
 function snapPhoto() {
   const { videoWidth: width, videoHeight: height } = camera.video;
   if (!width || !height) return;
-  photoData = toSmallJpeg(camera.video, width, height, camera.mirror); // saved exactly as the preview looks
-  showPhoto();
+  addPhoto(toSmallJpeg(camera.video, width, height, camera.mirror)); // saved exactly as the preview looks
   closeCamera();
 }
 
@@ -434,7 +472,7 @@ function validateForm() {
   const entry = { mood, whatHappened, comment };
   const identity = window.MoodSettings.getIdentity();
   if (!identity.anonymous) entry.name = identity.name; // only sent if the student chose it
-  if (photoData) entry.photo = photoData;
+  if (photos.length) entry.photos = [...photos];
   return entry;
 }
 
@@ -502,7 +540,7 @@ async function handleSubmit(event) {
 
 function resetForm() {
   form.reset();
-  removePhoto();
+  removeAllPhotos();
   clearAllErrors();
   highlightSelectedMood();
   updateAllCounters();
@@ -563,7 +601,6 @@ nameInput.addEventListener('blur', showIdentity); // tidy the box (trimmed name)
 if (photoField && window.MoodApi.usesSheet) {
   photoField.hidden = false;
   photoInputs.forEach((input) => input.addEventListener('change', handlePhotoChosen));
-  photoRemove.addEventListener('click', removePhoto);
   document.getElementById('photo-camera-btn').addEventListener('click', openCamera);
 }
 
@@ -577,6 +614,11 @@ async function showPausedMessage() {
     const status = await MoodApi.fetch('/api/status', { cache: 'no-store' }).then((response) => response.json());
     if (status.paused) {
       showStatus('Check-ins are paused by the admin right now. Please come back a bit later! ⏸', 'error');
+    }
+    // "Check photos first" is on: say so under the photo buttons
+    const photoHint = document.getElementById('photo-hint');
+    if (photoHint && status.approvePhotos) {
+      photoHint.textContent = "Photos are checked by an admin before they appear. Please don't post photos of classmates without asking them first.";
     }
   } catch {
     // No status? No problem: sending will still tell the student.

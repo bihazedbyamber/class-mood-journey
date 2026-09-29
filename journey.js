@@ -66,7 +66,7 @@ const els = {
   focusMoodName: document.getElementById('focus-mood-name'),
   focusWhat: document.getElementById('focus-what'),
   focusComment: document.getElementById('focus-comment'),
-  focusPhoto: document.getElementById('focus-photo'),
+  focusPhotos: document.getElementById('focus-photos'),
   focusDate: document.getElementById('focus-date'),
   focusAuthor: document.getElementById('focus-author'),
   focusAdmin: document.getElementById('focus-admin'),
@@ -194,7 +194,8 @@ function cleanEntries(list) {
       name: typeof entry.name === 'string' ? entry.name.trim() : '', // '' = anonymous
       pinned: entry.pinned === true, // pinned by the admin
       demo: entry.demo === true,
-      photo: MoodApi.photoUrl(entry.photo), // '' = no photo
+      photos: MoodApi.photoUrls(entry, 1000), // big versions (opened note); [] = no photos
+      thumbs: MoodApi.photoUrls(entry, 160),  // small versions (on the sticky note)
     }))
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 }
@@ -413,6 +414,37 @@ function placePins(trackWidth, metrics) {
   return { now: nowBox, first: firstBox };
 }
 
+/**
+ * The photo row on a sticky note: up to 3 photos, and when there are more,
+ * a 4th blurred tile that says "+1" / "+2".
+ */
+function createCollage(thumbs) {
+  const collage = document.createElement('span');
+  collage.className = 'note__photos';
+  collage.setAttribute('aria-hidden', 'true'); // the note's label already says it has photos
+  thumbs.slice(0, 4).forEach((src, index) => {
+    const tile = document.createElement('span');
+    tile.className = 'note__photo-tile';
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.draggable = false;
+    tile.append(img);
+    const extra = thumbs.length - 3;
+    if (index === 3 && extra > 0) {
+      tile.classList.add('is-more');
+      const more = document.createElement('span');
+      more.className = 'note__photo-more';
+      more.textContent = `+${extra}`;
+      tile.append(more);
+    }
+    collage.append(tile);
+  });
+  return collage;
+}
+
 /** Creates one sticky note button per note. */
 function drawNotes(positions) {
   els.notes.replaceChildren();
@@ -436,7 +468,8 @@ function drawNotes(positions) {
     const author = entry.name ? `by ${plainText(entry.name)}` : 'anonymous';
     note.setAttribute('aria-label',
       `${entry.pinned ? 'Pinned. ' : ''}${Moods.baseLabel(entry.mood)}, ${author}, ${formatFullDate(date)}: `
-      + `${plainText(entry.whatHappened)}. Open note.`);
+      + `${plainText(entry.whatHappened)}. `
+      + `${entry.photos.length ? `${entry.photos.length} photo${entry.photos.length === 1 ? '' : 's'}. ` : ''}Open note.`);
 
     // Only brand-new notes get the "drop in" animation
     if (!state.seenIds.has(entry.id)) {
@@ -456,14 +489,6 @@ function drawNotes(positions) {
     time.textContent = formatTime(date);
     meta.append(time);
 
-    // A small camera sticker: this note has a photo (shown when the note is opened)
-    if (entry.photo) {
-      const photoTag = document.createElement('span');
-      photoTag.className = 'note__photo';
-      photoTag.textContent = '📷';
-      photoTag.title = 'Has a photo';
-      meta.append(photoTag);
-    }
 
     // Show the name only if the student chose to share it
     if (entry.name) {
@@ -478,7 +503,12 @@ function drawNotes(positions) {
       meta.append(demoTag);
     }
 
-    note.append(text, meta);
+    note.append(text);
+    if (entry.thumbs.length) {
+      note.classList.add('has-photos');
+      note.append(createCollage(entry.thumbs));
+    }
+    note.append(meta);
     note.addEventListener('click', () => openNote(position, note));
     slot.append(note);
     els.notes.append(slot);
@@ -596,10 +626,23 @@ function fillFocusCard(entry) {
   else els.focusComment.textContent = 'No extra comment.';
   els.focusComment.classList.toggle('is-empty', !entry.comment);
 
-  // The photo (if the note has one)
-  els.focusPhoto.hidden = !entry.photo;
-  if (entry.photo) els.focusPhoto.src = entry.photo;
-  else els.focusPhoto.removeAttribute('src');
+  // All the photos (up to 5); tap one to open it full size
+  els.focusPhotos.replaceChildren();
+  els.focusPhotos.hidden = entry.photos.length === 0;
+  els.focusPhotos.dataset.count = String(entry.photos.length);
+  entry.photos.forEach((src, index) => {
+    const link = document.createElement('a');
+    link.className = 'focus-photos__item';
+    link.href = src.replace(/sz=w\d+/, 'sz=w2000');
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `Photo ${index + 1} of ${entry.photos.length}`;
+    img.referrerPolicy = 'no-referrer';
+    link.append(img);
+    els.focusPhotos.append(link);
+  });
   els.focusDate.textContent = formatFullDate(date);
   els.focusDate.dateTime = entry.timestamp;
 

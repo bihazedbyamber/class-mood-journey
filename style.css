@@ -5719,3 +5719,188 @@ body.is-dragging-note .pile {
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+
+/* ===== Up to 5 photos per note ===== */
+
+/* Check-in: counter next to the buttons, and the chosen photos with a ✕ each */
+.photo-count {
+  align-self: center;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.photo-picker.is-full .photo-btn {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.photo-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.photo-previews[hidden] {
+  display: none;
+}
+
+.photo-previews__item {
+  position: relative;
+  width: 88px;
+  height: 88px;
+}
+
+.photo-previews__item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-s);
+}
+
+.photo-previews__remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--error);
+  border: 2px solid #151515;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Sticky note: 1 line of text + a row of up to 4 small squares */
+.note.has-photos .note__text {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.note__photos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+  margin: 3px 0 2px;
+}
+
+.note__photo-tile {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.12);
+  border: 1.5px solid var(--note-line);
+  border-radius: 3px;
+}
+
+.note__photo-tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The 4th tile: blurred, with "+1" / "+2" on top */
+.note__photo-tile.is-more img {
+  filter: blur(2.5px);
+  transform: scale(1.15);
+}
+
+.note__photo-more {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+/* Opened note: every photo, tap one to open it big */
+.focus-photos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+
+.focus-photos[hidden] {
+  display: none;
+}
+
+.focus-photos[data-count="1"] {
+  grid-template-columns: 1fr;
+}
+
+/* An odd number: the first photo gets the full width */
+.focus-photos[data-count="3"] .focus-photos__item:first-child,
+.focus-photos[data-count="5"] .focus-photos__item:first-child {
+  grid-column: 1 / -1;
+}
+
+.focus-photos__item {
+  display: block;
+}
+
+.focus-photos__item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.06);
+  border: 2px solid var(--note-line);
+  border-radius: var(--radius-sm);
+}
+
+.focus-photos[data-count="1"] .focus-photos__item img {
+  aspect-ratio: auto;
+  max-height: 42vh;
+  object-fit: contain;
+}
+
+/* Admin desk: small grid of all photos */
+.admin-note__photos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.admin-note__photos[data-count="1"] {
+  grid-template-columns: 1fr;
+}
+
+.admin-note__photos .admin-note__photo {
+  margin: 0;
+}
+
+.admin-note__photos .admin-note__photo img {
+  aspect-ratio: 1;
+  max-height: none;
+}
+
+.admin-note__photos[data-count="1"] .admin-note__photo img {
+  aspect-ratio: auto;
+  max-height: 180px;
+}
+
+:root[data-style="modern-2026"] .note__photo-tile,
+:root[data-style="modern-bold"] .note__photo-tile,
+:root[data-style="modern-2026"] .focus-photos__item img,
+:root[data-style="modern-bold"] .focus-photos__item img,
+:root[data-style="modern-2026"] .photo-previews__item img,
+:root[data-style="modern-bold"] .photo-previews__item img {
+  border-radius: 0;
+}
