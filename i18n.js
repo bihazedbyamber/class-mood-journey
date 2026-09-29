@@ -64,6 +64,23 @@ window.MoodI18n = (function createI18n() {
     'Pick a face and say what happened. Takes 30 seconds.': 'Pilih wajah dan ceritakan apa yang terjadi. Cuma 30 detik.',
     "Read everyone's sticky notes, newest first.": 'Baca sticky note semua orang, yang terbaru duluan.',
     'Tap here': 'Ketuk di sini',
+    // photos
+    'Add a photo?': 'Tambah foto?',
+    'Take a photo': 'Ambil foto',
+    'Choose a photo': 'Pilih foto',
+    'Your photo': 'Fotomu',
+    'Remove photo': 'Hapus foto',
+    "Photos are checked by an admin before they appear. Please don't post photos of classmates without asking them first.":
+      'Foto dicek admin dulu sebelum muncul. Jangan unggah foto teman tanpa izin mereka ya.',
+    'That file is not a photo. Please pick a picture.': 'File itu bukan foto. Pilih gambar ya.',
+    "That photo can't be opened here. Please try a JPG or PNG.": 'Foto itu tidak bisa dibuka di sini. Coba JPG atau PNG.',
+    'Has a photo': 'Ada fotonya',
+    'Photo shared with this note': 'Foto yang dikirim bersama catatan ini',
+    'Photo sent with this note': 'Foto yang dikirim bersama catatan ini',
+    '📷 Photo': '📷 Foto',
+    'That photo could not be used. Please try another one.': 'Foto itu tidak bisa dipakai. Coba foto lain ya.',
+    'That photo is too big. Please try another one.': 'Foto itu terlalu besar. Coba foto lain ya.',
+    'Lots of photos at once! Please wait a minute and try again.': 'Banyak foto sekaligus! Tunggu semenit lalu coba lagi.',
     '✦ MY MOOD': '✦ MOOD-KU',
     '✦ 30 SECONDS': '✦ 30 DETIK',
     'Science experiment!': 'Eksperimen sains!',
@@ -420,7 +437,7 @@ window.MoodI18n = (function createI18n() {
 
   // ---------- Swapping the text on the page ----------
 
-  const ATTRIBUTES = ['placeholder', 'aria-label', 'title', 'data-name', 'data-tab', 'data-tab-2'];
+  const ATTRIBUTES = ['placeholder', 'aria-label', 'title', 'alt', 'data-name', 'data-tab', 'data-tab-2'];
   // Students' own words: never translated (the *censored* stickers inside still are)
   const USER_TEXT = '.note__text, .note__name, #focus-what, #focus-comment:not(.is-empty), '
     + '.admin-note__what, .admin-note__comment:not(.is-empty), .pile__sheet, [data-no-translate]';

@@ -5566,3 +5566,88 @@ body.is-dragging-note .pile {
     transform: none;
   }
 }
+
+
+/* ===== Photos: check-in buttons + preview, big note, admin desk ===== */
+.photo-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.photo-btn {
+  cursor: pointer;
+}
+
+/* The real file input is hidden inside the label; show focus on the button */
+.photo-btn:focus-within {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.photo-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.photo-preview img {
+  display: block;
+  max-width: min(260px, 100%);
+  max-height: 220px;
+  object-fit: cover;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-s);
+}
+
+.photo-hint {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.note__photo {
+  margin-left: 4px;
+  font-size: 0.9em;
+}
+
+.focus-photo {
+  display: block;
+  width: 100%;
+  max-height: 42vh;
+  margin: 4px 0 12px;
+  object-fit: contain;
+  background: rgba(0, 0, 0, 0.06);
+  border: 2px solid var(--note-line);
+  border-radius: var(--radius-sm);
+}
+
+.focus-photo[hidden] {
+  display: none;
+}
+
+.admin-note__photo {
+  display: block;
+  margin: 6px 0;
+}
+
+.admin-note__photo img {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border: 2px solid var(--note-line);
+  border-radius: var(--radius-sm);
+}
+
+:root[data-style="modern-2026"] .photo-preview img,
+:root[data-style="modern-2026"] .focus-photo,
+:root[data-style="modern-2026"] .admin-note__photo img,
+:root[data-style="modern-bold"] .photo-preview img,
+:root[data-style="modern-bold"] .focus-photo,
+:root[data-style="modern-bold"] .admin-note__photo img {
+  border-radius: 0;
+}

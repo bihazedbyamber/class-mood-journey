@@ -424,6 +424,7 @@ function createNoteCard(entry) {
     [hasSwearWords, 'Swear words', 'badge--flag'],
     [entry.hidden, 'Hidden', 'badge--hidden'],
     [entry.pinned, 'Pinned', 'badge--pinned'],
+    [Boolean(entry.photo), '📷 Photo', 'badge--photo'],
   ];
   for (const [show, text, extraClass] of badges) {
     if (!show) continue;
@@ -441,6 +442,25 @@ function createNoteCard(entry) {
   comment.className = 'admin-note__comment';
   comment.textContent = entry.comment || 'No comment.';
   comment.classList.toggle('is-empty', !entry.comment);
+
+  // The photo, so the admin can check it before approving (click = open it big)
+  const photoSrc = MoodApi.photoUrl(entry.photo, 600);
+  let photo = null;
+  if (photoSrc) {
+    photo = document.createElement('a');
+    photo.className = 'admin-note__photo';
+    photo.href = MoodApi.photoUrl(entry.photo, 1600);
+    photo.target = '_blank';
+    photo.rel = 'noopener noreferrer';
+    photo.draggable = false;
+    const img = document.createElement('img');
+    img.src = photoSrc;
+    img.alt = 'Photo sent with this note';
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.draggable = false;
+    photo.append(img);
+  }
 
   const meta = document.createElement('p');
   meta.className = 'admin-note__meta';
@@ -465,7 +485,7 @@ function createNoteCard(entry) {
     createButton('Delete', 'mini-btn mini-btn--danger', () => deleteNote(entry), 'trash'),
   );
 
-  card.append(head, what, comment, meta, actions);
+  card.append(head, what, comment, ...(photo ? [photo] : []), meta, actions);
 
   // Drag the note onto a pile
   card.addEventListener('dragstart', (event) => {

@@ -14,7 +14,10 @@
  *   2. Project Settings > Script properties > add ADMIN_PASSWORD.
  *   3. Deploy > Web app (Execute as: Me, Who has access: Anyone).
  *
- * First tab, header row:  Timestamp | Mood | WhatHappened | Comment | Name | Id
+ * First tab, header row:  Timestamp | Mood | WhatHappened | Comment | Name | Id | Photo
+ * Photos are saved in a Google Drive folder "Class Mood Journey photos";
+ * the Photo column holds the Drive file id. Notes with a photo always wait
+ * for an admin to approve them.
  *
  * How the website calls it:
  *   GET  ?action=entries                     -> visible notes + status
@@ -27,8 +30,11 @@
  * browser "CORS" problems with Apps Script.
  * ===================================================================== */
 
-var HEADERS = ['Timestamp', 'Mood', 'WhatHappened', 'Comment', 'Name', 'Id'];
+var HEADERS = ['Timestamp', 'Mood', 'WhatHappened', 'Comment', 'Name', 'Id', 'Photo'];
 var LIMITS = { whatHappened: 80, comment: 300, name: 24, pileName: 30, maxPiles: 20, word: 30, maxWords: 300 };
+var MAX_PHOTO_CHARS = 1500000;       // a photo (as text) may be at most ~1.1 MB; the website shrinks it first
+var MAX_PHOTOS_PER_MINUTE = 10;      // photos are heavier, so a smaller brake
+var PHOTO_FOLDER_NAME = 'Class Mood Journey photos';
 var PILE_COLORS = ['yellow', 'pink', 'blue', 'green', 'orange', 'purple'];
 var SESSION_SECONDS = 6 * 60 * 60;   // admin stays logged in for 6 hours (the most Apps Script allows)
 var MAX_POSTS_PER_MINUTE = 40;       // spam brake for the whole class
@@ -85,6 +91,8 @@ function getSheet_() {
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
     sheet.setFrozenRows(1);
+  } else if (sheet.getRange(1, 7).getValue() === '') {
+    sheet.getRange(1, 7).setValue('Photo'); // older Sheets: add the new Photo column header
   }
   return sheet;
 }
@@ -106,7 +114,8 @@ function readEntries_() {
       mood: mood,
       whatHappened: String(row[2]),
       comment: String(row[3]),
-      name: String(row[4] || '')
+      name: String(row[4] || ''),
+      photo: String(row[6] || '') // Google Drive file id ('' = no photo)
     });
   });
   entries.sort(function (a, b) { return a.timestamp < b.timestamp ? -1 : 1; });
@@ -128,6 +137,13 @@ function submit_(body) {
   cache.put(minuteKey, String(posts + 1), 120);
 
   var entry = validateEntry_(body);
+  var photoBytes = body.photo ? checkPhoto_(body.photo) : null;
+  if (photoBytes) {
+    var photoKey = 'photos-' + Math.floor(Date.now() / 60000);
+    var photoCount = Number(cache.get(photoKey) || 0);
+    if (photoCount >= MAX_PHOTOS_PER_MINUTE) throw error_(429, 'Lots of photos at once! Please wait a minute and try again.');
+    cache.put(photoKey, String(photoCount + 1), 120);
+  }
   var admin = loadAdmin_();
   if (admin.settings.paused) throw error_(423, 'Check-ins are paused by the admin right now. Please try again later.');
   if (admin.settings.blockedWords.length) {
@@ -137,13 +153,18 @@ function submit_(body) {
     }
   }
 
+  var now = new Date();
+  var id = Utilities.getUuid();
+  // Save the photo in Google Drive first (outside the lock, it can take a moment)
+  var photoId = photoBytes ? savePhoto_(photoBytes, id) : '';
+
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    var now = new Date();
-    var id = Utilities.getUuid();
-    getSheet_().appendRow([now, entry.mood, asPlainText_(entry.whatHappened), asPlainText_(entry.comment), asPlainText_(entry.name), id]);
-    var pending = Boolean(admin.settings.requireApproval);
+    getSheet_().appendRow([now, entry.mood, asPlainText_(entry.whatHappened), asPlainText_(entry.comment),
+      asPlainText_(entry.name), id, photoId]);
+    // Photos are always checked by an admin first: the censor can't look at pictures
+    var pending = Boolean(admin.settings.requireApproval) || Boolean(photoId);
     if (pending) {
       var fresh = loadAdmin_();
       fresh.notes[id] = { pending: true };
@@ -152,7 +173,7 @@ function submit_(body) {
     return {
       ok: true,
       entry: { id: id, timestamp: now.toISOString(), mood: entry.mood, whatHappened: entry.whatHappened,
-        comment: entry.comment, name: entry.name, pending: pending }
+        comment: entry.comment, name: entry.name, photo: photoId, pending: pending }
     };
   } finally {
     lock.releaseLock();
@@ -171,6 +192,64 @@ function validateEntry_(body) {
   if (comment.length > LIMITS.comment) throw error_(400, 'The comment can be at most ' + LIMITS.comment + ' characters.');
   if (name.length > LIMITS.name) throw error_(400, 'The name can be at most ' + LIMITS.name + ' characters.');
   return { mood: mood, whatHappened: whatHappened, comment: comment, name: name };
+}
+
+// ---------- Photos (saved in a Google Drive folder) ----------
+
+/**
+ * Checks a photo sent by the website: it must be a JPEG (the website
+ * converts every photo to JPEG and shrinks it) and not too big.
+ * Returns its bytes, or throws a friendly error.
+ */
+function checkPhoto_(photo) {
+  var prefix = 'data:image/jpeg;base64,';
+  if (typeof photo !== 'string' || photo.indexOf(prefix) !== 0) throw error_(400, 'That photo could not be used. Please try another one.');
+  if (photo.length > MAX_PHOTO_CHARS) throw error_(400, 'That photo is too big. Please try another one.');
+  var bytes;
+  try {
+    bytes = Utilities.base64Decode(photo.slice(prefix.length));
+  } catch (err) {
+    throw error_(400, 'That photo could not be used. Please try another one.');
+  }
+  // Every JPEG starts with the bytes FF D8 FF
+  if (bytes.length < 100 || bytes[0] !== -1 || bytes[1] !== -40 || bytes[2] !== -1) {
+    throw error_(400, 'That photo could not be used. Please try another one.');
+  }
+  return bytes;
+}
+
+/** The Drive folder for photos (made the first time, then remembered). */
+function getPhotoFolder_() {
+  var props = PropertiesService.getScriptProperties();
+  var folderId = props.getProperty('PHOTO_FOLDER_ID');
+  if (folderId) {
+    try {
+      var existing = DriveApp.getFolderById(folderId);
+      if (!existing.isTrashed()) return existing;
+    } catch (err) { /* folder was deleted: make a new one */ }
+  }
+  var folder = DriveApp.createFolder(PHOTO_FOLDER_NAME);
+  props.setProperty('PHOTO_FOLDER_ID', folder.getId());
+  return folder;
+}
+
+/**
+ * Saves the photo and lets anyone with the link view it (so the website
+ * can show it). Returns the Drive file id.
+ */
+function savePhoto_(bytes, noteId) {
+  var blob = Utilities.newBlob(bytes, 'image/jpeg', 'mood-' + noteId + '.jpg');
+  var file = getPhotoFolder_().createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return file.getId();
+}
+
+/** Moves a note's photo to the Drive trash (if it has one). */
+function trashPhoto_(fileId) {
+  if (!fileId) return;
+  try {
+    DriveApp.getFileById(fileId).setTrashed(true);
+  } catch (err) { /* already gone */ }
 }
 
 /** Trims text and removes invisible control characters. */
@@ -374,7 +453,10 @@ function deleteNote_(data, body) {
       if (String(ids[i][0]) === id) { row = i + 2; break; }
     }
   }
-  if (row >= 2 && row <= lastRow) sheet.deleteRow(row);
+  if (row >= 2 && row <= lastRow) {
+    trashPhoto_(String(sheet.getRange(row, 7).getValue() || ''));
+    sheet.deleteRow(row);
+  }
   delete data.notes[id];
   return { ok: true };
 }

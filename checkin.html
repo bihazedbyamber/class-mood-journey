@@ -13,16 +13,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;family=Nunito:wght@400;600;700&amp;family=Patrick+Hand&amp;family=Jersey+10&amp;family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;family=Gochi+Hand&amp;family=Anton&amp;family=Archivo:wght@400;500;600;800;900&amp;family=Permanent+Marker&amp;display=swap">
-  <link rel="stylesheet" href="style.css?v=20260929">
+  <link rel="stylesheet" href="style.css?v=20260929b">
 
   <!-- settings.js has no "defer": it must pick theme + style before the page is drawn -->
-  <script src="settings.js?v=20260929"></script>
-  <script src="i18n.js?v=20260929"></script>
-  <script src="site-config.js?v=20260929"></script>
-  <script src="api.js?v=20260929"></script>
-  <script src="moods.js?v=20260929" defer></script>
-  <script src="admin-login.js?v=20260929" defer></script>
-  <script type="module" src="input.js?v=20260929"></script>
+  <script src="settings.js?v=20260929b"></script>
+  <script src="i18n.js?v=20260929b"></script>
+  <script src="site-config.js?v=20260929b"></script>
+  <script src="api.js?v=20260929b"></script>
+  <script src="moods.js?v=20260929b" defer></script>
+  <script src="admin-login.js?v=20260929b" defer></script>
+  <script type="module" src="input.js?v=20260929b"></script>
 </head>
 <body class="page-input">
 
@@ -179,6 +179,31 @@ just honest vibes</span>
             <p class="field-error" id="comment-error" aria-live="polite"></p>
             <span class="counter" id="comment-counter">0 / 300</span>
           </div>
+        </div>
+
+        <!-- Optional photo: camera (phones) or a picture from the gallery.
+             Only shown when the site is connected to the Google Sheet (input.js). -->
+        <div class="field photo-field" id="photo-field" hidden>
+          <span class="field-label" id="photo-label">
+            <span class="step" aria-hidden="true">04</span> Add a photo?
+            <span class="optional">optional</span>
+          </span>
+          <div class="photo-picker" id="photo-picker" role="group" aria-labelledby="photo-label">
+            <label class="btn photo-btn">
+              <input type="file" class="visually-hidden" id="photo-camera" accept="image/*" capture="environment">
+              <span aria-hidden="true">📷</span> Take a photo
+            </label>
+            <label class="btn photo-btn">
+              <input type="file" class="visually-hidden" id="photo-file" accept="image/*">
+              <span aria-hidden="true">🖼</span> Choose a photo
+            </label>
+          </div>
+          <div class="photo-preview" id="photo-preview" hidden>
+            <img id="photo-preview-img" alt="Your photo">
+            <button type="button" class="mini-btn mini-btn--danger" id="photo-remove">Remove photo</button>
+          </div>
+          <p class="photo-hint">Photos are checked by an admin before they appear. Please don't post photos of classmates without asking them first.</p>
+          <p class="field-error" id="photo-error" aria-live="polite"></p>
         </div>
 
         <!-- Who the note is from: a quick switch, right here in the form -->

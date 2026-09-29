@@ -115,7 +115,8 @@ const SECURITY_HEADERS = {
     "style-src 'self' https://fonts.googleapis.com https://api.fontshare.com",
     // Fontshare links its fonts without http/https, so allow the host on both
     'font-src https://fonts.gstatic.com cdn.fontshare.com https://cdn.fontshare.com',
-    "img-src 'self' data:",
+    // Note photos live in Google Drive (drive.google.com redirects to googleusercontent.com)
+    "img-src 'self' data: blob: https://drive.google.com https://*.googleusercontent.com",
     // Google too, for when site-config.js has an Apps Script URL (pages then talk to the Sheet directly)
     "connect-src 'self' https://script.google.com https://script.googleusercontent.com",
     "base-uri 'none'",

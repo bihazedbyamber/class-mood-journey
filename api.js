@@ -111,8 +111,18 @@
     return answer(await callScript(path, method, body));
   }
 
+  /**
+   * Where a note's photo can be seen. The Sheet only stores the Google Drive
+   * file id; anything that doesn't look like one is ignored.
+   */
+  function photoUrl(fileId, width = 1000) {
+    if (typeof fileId !== 'string' || !/^[\w-]{20,100}$/.test(fileId)) return '';
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${width}`;
+  }
+
   root.MoodApi = {
     fetch: apiFetch,
+    photoUrl,
     usesSheet: Boolean(SCRIPT_URL),
   };
 })(typeof self !== 'undefined' ? self : this);

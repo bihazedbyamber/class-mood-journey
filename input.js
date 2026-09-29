@@ -65,8 +65,18 @@ const submitLabel = submitButton.querySelector('.btn__label');
 const thankYouBox = document.getElementById('thank-you');
 const thankYouMessage = document.getElementById('thank-you-message');
 const againButton = document.getElementById('again-btn');
+const photoField = document.getElementById('photo-field');         // only on checkin.html
+const photoInputs = [document.getElementById('photo-camera'), document.getElementById('photo-file')].filter(Boolean);
+const photoPreview = document.getElementById('photo-preview');
+const photoPreviewImg = document.getElementById('photo-preview-img');
+const photoRemove = document.getElementById('photo-remove');
+const photoError = document.getElementById('photo-error');
+
+/** Photos are shrunk to this many pixels on the longest side before sending. */
+const PHOTO_MAX_SIDE = 1280;
 
 let isSending = false;
+let photoData = ''; // the chosen photo as a small JPEG ("data:image/jpeg;base64,..."), '' = none
 
 // ---------- Mood faces ----------
 
@@ -148,6 +158,74 @@ function showIdentity() {
 function chooseIdentity(choice) {
   window.MoodSettings.setIdentity(choice);
   if (choice === 'named') nameInput.focus();
+}
+
+// ---------- Photo ----------
+
+/** Loads a picture file into an <img> (works for JPG, PNG, WebP and most phone photos). */
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('unreadable')); };
+    img.src = url;
+  });
+}
+
+/**
+ * Shrinks the photo and turns it into a JPEG. Redrawing it this way also
+ * drops hidden details phones add to photos (like the GPS location).
+ */
+async function shrinkPhoto(file) {
+  const img = await loadImage(file);
+  const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  const context = canvas.getContext('2d');
+  context.fillStyle = '#ffffff'; // see-through PNGs get a white background
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(img, 0, 0, canvas.width, canvas.height);
+  let quality = 0.82;
+  let data = canvas.toDataURL('image/jpeg', quality);
+  while (data.length > 1400000 && quality > 0.4) { // stay under the Sheet's limit
+    quality -= 0.12;
+    data = canvas.toDataURL('image/jpeg', quality);
+  }
+  return data;
+}
+
+function showPhoto() {
+  if (!photoField) return;
+  photoPreview.hidden = !photoData;
+  if (photoData) photoPreviewImg.src = photoData;
+  else photoPreviewImg.removeAttribute('src');
+}
+
+async function handlePhotoChosen(event) {
+  const input = event.target;
+  const file = input.files && input.files[0];
+  input.value = ''; // so choosing the same photo again still works
+  if (!file) return;
+  setFieldError(photoError, '');
+  if (!file.type.startsWith('image/')) {
+    setFieldError(photoError, 'That file is not a photo. Please pick a picture.');
+    return;
+  }
+  try {
+    photoData = await shrinkPhoto(file);
+  } catch {
+    photoData = '';
+    setFieldError(photoError, "That photo can't be opened here. Please try a JPG or PNG.");
+  }
+  showPhoto();
+}
+
+function removePhoto() {
+  photoData = '';
+  if (photoError) setFieldError(photoError, '');
+  showPhoto();
 }
 
 // ---------- Counters and errors ----------
@@ -232,6 +310,7 @@ function validateForm() {
   const entry = { mood, whatHappened, comment };
   const identity = window.MoodSettings.getIdentity();
   if (!identity.anonymous) entry.name = identity.name; // only sent if the student chose it
+  if (photoData) entry.photo = photoData;
   return entry;
 }
 
@@ -299,6 +378,7 @@ async function handleSubmit(event) {
 
 function resetForm() {
   form.reset();
+  removePhoto();
   clearAllErrors();
   highlightSelectedMood();
   updateAllCounters();
@@ -354,6 +434,13 @@ identityButtons.forEach((button) => {
 });
 nameInput.addEventListener('input', () => window.MoodSettings.setName(nameInput.value));
 nameInput.addEventListener('blur', showIdentity); // tidy the box (trimmed name) when leaving it
+
+// Photo buttons (photos need the Google Sheet version of the site, not the local server)
+if (photoField && window.MoodApi.usesSheet) {
+  photoField.hidden = false;
+  photoInputs.forEach((input) => input.addEventListener('change', handlePhotoChosen));
+  photoRemove.addEventListener('click', removePhoto);
+}
 
 form.addEventListener('submit', handleSubmit);
 againButton.addEventListener('click', showFormAgain);

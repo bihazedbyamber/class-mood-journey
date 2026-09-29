@@ -66,6 +66,7 @@ const els = {
   focusMoodName: document.getElementById('focus-mood-name'),
   focusWhat: document.getElementById('focus-what'),
   focusComment: document.getElementById('focus-comment'),
+  focusPhoto: document.getElementById('focus-photo'),
   focusDate: document.getElementById('focus-date'),
   focusAuthor: document.getElementById('focus-author'),
   focusAdmin: document.getElementById('focus-admin'),
@@ -193,6 +194,7 @@ function cleanEntries(list) {
       name: typeof entry.name === 'string' ? entry.name.trim() : '', // '' = anonymous
       pinned: entry.pinned === true, // pinned by the admin
       demo: entry.demo === true,
+      photo: MoodApi.photoUrl(entry.photo), // '' = no photo
     }))
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 }
@@ -454,6 +456,15 @@ function drawNotes(positions) {
     time.textContent = formatTime(date);
     meta.append(time);
 
+    // A small camera sticker: this note has a photo (shown when the note is opened)
+    if (entry.photo) {
+      const photoTag = document.createElement('span');
+      photoTag.className = 'note__photo';
+      photoTag.textContent = '📷';
+      photoTag.title = 'Has a photo';
+      meta.append(photoTag);
+    }
+
     // Show the name only if the student chose to share it
     if (entry.name) {
       const nameTag = document.createElement('span');
@@ -584,6 +595,11 @@ function fillFocusCard(entry) {
   if (entry.comment) fillText(els.focusComment, entry.comment);
   else els.focusComment.textContent = 'No extra comment.';
   els.focusComment.classList.toggle('is-empty', !entry.comment);
+
+  // The photo (if the note has one)
+  els.focusPhoto.hidden = !entry.photo;
+  if (entry.photo) els.focusPhoto.src = entry.photo;
+  else els.focusPhoto.removeAttribute('src');
   els.focusDate.textContent = formatFullDate(date);
   els.focusDate.dateTime = entry.timestamp;
 
