@@ -126,7 +126,7 @@ const SECURITY_HEADERS = {
     // Note photos live in Google Drive (drive.google.com redirects to googleusercontent.com)
     "img-src 'self' data: blob: https://drive.google.com https://*.googleusercontent.com",
     // Google too, for when site-config.js has an Apps Script URL (pages then talk to the Sheet directly)
-    "connect-src 'self' https://script.google.com https://script.googleusercontent.com https://accounts.google.com",
+    "connect-src 'self' https://script.google.com https://script.googleusercontent.com https://accounts.google.com https://lh3.googleusercontent.com",
     "base-uri 'none'",
     "form-action 'self'",
     "frame-ancestors 'none'",

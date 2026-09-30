@@ -153,7 +153,10 @@ function createCard(note) {
     img.referrerPolicy = 'no-referrer';
     photo.append(img);
     if (photos.length > 1) photo.append(el('span', 'wall-card__more', `📷 ${photos.length}`));
-    photo.addEventListener('click', () => MoodLightbox.open(MoodApi.photoUrls(note, 2000), 0, img));
+    photo.addEventListener('click', () => MoodLightbox.open(MoodApi.photoUrls(note, 2000), 0, img, {
+      downloads: MoodApi.photoIds(note).map((id) => MoodApi.photoFullUrl(id)),
+      fileName: (index) => `moodboard-${String(note.timestamp).slice(0, 10)}-photo-${index + 1}`,
+    }));
     card.append(photo);
   }
 

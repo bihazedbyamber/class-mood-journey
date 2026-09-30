@@ -137,11 +137,23 @@ window.MoodShareCard = (function createShareCard() {
    * Where each photo goes in a collage of n photos (1-5), inside x/y/w/h:
    *   1: one big   2: side by side   3: one big left + two stacked right
    *   4: a 2x2 grid   5: two on top + three below
+   * wide = the photos are mostly landscape: then 2 are stacked in rows and
+   * 3 are one big on top + two below, so landscape photos aren't squeezed.
    */
-  function collageCells(n, x, y, w, h, gap) {
+  function collageCells(n, x, y, w, h, gap, wide = false) {
     const half = (size) => (size - gap) / 2;
     const third = (w - gap * 2) / 3;
     if (n <= 1) return [{ x, y, w, h }];
+    if (n === 2 && wide) return [{ x, y, w, h: half(h) }, { x, y: y + half(h) + gap, w, h: half(h) }];
+    if (n === 3 && wide) {
+      const bigH = (h - gap) * 0.6;
+      const smallH = h - gap - bigH;
+      return [
+        { x, y, w, h: bigH },
+        { x, y: y + bigH + gap, w: half(w), h: smallH },
+        { x: x + half(w) + gap, y: y + bigH + gap, w: half(w), h: smallH },
+      ];
+    }
     if (n === 2) return [{ x, y, w: half(w), h }, { x: x + half(w) + gap, y, w: half(w), h }];
     if (n === 3) {
       const bigW = (w - gap) * 0.6;
@@ -160,6 +172,139 @@ window.MoodShareCard = (function createShareCard() {
       { x: x + half(w) + gap, y, w: half(w), h: half(h) },
       ...[0, 1, 2].map((i) => ({ x: x + i * (third + gap), y: y + half(h) + gap, w: third, h: half(h) })),
     ];
+  }
+
+  /** Width / height of a photo after turning it (90° or 270° swaps the sides). */
+  function turnedAspect(img, rotate) {
+    const quarter = (rotate / 90) % 2 === 1;
+    return quarter ? img.naturalHeight / img.naturalWidth : img.naturalWidth / img.naturalHeight;
+  }
+
+  /**
+   * Draws one photo into a box, with the choices from the share window:
+   *   rotate: 0 / 90 / 180 / 270
+   *   fit: 'fill' (cover the box, cropping the rest) or 'fit' (whole photo, uncropped)
+   *   pos: which part stays when it's cropped: 'center', 'start' (left/top) or 'end'
+   */
+  function drawPhoto(ctx, img, box, edit = {}) {
+    const rotate = [0, 90, 180, 270].includes(edit.rotate) ? edit.rotate : 0;
+    const fit = edit.fit === 'fit' ? 'fit' : 'fill';
+    const quarter = (rotate / 90) % 2 === 1;
+    // In the turned picture's own direction, the box is w x h (or h x w when turned a quarter)
+    const bw = quarter ? box.h : box.w;
+    const bh = quarter ? box.w : box.h;
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+    const scale = fit === 'fit' ? Math.min(bw / iw, bh / ih) : Math.max(bw / iw, bh / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    let dx = -dw / 2;
+    let dy = -dh / 2;
+    if (fit === 'fill') { // move the crop
+      if (edit.pos === 'start') { if (dw > bw) dx = -bw / 2; if (dh > bh) dy = -bh / 2; }
+      if (edit.pos === 'end') { if (dw > bw) dx = bw / 2 - dw; if (dh > bh) dy = bh / 2 - dh; }
+    }
+    // Drawn on its own small canvas first, so the filter only touches the photo
+    const off = document.createElement('canvas');
+    off.width = Math.max(1, Math.round(box.w));
+    off.height = Math.max(1, Math.round(box.h));
+    const octx = off.getContext('2d', { willReadFrequently: true });
+    if (fit === 'fit') { // soft background around an uncropped photo
+      octx.fillStyle = '#ece8df';
+      octx.fillRect(0, 0, off.width, off.height);
+    }
+    octx.translate(off.width / 2, off.height / 2);
+    octx.rotate((rotate * Math.PI) / 180);
+    octx.drawImage(img, dx, dy, dw, dh);
+    octx.setTransform(1, 0, 0, 1, 0, 0);
+    applyFilter(octx, off.width, off.height, edit.filter, edit.tint);
+    ctx.drawImage(off, box.x, box.y, box.w, box.h);
+  }
+
+  // ---------- Photo filters ----------
+
+  const FILTERS = ['normal', 'saturated', 'bw', 'mono', 'texture'];
+
+  function hexToRgb(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return [255, 225, 74];
+    const n = parseInt(m[1], 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  /** Same "random" grain every redraw, so the picture doesn't flicker. */
+  function seededRandom(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let r = Math.imul(a ^ (a >>> 15), 1 | a);
+      r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /**
+   * saturated = stronger colours, bw = punchy black & white,
+   * mono = one colour (dark ink → the picture's colour), texture = faded film with grain.
+   */
+  function applyFilter(ctx, w, h, filter, tint) {
+    if (!FILTERS.includes(filter) || filter === 'normal') return;
+    let image;
+    try {
+      image = ctx.getImageData(0, 0, w, h);
+    } catch {
+      return; // the photo couldn't be read: leave it as it is
+    }
+    const d = image.data;
+    const clamp = (v) => (v < 0 ? 0 : v > 255 ? 255 : v);
+    const [tr, tg, tb] = hexToRgb(tint);
+    // Mono: shadows = very dark version of the colour, highlights = light version of it
+    const dark = [tr * 0.12, tg * 0.12, tb * 0.12];
+    const light = [tr + (255 - tr) * 0.55, tg + (255 - tg) * 0.55, tb + (255 - tb) * 0.55];
+    const random = seededRandom(w * 7919 + h);
+    for (let i = 0; i < d.length; i += 4) {
+      let r = d[i];
+      let g = d[i + 1];
+      let b = d[i + 2];
+      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+      if (filter === 'saturated') {
+        r = lum + (r - lum) * 1.75;
+        g = lum + (g - lum) * 1.75;
+        b = lum + (b - lum) * 1.75;
+        r = (r - 128) * 1.08 + 128;
+        g = (g - 128) * 1.08 + 128;
+        b = (b - 128) * 1.08 + 128;
+      } else if (filter === 'bw') {
+        r = g = b = (lum - 128) * 1.35 + 128;
+      } else if (filter === 'mono') {
+        const k = clamp((lum - 128) * 1.15 + 128) / 255;
+        r = dark[0] + (light[0] - dark[0]) * k;
+        g = dark[1] + (light[1] - dark[1]) * k;
+        b = dark[2] + (light[2] - dark[2]) * k;
+      } else if (filter === 'texture') {
+        const grain = (random() - 0.5) * 46;
+        r = r * 0.86 + 26 + 8 + grain; // faded blacks, a bit warm
+        g = g * 0.86 + 26 + 2 + grain;
+        b = b * 0.86 + 26 - 8 + grain;
+      }
+      d[i] = clamp(r);
+      d[i + 1] = clamp(g);
+      d[i + 2] = clamp(b);
+    }
+    ctx.putImageData(image, 0, 0);
+    if (filter === 'texture') { // soft dark corners + a few dust specks
+      const glow = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.hypot(w, h) / 2);
+      glow.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      glow.addColorStop(1, 'rgba(40, 25, 10, 0.35)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, w, h);
+      for (let s = 0; s < Math.round((w * h) / 9000); s += 1) {
+        ctx.fillStyle = random() < 0.5 ? 'rgba(255, 250, 235, 0.55)' : 'rgba(30, 20, 10, 0.35)';
+        ctx.beginPath();
+        ctx.arc(random() * w, random() * h, 0.6 + random() * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
   }
 
   /** Draws an image like CSS object-fit: cover. */
@@ -253,15 +398,21 @@ window.MoodShareCard = (function createShareCard() {
     const parts = window.Moods.parts(entry.mood);
     // Which photos: 'all' (collage, the default), one photo (its number), or 'none'
     const ids = (entry.photoIds || []).slice(0, 5);
-    let chosen = ids;
+    let chosen = ids.map((id, index) => index); // photo numbers in the note
     if (options.photos === 'none') chosen = [];
-    else if (Number.isInteger(options.photos) && ids[options.photos]) chosen = [ids[options.photos]];
+    else if (Number.isInteger(options.photos) && ids[options.photos]) chosen = [options.photos];
     const [faceA, faceB, ...loaded] = await Promise.all([
       loadFace(parts[0], style),
       parts[1] ? loadFace(parts[1], style) : null,
-      ...chosen.map((id) => loadImage(MoodApi.photoCorsUrl(id, chosen.length > 1 ? 800 : 1200), true)),
+      ...chosen.map((index) => loadImage(MoodApi.photoCorsUrl(ids[index], chosen.length > 1 ? 1000 : 1400), true)),
     ]);
-    const photos = loaded.filter(Boolean);
+    // Each photo with its own edits (rotate / fill or fit / crop position) from the share window
+    const edits = options.photoEdits || {};
+    // One filter for all photos; Mono uses the picture's colour
+    const photoLook = { filter: options.filter, tint: colorA };
+    const photos = loaded
+      .map((img, i) => (img ? { img, edit: { ...(edits[chosen[i]] || {}), ...photoLook } } : null))
+      .filter(Boolean);
     const photo = photos[0] || null;
 
     drawBackground(ctx, style, colorA, colorB);
@@ -398,11 +549,13 @@ window.MoodShareCard = (function createShareCard() {
     if (photos.length) {
       const photoH = Math.max(160, footerY - 44 - y);
       const photoR = style === 'scribblish' ? 26 : style === 'modern-bold' ? 0 : 6;
-      collageCells(photos.length, innerX, y, innerW, photoH, 12).forEach((cell, index) => {
+      // Mostly landscape photos (after turning)? Then use the row layouts
+      const avgAspect = photos.reduce((sum, p) => sum + turnedAspect(p.img, p.edit.rotate || 0), 0) / photos.length;
+      collageCells(photos.length, innerX, y, innerW, photoH, 12, avgAspect > 1.15).forEach((cell, index) => {
         ctx.save();
         roundRect(ctx, cell.x, cell.y, cell.w, cell.h, photoR);
         ctx.clip();
-        drawCover(ctx, photos[index], cell.x, cell.y, cell.w, cell.h);
+        drawPhoto(ctx, photos[index].img, cell, photos[index].edit);
         ctx.restore();
         ctx.lineWidth = 5;
         ctx.strokeStyle = INK;
@@ -439,5 +592,38 @@ window.MoodShareCard = (function createShareCard() {
     });
   }
 
-  return { render, siteUrl, COLORS, STYLES: Object.keys(LOOKS) };
+  /** The picture's main colour (the chosen one, or the note's mood colour). */
+  function tintFor(entry, color) {
+    return COLORS[color] || moodColors(entry.mood)[0];
+  }
+
+  const previewCache = new Map();
+  /**
+   * Small squares of one photo with each filter, for the filter buttons.
+   * Returns { filter: dataURL } (empty when the photo can't be loaded).
+   */
+  async function filterPreviews(entry, photoIndex, color) {
+    const id = (entry.photoIds || [])[photoIndex];
+    if (!id) return {};
+    const tint = tintFor(entry, color);
+    const key = `${id}|${tint}`;
+    if (!previewCache.has(key)) {
+      previewCache.set(key, loadImage(MoodApi.photoCorsUrl(id, 200), true).then((img) => {
+        if (!img) return {};
+        const size = 116;
+        const result = {};
+        FILTERS.forEach((filter) => {
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          drawPhoto(canvas.getContext('2d'), img, { x: 0, y: 0, w: size, h: size }, { filter, tint });
+          try { result[filter] = canvas.toDataURL('image/jpeg', 0.85); } catch { /* not readable */ }
+        });
+        return result;
+      }));
+    }
+    return previewCache.get(key);
+  }
+
+  return { render, siteUrl, filterPreviews, COLORS, FILTERS, STYLES: Object.keys(LOOKS) };
 })();

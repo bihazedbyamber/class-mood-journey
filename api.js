@@ -131,6 +131,12 @@
     return `https://lh3.googleusercontent.com/d/${fileId}=w${width}`;
   }
 
+  /** The original photo (full size), for "Download (no design)". */
+  function photoFullUrl(fileId) {
+    if (typeof fileId !== 'string' || !/^[\w-]{20,100}$/.test(fileId)) return '';
+    return `https://lh3.googleusercontent.com/d/${fileId}=s0`;
+  }
+
   /** A note's Drive photo ids (up to 5). */
   function photoIds(entry) {
     const ids = Array.isArray(entry && entry.photos) ? entry.photos : [entry && entry.photo];
@@ -170,6 +176,7 @@
     photoUrls,
     photoIds,
     photoCorsUrl,
+    photoFullUrl,
     usesSheet: Boolean(SCRIPT_URL),
   };
 })(typeof self !== 'undefined' ? self : this);

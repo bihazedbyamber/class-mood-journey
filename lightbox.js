@@ -4,7 +4,10 @@
    the page behind gets dark and blurry. With several photos: ‹ › buttons,
    arrow keys, or swipe. Close with ✕, Esc, or a tap on the dark area.
 
-   Use: MoodLightbox.open(['big-url-1', 'big-url-2'], startIndex, clickedImg)
+   Use: MoodLightbox.open(['big-url-1', 'big-url-2'], startIndex, clickedImg, options)
+   options.downloads = the same photos as full-size addresses that allow
+   downloading (lh3.googleusercontent.com): shows "Download (no design)".
+   options.fileName = (index) => 'name-without-extension'
    ===================================================================== */
 
 'use strict';
@@ -16,7 +19,10 @@ window.MoodLightbox = (function createLightbox() {
   let prevButton = null;
   let nextButton = null;
   let closeButton = null;
+  let downloadButton = null;
   let urls = [];
+  let downloads = [];
+  let fileName = null;
   let index = 0;
   let returnFocus = null;
   let touchStartX = null;
@@ -57,12 +63,17 @@ window.MoodLightbox = (function createLightbox() {
     counter = document.createElement('p');
     counter.className = 'lightbox__counter';
     counter.setAttribute('aria-live', 'polite');
+    downloadButton = document.createElement('button');
+    downloadButton.type = 'button';
+    downloadButton.className = 'lightbox__download';
+    downloadButton.innerHTML = '<span aria-hidden="true">⬇</span> <span class="lightbox__download-label">Download (no design)</span>';
 
-    layer.append(backdrop, img, closeButton, prevButton, nextButton, counter);
+    layer.append(backdrop, img, closeButton, prevButton, nextButton, counter, downloadButton);
     document.body.append(layer);
 
     backdrop.addEventListener('click', close);
     closeButton.addEventListener('click', close);
+    downloadButton.addEventListener('click', downloadCurrent);
     prevButton.addEventListener('click', () => show(index - 1, -1));
     nextButton.addEventListener('click', () => show(index + 1, 1));
     // Swipe left/right on phones
@@ -88,7 +99,7 @@ window.MoodLightbox = (function createLightbox() {
       // Keep keyboard focus on the lightbox buttons
       event.preventDefault();
       event.stopImmediatePropagation();
-      const buttons = [closeButton, prevButton, nextButton].filter((button) => !button.hidden);
+      const buttons = [closeButton, prevButton, nextButton, downloadButton].filter((button) => !button.hidden);
       const at = buttons.indexOf(document.activeElement);
       buttons[(at + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length].focus();
     }
@@ -103,12 +114,49 @@ window.MoodLightbox = (function createLightbox() {
     counter.textContent = urls.length > 1 ? `${index + 1} / ${urls.length}` : '';
     prevButton.hidden = urls.length < 2;
     nextButton.hidden = urls.length < 2;
+    downloadButton.hidden = !downloads[index];
+    downloadButton.disabled = false;
     if (direction && !reducedMotion()) {
       img.animate(
         [{ transform: `translateX(${direction * 40}px)`, opacity: 0.2 }, { transform: 'none', opacity: 1 }],
         { duration: 220, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
       );
     }
+  }
+
+  /** Saves the photo that is open, just the photo (no MoodBoard design around it). */
+  async function downloadCurrent() {
+    const at = index;
+    const src = downloads[at];
+    if (!src || downloadButton.disabled) return;
+    const label = downloadButton.querySelector('.lightbox__download-label');
+    const original = label.textContent;
+    downloadButton.disabled = true;
+    label.textContent = '…';
+    try {
+      const response = await fetch(src, { referrerPolicy: 'no-referrer' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      const ext = { 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' }[blob.type] || 'jpg';
+      const name = `${(fileName && fileName(at)) || `moodboard-photo-${at + 1}`}.${ext}`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      label.textContent = '✓';
+    } catch (error) {
+      console.error(error);
+      window.open(src, '_blank', 'noopener'); // can't save it directly: open the photo, then save it from there
+      label.textContent = original;
+    }
+    setTimeout(() => {
+      label.textContent = original;
+      downloadButton.disabled = false;
+    }, 1400);
   }
 
   /** The transform that puts the big photo exactly on top of the small one. */
@@ -123,10 +171,15 @@ window.MoodLightbox = (function createLightbox() {
   }
 
   /** Opens the photos, starting at startIndex, growing out of fromEl (the tapped photo). */
-  function open(list, startIndex = 0, fromEl = null) {
+  function open(list, startIndex = 0, fromEl = null, options = {}) {
     if (!list || !list.length) return;
     if (!layer) build();
+    // Opened from inside a window (dialog)? Then show on top of that window
+    const host = (fromEl && fromEl.closest('dialog[open]')) || document.body;
+    if (layer.parentNode !== host) host.append(layer);
     urls = list.slice();
+    downloads = Array.isArray(options.downloads) ? options.downloads.slice() : [];
+    fileName = typeof options.fileName === 'function' ? options.fileName : null;
     // After closing, go back to the photo that was tapped
     returnFocus = (fromEl && fromEl.closest('button, a')) || document.activeElement;
     layer.hidden = false;

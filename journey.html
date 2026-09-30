@@ -12,19 +12,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;family=Nunito:wght@400;600;700&amp;family=Patrick+Hand&amp;family=Jersey+10&amp;family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;family=Gochi+Hand&amp;family=Anton&amp;family=Archivo:wght@400;500;600;800;900&amp;family=Permanent+Marker&amp;display=swap">
-  <link rel="stylesheet" href="style.css?v=20260929q">
+  <link rel="stylesheet" href="style.css?v=20260930c">
 
-  <script src="settings.js?v=20260929q"></script>
-  <script src="i18n.js?v=20260929q"></script>
-  <script src="site-config.js?v=20260929q"></script>
-  <script src="api.js?v=20260929q"></script>
-  <script src="account.js?v=20260929q" defer></script>
-  <script src="moods.js?v=20260929q" defer></script>
-  <script src="censor.js?v=20260929q" defer></script>
-  <script src="lightbox.js?v=20260929q" defer></script>
-  <script src="share-card.js?v=20260929q" defer></script>
-  <script src="admin-login.js?v=20260929q" defer></script>
-  <script type="module" src="journey.js?v=20260929q"></script>
+  <script src="settings.js?v=20260930c"></script>
+  <script src="i18n.js?v=20260930c"></script>
+  <script src="site-config.js?v=20260930c"></script>
+  <script src="api.js?v=20260930c"></script>
+  <script src="account.js?v=20260930c" defer></script>
+  <script src="moods.js?v=20260930c" defer></script>
+  <script src="censor.js?v=20260930c" defer></script>
+  <script src="lightbox.js?v=20260930c" defer></script>
+  <script src="share-card.js?v=20260930c" defer></script>
+  <script src="admin-login.js?v=20260930c" defer></script>
+  <script type="module" src="journey.js?v=20260930c"></script>
 </head>
 <body class="page-journey">
 
@@ -242,52 +242,86 @@
 
   <!-- Share a note: a pretty picture of it (share-card.js) + Share / Save / Copy link -->
   <dialog class="settings share-dialog" id="share-dialog" aria-labelledby="share-title">
-    <div class="settings__form">
-      <div class="settings__head">
+    <!-- Phone: picture on top (always in view), tabs + share buttons below.
+         Computer: picture on the left, tabs + share buttons on the right. -->
+    <div class="share-layout">
+      <div class="settings__head share-layout__head">
         <h2 class="settings__title" id="share-title">Share this note</h2>
         <button type="button" class="settings__close" id="share-close" aria-label="Close">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
         </button>
       </div>
       <div class="share-preview">
-        <img id="share-img" alt="Picture of the note to share" hidden>
+        <button type="button" class="share-preview__zoom" id="share-zoom" aria-label="See the picture bigger" title="See the picture bigger">
+          <img id="share-img" alt="Picture of the note to share" hidden>
+        </button>
         <p class="share-status" id="share-status" aria-live="polite">Making the picture…</p>
       </div>
-      <div class="share-options">
-        <!-- Only for notes with photos: all of them as a collage, just one, or none -->
-        <div class="share-options__row" id="share-photos-row" hidden>
-          <span class="settings__label" id="share-photos-label">Photos</span>
-          <div class="share-choices share-photo-choices" id="share-photo-choices" role="group" aria-labelledby="share-photos-label"></div>
+
+      <div class="share-panel">
+        <div class="share-tabs" role="tablist" aria-label="Change the picture">
+          <button type="button" class="share-tab" role="tab" id="share-tab-photos" data-share-tab="photos" aria-controls="share-panel-photos" aria-selected="false"><span aria-hidden="true">🖼️</span> Photos</button>
+          <button type="button" class="share-tab" role="tab" id="share-tab-edit" data-share-tab="edit" aria-controls="share-panel-edit" aria-selected="false"><span aria-hidden="true">✂️</span> Edit</button>
+          <button type="button" class="share-tab" role="tab" id="share-tab-filter" data-share-tab="filter" aria-controls="share-panel-filter" aria-selected="false"><span aria-hidden="true">✨</span> Filter</button>
+          <button type="button" class="share-tab" role="tab" id="share-tab-look" data-share-tab="look" aria-controls="share-panel-look" aria-selected="true"><span aria-hidden="true">🎨</span> Style</button>
         </div>
-        <div class="share-options__row">
-          <span class="settings__label" id="share-style-label">Style</span>
-          <div class="share-choices" role="group" aria-labelledby="share-style-label">
-            <button type="button" class="share-choice" data-share-style="modern-2026" aria-pressed="true">Modern 2026</button>
-            <button type="button" class="share-choice" data-share-style="scribblish" aria-pressed="false">Scribblish</button>
-            <button type="button" class="share-choice" data-share-style="modern-bold" aria-pressed="false">Modern Bold</button>
-          </div>
+
+        <div class="share-tabpanels">
+          <!-- Only for notes with photos: all of them as a collage, just one, or none -->
+          <section class="share-tabpanel" role="tabpanel" id="share-panel-photos" data-share-panel="photos" aria-labelledby="share-tab-photos" hidden>
+            <p class="share-tabpanel__hint">Which photos go on the picture?</p>
+            <div class="share-choices share-photo-choices" id="share-photo-choices" role="group" aria-label="Photos"></div>
+          </section>
+
+          <!-- Per photo: rotate, fill (cropped) or fit (whole photo), and which part stays when cropped -->
+          <section class="share-tabpanel" role="tabpanel" id="share-panel-edit" data-share-panel="edit" aria-labelledby="share-tab-edit" hidden>
+            <div class="share-photo-edit__all">
+              <button type="button" class="share-choice" id="share-fill-all">Fill all</button>
+              <button type="button" class="share-choice" id="share-fit-all">Fit all (uncrop)</button>
+            </div>
+            <div class="share-photo-edit__list" id="share-photo-edit-list"></div>
+            <p class="share-tabpanel__hint share-photo-edit__empty" id="share-photo-edit-empty" hidden>No photo on the picture. Pick one in Photos.</p>
+          </section>
+
+          <section class="share-tabpanel" role="tabpanel" id="share-panel-filter" data-share-panel="filter" aria-labelledby="share-tab-filter" hidden>
+            <p class="share-tabpanel__hint">One filter for all the photos.</p>
+            <div class="share-filter__list" id="share-filter-list" role="group" aria-label="Filter"></div>
+          </section>
+
+          <section class="share-tabpanel" role="tabpanel" id="share-panel-look" data-share-panel="look" aria-labelledby="share-tab-look">
+            <div class="share-options__row">
+              <span class="settings__label" id="share-style-label">Style</span>
+              <div class="share-choices" role="group" aria-labelledby="share-style-label">
+                <button type="button" class="share-choice" data-share-style="modern-2026" aria-pressed="true">Modern 2026</button>
+                <button type="button" class="share-choice" data-share-style="scribblish" aria-pressed="false">Scribblish</button>
+                <button type="button" class="share-choice" data-share-style="modern-bold" aria-pressed="false">Modern Bold</button>
+              </div>
+            </div>
+            <div class="share-options__row">
+              <span class="settings__label" id="share-color-label">Colour</span>
+              <div class="share-swatches" role="group" aria-labelledby="share-color-label">
+                <button type="button" class="share-swatch share-swatch--mood" data-share-color="mood" aria-pressed="true" title="Mood colour" aria-label="Mood colour"></button>
+                <button type="button" class="share-swatch" data-share-color="lime" aria-pressed="false" title="Lime" aria-label="Lime"></button>
+                <button type="button" class="share-swatch" data-share-color="pink" aria-pressed="false" title="Pink" aria-label="Pink"></button>
+                <button type="button" class="share-swatch" data-share-color="sky" aria-pressed="false" title="Sky blue" aria-label="Sky blue"></button>
+                <button type="button" class="share-swatch" data-share-color="lemon" aria-pressed="false" title="Lemon" aria-label="Lemon"></button>
+                <button type="button" class="share-swatch" data-share-color="lavender" aria-pressed="false" title="Lavender" aria-label="Lavender"></button>
+              </div>
+            </div>
+          </section>
         </div>
-        <div class="share-options__row">
-          <span class="settings__label" id="share-color-label">Colour</span>
-          <div class="share-swatches" role="group" aria-labelledby="share-color-label">
-            <button type="button" class="share-swatch share-swatch--mood" data-share-color="mood" aria-pressed="true" title="Mood colour" aria-label="Mood colour"></button>
-            <button type="button" class="share-swatch" data-share-color="lime" aria-pressed="false" title="Lime" aria-label="Lime"></button>
-            <button type="button" class="share-swatch" data-share-color="pink" aria-pressed="false" title="Pink" aria-label="Pink"></button>
-            <button type="button" class="share-swatch" data-share-color="sky" aria-pressed="false" title="Sky blue" aria-label="Sky blue"></button>
-            <button type="button" class="share-swatch" data-share-color="lemon" aria-pressed="false" title="Lemon" aria-label="Lemon"></button>
-            <button type="button" class="share-swatch" data-share-color="lavender" aria-pressed="false" title="Lavender" aria-label="Lavender"></button>
+
+        <div class="share-footer">
+          <button type="button" class="btn btn--primary btn--big share-main" id="share-send" disabled>
+            <span aria-hidden="true">📤</span> Share to WhatsApp, Instagram…
+          </button>
+          <div class="share-actions">
+            <a class="btn share-whatsapp" id="share-whatsapp" href="https://wa.me/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">💬</span> WhatsApp</a>
+            <button type="button" class="btn" id="share-save" disabled><span aria-hidden="true">⬇</span> Save image</button>
+            <button type="button" class="btn" id="share-copy"><span aria-hidden="true">🔗</span> Copy link</button>
           </div>
         </div>
       </div>
-      <button type="button" class="btn btn--primary btn--big share-main" id="share-send" disabled>
-        <span aria-hidden="true">📤</span> Share to WhatsApp, Instagram…
-      </button>
-      <div class="share-actions">
-        <a class="btn share-whatsapp" id="share-whatsapp" href="https://wa.me/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">💬</span> WhatsApp</a>
-        <button type="button" class="btn" id="share-save" disabled><span aria-hidden="true">⬇</span> Save image</button>
-        <button type="button" class="btn" id="share-copy"><span aria-hidden="true">🔗</span> Copy link</button>
-      </div>
-      <p class="settings__hint share-hint">On a phone, the big button opens your phone's share menu: pick WhatsApp, Instagram, or <em>Save image</em> for your gallery.</p>
     </div>
   </dialog>
 

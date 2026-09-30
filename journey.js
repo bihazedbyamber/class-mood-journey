@@ -77,8 +77,13 @@ const els = {
   shareSave: document.getElementById('share-save'),
   shareCopy: document.getElementById('share-copy'),
   shareWhatsApp: document.getElementById('share-whatsapp'),
-  sharePhotosRow: document.getElementById('share-photos-row'),
+  shareZoom: document.getElementById('share-zoom'),
   sharePhotoChoices: document.getElementById('share-photo-choices'),
+  sharePhotoEditList: document.getElementById('share-photo-edit-list'),
+  sharePhotoEditEmpty: document.getElementById('share-photo-edit-empty'),
+  shareFilterList: document.getElementById('share-filter-list'),
+  shareFillAll: document.getElementById('share-fill-all'),
+  shareFitAll: document.getElementById('share-fit-all'),
   comments: document.getElementById('focus-comments'),
   commentsList: document.getElementById('focus-comments-list'),
   commentsEmpty: document.getElementById('focus-comments-empty'),
@@ -588,7 +593,49 @@ function makeShareButton(icon, label, onClick) {
 // Share / Save a note as a pretty picture (share-card.js)
 // =====================================================================
 
-const share = { entry: null, blob: null, file: null, token: 0, options: loadShareOptions() };
+const share = { entry: null, blob: null, file: null, token: 0, options: loadShareOptions(), photos: 'all', photoEdits: {}, filter: 'normal', tab: 'photos' };
+
+// ---------- Tabs: Photos / Edit / Filter / Style (one at a time, the picture stays in view) ----------
+
+const SHARE_TABS = ['photos', 'edit', 'filter', 'look'];
+
+function showShareTab(name, focus = false) {
+  const tabs = [...document.querySelectorAll('[data-share-tab]')];
+  const visible = tabs.filter((tab) => !tab.hidden).map((tab) => tab.dataset.shareTab);
+  const chosen = visible.includes(name) ? name : visible[visible.length - 1];
+  tabs.forEach((tab) => {
+    const on = tab.dataset.shareTab === chosen;
+    tab.setAttribute('aria-selected', String(on));
+    tab.tabIndex = on ? 0 : -1;
+    if (on && focus) tab.focus();
+  });
+  document.querySelectorAll('[data-share-panel]').forEach((panel) => {
+    panel.hidden = panel.dataset.sharePanel !== chosen;
+  });
+  return chosen;
+}
+
+/** Notes without photos only have the Style tab (then the tab bar is hidden too). */
+function updateShareTabs(hasPhotos) {
+  document.querySelectorAll('[data-share-tab]').forEach((tab) => {
+    tab.hidden = !hasPhotos && tab.dataset.shareTab !== 'look';
+  });
+  document.querySelector('.share-tabs').classList.toggle('is-single', !hasPhotos);
+  showShareTab(hasPhotos ? share.tab : 'look');
+}
+
+document.querySelectorAll('[data-share-tab]').forEach((tab) => {
+  tab.addEventListener('click', () => { share.tab = showShareTab(tab.dataset.shareTab); });
+  // Arrow keys move between the tabs
+  tab.addEventListener('keydown', (event) => {
+    const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const visible = SHARE_TABS.filter((name) => !document.querySelector(`[data-share-tab="${name}"]`).hidden);
+    const next = visible[(visible.indexOf(tab.dataset.shareTab) + step + visible.length) % visible.length];
+    share.tab = showShareTab(next, true);
+  });
+});
 
 /** The picture look (style + colour), remembered on this device. Starts with the site's style. */
 function loadShareOptions() {
@@ -614,7 +661,6 @@ function saveShareOptions() {
  */
 function showPhotoChoices(entry) {
   const count = entry.thumbs.length;
-  els.sharePhotosRow.hidden = count === 0;
   els.sharePhotoChoices.replaceChildren();
   if (!count) return;
   const add = (value, build) => {
@@ -642,6 +688,149 @@ function showPhotoChoices(entry) {
   }));
   add('none', (button) => { button.textContent = 'No photo'; });
 }
+
+// ---------- Photo editor (share window) ----------
+// Per photo: ⟳ rotate, Fill (cropped) / Fit (whole photo), and which part stays when cropped.
+
+const POSITIONS = ['center', 'start', 'end'];
+
+function photoEdit(index) {
+  share.photoEdits[index] = share.photoEdits[index] || { rotate: 0, fit: 'fill', pos: 'center' };
+  return share.photoEdits[index];
+}
+
+/** Redraw the picture a moment after the last click (so quick clicks don't redraw many times). */
+let redrawTimer = null;
+function redrawShareSoon() {
+  clearTimeout(redrawTimer);
+  redrawTimer = setTimeout(() => { if (share.entry) openShare(share.entry, true); }, 250);
+}
+
+function editButton(label, title, onClick) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'mini-btn photo-edit__btn';
+  button.textContent = label;
+  button.title = title;
+  button.setAttribute('aria-label', title);
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+function showPhotoEditors(entry) {
+  const photos = entry.thumbs;
+  const shown = share.photos === 'none' ? [] : Number.isInteger(share.photos) ? [share.photos] : photos.map((src, i) => i);
+  els.sharePhotoEditEmpty.hidden = shown.length > 0;
+  els.shareFillAll.parentElement.hidden = shown.length === 0;
+  els.sharePhotoEditList.replaceChildren();
+  shown.forEach((index) => {
+    const edit = photoEdit(index);
+    const item = document.createElement('div');
+    item.className = 'photo-edit';
+
+    const thumb = document.createElement('span');
+    thumb.className = 'photo-edit__thumb';
+    thumb.classList.toggle('is-fit', edit.fit === 'fit');
+    const img = document.createElement('img');
+    img.src = photos[index];
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+    img.style.transform = `rotate(${edit.rotate}deg)`; // a small preview of the turn
+    thumb.append(img);
+    const number = document.createElement('span');
+    number.className = 'photo-edit__number';
+    number.textContent = String(index + 1);
+    thumb.append(number);
+
+    const buttons = document.createElement('div');
+    buttons.className = 'photo-edit__buttons';
+    buttons.append(
+      editButton('⟳', `Rotate photo ${index + 1}`, () => {
+        edit.rotate = (edit.rotate + 90) % 360;
+        showPhotoEditors(entry);
+        redrawShareSoon();
+      }),
+      editButton(edit.fit === 'fit' ? 'Fit' : 'Fill', edit.fit === 'fit'
+        ? `Photo ${index + 1}: whole photo (uncropped). Tap to fill.`
+        : `Photo ${index + 1}: fills the space (cropped). Tap to fit.`, () => {
+        edit.fit = edit.fit === 'fit' ? 'fill' : 'fit';
+        showPhotoEditors(entry);
+        redrawShareSoon();
+      }),
+    );
+    const move = editButton(`✥ ${edit.pos === 'start' ? '◀' : edit.pos === 'end' ? '▶' : '●'}`,
+      `Photo ${index + 1}: move the crop (middle, start, end)`, () => {
+        edit.pos = POSITIONS[(POSITIONS.indexOf(edit.pos) + 1) % POSITIONS.length];
+        showPhotoEditors(entry);
+        redrawShareSoon();
+      });
+    move.disabled = edit.fit === 'fit'; // nothing is cropped when it fits
+    buttons.append(move);
+    item.append(thumb, buttons);
+    els.sharePhotoEditList.append(item);
+  });
+  showFilterChoices(entry, shown);
+}
+
+// ---------- Filters (for all the photos in the picture) ----------
+
+const FILTER_NAMES = { normal: 'Normal', saturated: 'Saturated', bw: 'B&W', mono: 'Mono', texture: 'Texture' };
+
+/**
+ * Each filter as a small preview of the first photo. A CSS look shows straight
+ * away, then it's swapped for the real filter (Mono uses the picture's colour).
+ */
+function showFilterChoices(entry, shown) {
+  els.shareFilterList.replaceChildren();
+  if (!shown.length) {
+    const empty = document.createElement('p');
+    empty.className = 'share-tabpanel__hint';
+    empty.textContent = 'No photo on the picture. Pick one in Photos.';
+    els.shareFilterList.append(empty);
+    return;
+  }
+  const images = {};
+  MoodShareCard.filterPreviews(entry, shown[0], share.options.color).then((previews) => {
+    Object.entries(previews).forEach(([filter, url]) => {
+      if (!images[filter] || !images[filter].isConnected) return;
+      images[filter].src = url;
+      images[filter].className = '';
+    });
+  }).catch(() => { /* keep the CSS look */ });
+  MoodShareCard.FILTERS.forEach((filter) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'share-filter__choice';
+    button.dataset.filter = filter;
+    button.setAttribute('aria-pressed', String(share.filter === filter));
+    const img = document.createElement('img');
+    img.src = entry.thumbs[shown[0]];
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+    img.className = `filter-preview--${filter}`;
+    images[filter] = img;
+    const name = document.createElement('span');
+    name.textContent = FILTER_NAMES[filter];
+    button.append(img, name);
+    button.addEventListener('click', () => {
+      if (share.filter === filter) return;
+      share.filter = filter;
+      showPhotoEditors(entry);
+      redrawShareSoon();
+    });
+    els.shareFilterList.append(button);
+  });
+}
+
+function setAllFit(fit) {
+  if (!share.entry) return;
+  share.entry.thumbs.forEach((src, index) => { photoEdit(index).fit = fit; });
+  showPhotoEditors(share.entry);
+  redrawShareSoon();
+}
+
+els.shareFillAll.addEventListener('click', () => setAllFit('fill'));
+els.shareFitAll.addEventListener('click', () => setAllFit('fit'));
 
 function showShareOptions() {
   document.querySelectorAll('[data-share-style]').forEach((button) => {
@@ -692,13 +881,19 @@ async function saveNoteImage(entry, button) {
 
 /** The Share button: show the picture first, then Share / Save / Copy link. */
 async function openShare(entry, keepChoices = false) {
-  if (!keepChoices || share.entry !== entry) share.photos = 'all'; // a new note starts with all its photos
+  if (!keepChoices || share.entry !== entry) { // a new note starts with all its photos, unedited
+    share.photos = 'all';
+    share.photoEdits = {};
+    share.filter = 'normal';
+  }
   share.entry = entry;
   share.blob = null;
   share.file = null;
   const token = ++share.token;
   showShareOptions();
   showPhotoChoices(entry);
+  showPhotoEditors(entry);
+  updateShareTabs(entry.thumbs.length > 0);
   els.shareWhatsApp.href = `https://wa.me/?text=${encodeURIComponent(shareText(entry))}`;
   els.shareStatus.hidden = false;
   els.shareStatus.textContent = 'Making the picture…';
@@ -709,7 +904,7 @@ async function openShare(entry, keepChoices = false) {
     els.shareDialog.showModal();
   }
   try {
-    const blob = await MoodShareCard.render(entry, { ...share.options, photos: share.photos });
+    const blob = await MoodShareCard.render(entry, { ...share.options, photos: share.photos, photoEdits: share.photoEdits, filter: share.filter });
     if (token !== share.token) return; // another note was chosen meanwhile
     share.blob = blob;
     share.file = new File([blob], shareFileName(entry), { type: 'image/png' });
@@ -751,6 +946,7 @@ async function copyShareLink() {
     await navigator.clipboard.writeText(MoodShareCard.siteUrl());
     els.shareStatus.hidden = false;
     els.shareStatus.textContent = 'Link copied!';
+    setTimeout(() => { if (share.blob) els.shareStatus.hidden = true; }, 2200); // (no blob = a new picture is being made)
   } catch {
     els.shareStatus.hidden = false;
     els.shareStatus.textContent = MoodShareCard.siteUrl();
@@ -776,6 +972,10 @@ document.querySelectorAll('[data-share-color]').forEach((button) => {
 els.shareSend.addEventListener('click', sendShare);
 els.shareSave.addEventListener('click', () => { if (share.blob) downloadBlob(share.blob, share.file.name); });
 els.shareCopy.addEventListener('click', copyShareLink);
+// Tap the picture to see it big (handy on phones, where the preview is small)
+els.shareZoom.addEventListener('click', () => {
+  if (!els.shareImg.hidden && els.shareImg.src) MoodLightbox.open([els.shareImg.src], 0, els.shareImg);
+});
 els.shareClose.addEventListener('click', () => els.shareDialog.close());
 els.shareDialog.addEventListener('click', (event) => { if (event.target === els.shareDialog) els.shareDialog.close(); });
 
@@ -1261,6 +1461,11 @@ function fillFocusCard(entry) {
   els.focusPhotos.hidden = entry.photos.length === 0;
   els.focusPhotos.dataset.count = String(entry.photos.length);
   const bigPhotos = entry.photos.map((src) => src.replace(/sz=w\d+/, 'sz=w2000'));
+  // "Download (no design)" in the photo viewer: the photo itself, full size
+  const photoView = {
+    downloads: (entry.photoIds || []).map((id) => MoodApi.photoFullUrl(id)),
+    fileName: (index) => `moodboard-${String(entry.timestamp).slice(0, 10)}-photo-${index + 1}`,
+  };
   entry.photos.forEach((src, index) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -1271,7 +1476,7 @@ function fillFocusCard(entry) {
     img.alt = '';
     img.referrerPolicy = 'no-referrer';
     button.append(img);
-    button.addEventListener('click', () => MoodLightbox.open(bigPhotos, index, img));
+    button.addEventListener('click', () => MoodLightbox.open(bigPhotos, index, img, photoView));
     els.focusPhotos.append(button);
   });
   els.focusDate.textContent = formatFullDate(date);

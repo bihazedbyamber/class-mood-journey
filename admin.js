@@ -473,7 +473,9 @@ function createNoteCard(entry) {
       link.addEventListener('click', (event) => {
         if (event.ctrlKey || event.metaKey || event.shiftKey || !window.MoodLightbox) return;
         event.preventDefault();
-        MoodLightbox.open(photoBig, index, img);
+        MoodLightbox.open(photoBig, index, img, {
+          downloads: MoodApi.photoIds(entry).map((id) => MoodApi.photoFullUrl(id)),
+        });
       });
       photo.append(link);
     });
